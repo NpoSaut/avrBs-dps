@@ -11,7 +11,7 @@
 
 #include <avr/pgmspace.h>
 
-#define VerProg_Pr 104
+#define VerProg_Pr 105
 
 
 struct IdentifyDoc

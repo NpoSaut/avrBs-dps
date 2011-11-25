@@ -129,8 +129,8 @@ typedef INT_TYPELIST_5 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 typedef INT_TYPELIST_2 (CanRx::MCO_STATE_A, CanRx::MCO_LIMITS_A) MCO_STATE_LIMITS_A;
 typedef INT_TYPELIST_2 (CanRx::MCO_STATE_B, CanRx::MCO_LIMITS_B) MCO_STATE_LIMITS_B;
 typedef INT_TYPELIST_2 (CanRx::SYS_DATA_QUERY, CanRx::SYS_KEY) SYS;
-typedef INT_TYPELIST_2 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A) MP_ALS_A;
-typedef INT_TYPELIST_2 (CanRx::MP_ALS_ON_B, CanRx::MP_ALS_OFF_B) MP_ALS_B;
+typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_ON_TIME_A, CanRx::MP_ALS_OFF_TIME_A) MP_ALS_A;
+typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_B, CanRx::MP_ALS_OFF_B, CanRx::MP_ALS_ON_TIME_B, CanRx::MP_ALS_OFF_TIME_B) MP_ALS_B;
 typedef INT_TYPELIST_2 (CanRx::BKSI_DATA, CanRx::INPUT_DATA) INPUT;
 
 typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов для отправки
@@ -152,7 +152,7 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 INPUT,
 						 Int2Type< CanRx::SYS_DIAGNOSTICS >
 						 	 	 ),
-				 LOKI_TYPELIST_14(
+				 LOKI_TYPELIST_18(
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
@@ -166,6 +166,10 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 Int2Type< CanRx::MP_ALS_OFF_A >,
 						 Int2Type< CanRx::MP_ALS_ON_B >,
 						 Int2Type< CanRx::MP_ALS_OFF_B >,
+						 Int2Type< CanRx::MP_ALS_ON_TIME_A >,
+						 Int2Type< CanRx::MP_ALS_OFF_TIME_A >,
+						 Int2Type< CanRx::MP_ALS_ON_TIME_B >,
+						 Int2Type< CanRx::MP_ALS_OFF_TIME_B >,
 						 Int2Type< CanRx::SYS_KEY >
 								),
 				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
@@ -460,6 +464,46 @@ void kptFallB (uint16_t)
 		kpt.fall();
 }
 
+void kptRiseTimeA (uint16_t dataPointer)
+{
+	if (reg.portB.pin7 == 0) // первый полукомплект
+	{
+		typedef const uint8_t Data[1];
+		Data& data = *( (Data *)(dataPointer) );
+		kpt.rise (data[0]);
+	}
+}
+
+void kptRiseTimeB (uint16_t dataPointer)
+{
+	if (reg.portB.pin7 == 1) // второй полукомплект
+	{
+		typedef const uint8_t Data[1];
+		Data& data = *( (Data *)(dataPointer) );
+		kpt.rise (data[0]);
+	}
+}
+
+void kptFallTimeA (uint16_t dataPointer)
+{
+	if (reg.portB.pin7 == 0) // первый полукомплект
+	{
+		typedef const uint8_t Data[1];
+		Data& data = *( (Data *)(dataPointer) );
+		kpt.fall (data[0]);
+	}
+}
+
+void kptFallTimeB (uint16_t dataPointer)
+{
+	if (reg.portB.pin7 == 1) // второй полукомплект
+	{
+		typedef const uint8_t Data[1];
+		Data& data = *( (Data *)(dataPointer) );
+		kpt.fall (data[0]);
+	}
+}
+
 void kptCommandParse ()
 {
 	static uint8_t commandOld;
@@ -700,9 +744,13 @@ int main ()
 	canDat.rxHandler<CanRx::SYS_KEY>() = SoftIntHandler::from_function <&sysKey> ();
 
 	canDat.rxHandler<CanRx::MP_ALS_ON_A>() = SoftIntHandler::from_function <&kptRiseA> ();
+	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_A>() = SoftIntHandler::from_function <&kptRiseA> ();
 	canDat.rxHandler<CanRx::MP_ALS_OFF_A>() = SoftIntHandler::from_function <&kptFallA> ();
+	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_A>() = SoftIntHandler::from_function <&kptFallA> ();
 	canDat.rxHandler<CanRx::MP_ALS_ON_B>() = SoftIntHandler::from_function <&kptRiseB> ();
+	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_B>() = SoftIntHandler::from_function <&kptRiseB> ();
 	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler::from_function <&kptFallB> ();
+	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallB> ();
 
 
 	dps.activus();

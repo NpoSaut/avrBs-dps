@@ -64,8 +64,8 @@ private:
 	Status& status; // Ссылка на внешнюю переменную, в которую выводится состояние
 
 	Clock10ms clock;
-	uint8_t periodStartTime;
-	uint8_t periodStartTimeControl;
+	uint8_t impulseWatchDogCounter;
+	uint8_t periodTime;
 	uint8_t impulseStartTime;
 	uint8_t shortImpNumber;
 	uint8_t lisZeroingPermission;
@@ -73,9 +73,20 @@ private:
 	Status statusPrevious;
 	uint8_t repeateCounter;
 
+	uint8_t getImpulseTime ()
+	{
+		uint8_t time;
+		ATOMIC
+		{
+			time = clock.time() - impulseStartTime;
+			impulseStartTime = clock.time();
+		}
+		return time;
+	}
+
 	void watchDog (uint16_t)
 	{
-		if (periodStartTime == periodStartTimeControl) // не было изменений
+		if ( impulseWatchDogCounter == 0 ) // не было изменений
 		{
 			if (status.color == Status::Color::RedYellow)
 				status = { 	Status::Color::Red,
@@ -91,7 +102,7 @@ private:
 						};
 		}
 		else
-			periodStartTimeControl = periodStartTime;
+			impulseWatchDogCounter = 0;
 	}
 
 
@@ -105,23 +116,33 @@ public:
 
 	void fall ()
 	{
-		// Начало отрицательного импульса
-		impulseStartTime <<= clock.time();
+		fall( getImpulseTime() );
+	}
 
+	void fall (uint8_t upTime)
+	{
+		// Начало отрицательного импульса
+		impulseWatchDogCounter ++;
 		status.kptImp = 0;
+		periodTime += upTime;
+
 	}
 
 	void rise ()
 	{
+		rise( getImpulseTime() );
+	}
+
+	void rise (uint8_t downTime)
+	{
 		// Конец отрицательного импульса
-		uint8_t impulseTime = clock.time() - impulseStartTime;
+		impulseWatchDogCounter ++;
 		status.kptImp = 1;
+		periodTime += downTime;
 
-		if (impulseTime > 35) // длинный импульс -- начало нового периода
+
+		if ( downTime > 35) // длинный импульс -- конец периода
 		{
-			uint8_t periodTime = clock.time() - periodStartTime;
-			periodStartTime = clock.time();
-
 			if (shortImpNumber == 0) // При отсутствии коротких импульсов (КЖ)
 				periodTime *= 2; // реальный период в 2 раза меньше
 
@@ -163,6 +184,8 @@ public:
 			else
 				status.correct = false;
 			statusPrevious = statusNew;
+
+			periodTime = 0; // Начало нового периода
 		}
 		else // короткий импульс
 			if (++shortImpNumber == 3) // Трёх коротких имульсов подряд быть не может
