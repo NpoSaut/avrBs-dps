@@ -1,0 +1,5 @@
+H_TO_B bs-dps.hex
+COPY bs-dps.BIN DPS_CAN.FLA
+DEL bs-dps.BIN
+
+COPY DPS_can.FLA C:\PROGRA~1\SAUT\PROGRAMS\DPS_can.FLA

@@ -1,0 +1,1144 @@
+Archive member included because of file (symbol)
+
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+                              ./main.o (__mulsi3)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+                              ./main.o (__udivmodhi4)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+                              ./main.o (__udivmodsi4)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+                              ./main.o (__divmodsi4)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+                              c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o (exit)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+                              ./main.o (__do_copy_data)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+                              ./main.o (__do_clear_bss)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+                              ./main.o (__do_global_ctors)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+                              ./main.o (__do_global_dtors)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+                              c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o) (__tablejump__)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+                              ./main.o (malloc)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_byte_at90can64.o)
+                              ./main.o (__eerd_byte_can64)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_word_at90can64.o)
+                              ./main.o (__eerd_word_can64)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eeupd_byte_at90can64.o)
+                              ./main.o (__eeupd_byte_can64)
+c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_block_at90can64.o)
+                              c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_word_at90can64.o) (__eerd_blraw_can64)
+
+Allocating common symbols
+Common symbol       size              file
+
+__brkval            0x2               c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+__flp               0x2               c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+
+Discarded input sections
+
+ .text          0x00000000        0x4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+ .text.__cxa_guard_acquire
+                0x00000000       0x14 ./main.o
+ .text.__cxa_guard_release
+                0x00000000        0x8 ./main.o
+ .text.__cxa_guard_abort
+                0x00000000        0x2 ./main.o
+ .text.__cxa_pure_virtual
+                0x00000000        0x2 ./main.o
+ .text._Znwj    0x00000000        0x6 ./main.o
+ .text._ZdlPv   0x00000000        0x6 ./main.o
+ .text._Znaj    0x00000000        0x6 ./main.o
+ .text._ZdaPv   0x00000000        0x6 ./main.o
+ .text._Z4swapRKj
+                0x00000000        0x8 ./main.o
+ .text._Z16clubSendNextPagej
+                0x00000000       0x5a ./main.o
+ .text._Z25clubSendNextPageInterruptv
+                0x00000000       0x56 ./main.o
+ .text._Z10canDataGetj
+                0x00000000       0xae ./main.o
+ .text._Z13sysKeyReleasev
+                0x00000000       0x5c ./main.o
+ .text._Z7ipdDatej
+                0x00000000       0x32 ./main.o
+ .text._Z8kptRiseAj
+                0x00000000      0x110 ./main.o
+ .text._Z8kptRiseBj
+                0x00000000      0x110 ./main.o
+ .text._Z8kptFallAj
+                0x00000000       0x1c ./main.o
+ .text._Z8kptFallBj
+                0x00000000       0x1c ./main.o
+ .text._Z15kptCommandParsev
+                0x00000000       0x28 ./main.o
+ .text._Z9mcoStateAj
+                0x00000000        0xa ./main.o
+ .text._Z9mcoStateBj
+                0x00000000        0xa ./main.o
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+ .text.libgcc   0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+ .text.libgcc   0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+ .text.libgcc   0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+ .text.libgcc   0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+ .text.libgcc   0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_byte_at90can64.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_byte_at90can64.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_byte_at90can64.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_word_at90can64.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_word_at90can64.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_word_at90can64.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eeupd_byte_at90can64.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eeupd_byte_at90can64.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eeupd_byte_at90can64.o)
+ .text          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_block_at90can64.o)
+ .data          0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_block_at90can64.o)
+ .bss           0x00000000        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_block_at90can64.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+start            0x00000000         0x000000ff         xr
+id               0x00000100         0x00000010         xr
+text             0x00000110         0x00020000         xr
+data             0x00800100         0x0000ff00         rw !x
+eeprom           0x00810000         0x00010000         rw !x
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+Address of section .data set to 0x800100
+LOAD c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+LOAD ./main.o
+LOAD c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a
+LOAD c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libm.a
+LOAD c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a
+LOAD c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a
+LOAD c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a
+
+.hash
+ *(.hash)
+
+.dynsym
+ *(.dynsym)
+
+.dynstr
+ *(.dynstr)
+
+.gnu.version
+ *(.gnu.version)
+
+.gnu.version_d
+ *(.gnu.version_d)
+
+.gnu.version_r
+ *(.gnu.version_r)
+
+.rel.init
+ *(.rel.init)
+
+.rela.init
+ *(.rela.init)
+
+.rel.text
+ *(.rel.text)
+ *(.rel.text.*)
+ *(.rel.gnu.linkonce.t*)
+
+.rela.text
+ *(.rela.text)
+ *(.rela.text.*)
+ *(.rela.gnu.linkonce.t*)
+
+.rel.fini
+ *(.rel.fini)
+
+.rela.fini
+ *(.rela.fini)
+
+.rel.rodata
+ *(.rel.rodata)
+ *(.rel.rodata.*)
+ *(.rel.gnu.linkonce.r*)
+
+.rela.rodata
+ *(.rela.rodata)
+ *(.rela.rodata.*)
+ *(.rela.gnu.linkonce.r*)
+
+.rel.data
+ *(.rel.data)
+ *(.rel.data.*)
+ *(.rel.gnu.linkonce.d*)
+
+.rela.data
+ *(.rela.data)
+ *(.rela.data.*)
+ *(.rela.gnu.linkonce.d*)
+
+.rel.ctors
+ *(.rel.ctors)
+
+.rela.ctors
+ *(.rela.ctors)
+
+.rel.dtors
+ *(.rel.dtors)
+
+.rela.dtors
+ *(.rela.dtors)
+
+.rel.got
+ *(.rel.got)
+
+.rela.got
+ *(.rela.got)
+
+.rel.bss
+ *(.rel.bss)
+
+.rela.bss
+ *(.rela.bss)
+
+.rel.plt
+ *(.rel.plt)
+
+.rela.plt
+ *(.rela.plt)
+
+.start          0x00000000       0x98
+ *(.vectors)
+ .vectors       0x00000000       0x94 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+                0x00000000                __vector_default
+                0x00000000                __vectors
+ *(.vectors)
+ *(.progmem.gcc*)
+ *(.progmem*)
+                0x00000094                . = ALIGN (0x2)
+                0x00000094                __trampolines_start = .
+ *(.trampolines)
+ .trampolines   0x00000094        0x0 linker stubs
+ *(.trampolines*)
+                0x00000094                __trampolines_end = .
+ *(.jumptables)
+ *(.jumptables*)
+ *(.lowtext)
+ *(.lowtext*)
+                0x00000094                __ctors_start = .
+ *(.ctors)
+ .ctors         0x00000094        0x2 ./main.o
+                0x00000096                __ctors_end = .
+                0x00000096                __dtors_start = .
+ *(.dtors)
+ .dtors         0x00000096        0x2 ./main.o
+                0x00000098                __dtors_end = .
+ SORT(*)(.ctors)
+ SORT(*)(.dtors)
+
+.id             0x00000100       0x10
+ *(.id)
+ .id            0x00000100       0x10 ./main.o
+                0x00000100                ID
+ *(.id)
+
+.text           0x00000110     0x4c96
+ *(.init0)
+ .init0         0x00000110        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+                0x00000110                __init
+ *(.init0)
+ *(.init1)
+ *(.init1)
+ *(.init2)
+ .init2         0x00000110        0xc c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+ *(.init2)
+ *(.init3)
+ .init3         0x0000011c       0x12 ./main.o
+                0x0000011c                wdt_init()
+ *(.init3)
+ *(.init4)
+ .init4         0x0000012e       0x16 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+                0x0000012e                __do_copy_data
+ .init4         0x00000144       0x10 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+                0x00000144                __do_clear_bss
+ *(.init4)
+ *(.init5)
+ .init5         0x00000154       0x18 ./main.o
+                0x00000154                Init()
+ *(.init5)
+ *(.init6)
+ .init6         0x0000016c       0x16 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+                0x0000016c                __do_global_ctors
+ *(.init6)
+ *(.init7)
+ *(.init7)
+ *(.init8)
+ *(.init8)
+ *(.init9)
+ .init9         0x00000182        0x8 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+ *(.init9)
+ *(.text)
+ .text          0x0000018a      0x110 ./main.o
+                0x0000018a                ReIndex16<Loki::Typelist<Loki::Int2Type<6u>, Loki::Typelist<Loki::Int2Type<3u>, Loki::Typelist<Loki::Int2Type<2u>, Loki::Typelist<Loki::Int2Type<2u>, Loki::Typelist<Loki::Int2Type<1u>, Loki::Typelist<Loki::Int2Type<1u>, Loki::NullType> > > > > > >::array
+                0x0000019a                ReIndex256<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<6u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<5u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<4u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<3u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<2u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::Typelist<Loki::Int2Type<1u>, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<142u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<141u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<140u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<139u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<138u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<137u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<136u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::Typelist<Loki::Int2Type<135u>, Loki::NullType> > > > > > > > > > > > > > > > > > > > > > > > > > > > >::array
+                0x0000029a                . = ALIGN (0x2)
+ *(.text.*)
+ .text._ZN6srutil8DelegateIFvjEE14empty_functionEPvj
+                0x0000029a        0x2 ./main.o
+                0x0000029a                srutil::Delegate<void (unsigned int)>::empty_function(void*, unsigned int)
+ .text._ZN6srutil8DelegateIFvvEE14empty_functionEPv
+                0x0000029c        0x2 ./main.o
+                0x0000029c                srutil::Delegate<void ()>::empty_function(void*)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z7ipdDatejEEEEvPvj
+                0x0000029e       0x32 ./main.o
+                0x0000029e                void srutil::Delegate<void (unsigned int)>::function_stub<&(ipdDate(unsigned int))>(void*, unsigned int)
+ .text._ZN6srutil8DelegateIFvvEE11method_stubIN4Saut3ComIXadL_ZN8Register13usart1ControlEEEXadL_ZNS6_14usart1BaudRateEEEXadL_ZNS6_10usart1DataEEEXadL_ZNS6_5portDEEELh2EXadL_ZNS6_5portDEEELh3EXadL_ZNS6_5portDEEELh4EXadL_ZNS6_5portBEEELh7ELh1ENS4_3DatIN4Loki8TypelistINS8_8Int2TypeILj12EEENS9_INSA_ILj13EEENS9_INSA_ILj14EEENS9_INSA_ILj15EEENS9_INSA_ILj84EEENS9_INSA_ILj85EEENS8_8NullTypeEEEEEEEEEEEEENS9_INSA_ILj8EEENS9_INSA_ILj9EEENS9_INSA_ILj10EEENS9_INSA_ILj11EEENS9_INSA_ILj80EEENS9_INSA_ILj81EEENS9_INSA_ILj82EEENS9_INSA_ILj83EEESH_EEEEEEEEEEEEEEEENS9_ISB_SJ_EEEELZ4dataEEEXadL_ZNS16_11udreHandlerEvEEEEvPv
+                0x000002d0       0x8e ./main.o
+                0x000002d0                void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::udreHandler())>(void*)
+                0x000002d0                void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::udreHandler())>(void*)
+ .text._ZN6srutil8DelegateIFvjEE11method_stubI3KptXadL_ZNS4_8watchDogEjEEEEvPvj
+                0x0000035e       0x3e ./main.o
+                0x0000035e                void srutil::Delegate<void (unsigned int)>::method_stub<Kpt, &(Kpt::watchDog(unsigned int))>(void*, unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z8kptFallBjEEEEvPvj
+                0x0000039c       0x1c ./main.o
+                0x0000039c                void srutil::Delegate<void (unsigned int)>::function_stub<&(kptFallB(unsigned int))>(void*, unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z8kptFallAjEEEEvPvj
+                0x000003b8       0x1c ./main.o
+                0x000003b8                void srutil::Delegate<void (unsigned int)>::function_stub<&(kptFallA(unsigned int))>(void*, unsigned int)
+ .text._ZN7ProgSpi13ProgSpiSimpleIXadL_ZN8Register16spiStatusControlEEEXadL_ZNS1_7spiDataEEEXadL_ZNS1_5portBEEELh0ELh1ELh2ELh3EXadL_ZNS1_5portBEEELh4EE11instructionEhhhh.isra.38
+                0x000003d4       0x24 ./main.o
+ .text._ZN7ProgSpi13ProgSpiSimpleIXadL_ZN8Register16spiStatusControlEEEXadL_ZNS1_7spiDataEEEXadL_ZNS1_5portBEEELh0ELh1ELh2ELh3EXadL_ZNS1_5portBEEELh4EE5flushILNS_7MemTypeE1EEEvv.isra.44
+                0x000003f8       0x28 ./main.o
+ .text._ZN6srutil8DelegateIFvvEE11method_stubIN4Saut3ComIXadL_ZN8Register13usart1ControlEEEXadL_ZNS6_14usart1BaudRateEEEXadL_ZNS6_10usart1DataEEEXadL_ZNS6_5portDEEELh2EXadL_ZNS6_5portDEEELh3EXadL_ZNS6_5portDEEELh4EXadL_ZNS6_5portBEEELh7ELh1ENS4_3DatIN4Loki8TypelistINS8_8Int2TypeILj12EEENS9_INSA_ILj13EEENS9_INSA_ILj14EEENS9_INSA_ILj15EEENS9_INSA_ILj84EEENS9_INSA_ILj85EEENS8_8NullTypeEEEEEEEEEEEEENS9_INSA_ILj8EEENS9_INSA_ILj9EEENS9_INSA_ILj10EEENS9_INSA_ILj11EEENS9_INSA_ILj80EEENS9_INSA_ILj81EEENS9_INSA_ILj82EEENS9_INSA_ILj83EEESH_EEEEEEEEEEEEEEEENS9_ISB_SJ_EEEELZ4dataEEEXadL_ZNS16_9txHandlerEvEEEEvPv
+                0x00000420       0x38 ./main.o
+                0x00000420                void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::txHandler())>(void*)
+                0x00000420                void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::txHandler())>(void*)
+ .text._ZN6srutil8DelegateIFvvEE11method_stubI9Clock10msXadL_ZNS4_12timePlusPlusEvEEEEvPv
+                0x00000458       0x60 ./main.o
+                0x00000458                void srutil::Delegate<void ()>::method_stub<Clock10ms, &(Clock10ms::timePlusPlus())>(void*)
+ .text._ZN6srutil8DelegateIFvvEE13function_stubIXadL_Z15kptCommandParsevEEEEvPv
+                0x000004b8       0x28 ./main.o
+                0x000004b8                void srutil::Delegate<void ()>::function_stub<&(kptCommandParse())>(void*)
+ .text._ZN6srutil8DelegateIFvvEE13function_stubIXadL_Z25clubSendNextPageInterruptvEEEEvPv
+                0x000004e0       0x56 ./main.o
+                0x000004e0                void srutil::Delegate<void ()>::function_stub<&(clubSendNextPageInterrupt())>(void*)
+ .text._ZN6srutil8DelegateIFvvEE11method_stubI24CeleritasSpatiumDimetiorIXadL_ZN8Register5portCEEEXadL_ZNS5_5portCEEELh4ELh5EXadL_ZNS5_5portBEEELh7E6CanDatIN4Loki8TypelistINS8_INS7_8Int2TypeILj6280EEENS8_INS9_ILj6792EEENS7_8NullTypeEEEEENS8_INS8_INS9_ILj18024EEENS8_INS9_ILj18056EEESC_EEEENS8_INS9_ILj25575EEENS8_INS9_ILj25544EEENS8_INS8_INS9_ILj50789EEENS8_INS9_ILj50821EEENS8_INS9_ILj38917EEENS8_INS9_ILj39429EEENS8_INS9_ILj25189EEESC_EEEEEEEEEESC_EEEEEEEEEENS8_INS9_ILj2309EEENS8_INS8_INS9_ILj2568EEENS8_INS9_ILj2632EEESC_EEEENS8_INS8_INS9_ILj2824EEENS8_INS9_ILj2888EEESC_EEEENS8_INS8_INS9_ILj3585EEENS8_INS9_ILj3073EEESC_EEEENS8_INS8_INS9_ILj4096EEENS8_INS9_ILj4224EEESC_EEEENS8_INS8_INS9_ILj4128EEENS8_INS9_ILj4256EEESC_EEEENS8_INS9_ILj6375EEENS8_INS9_ILj16936EEENS8_INS8_INS9_ILj19013EEENS8_INS9_ILj25093EEESC_EEEENS8_INS9_ILj36103EEESC_EEEEEEEEEEEEEEEEEEEENS8_IS1O_NS8_IS10_NS8_IS1N_NS8_IS19_NS8_IS1M_NS8_IS1R_NS8_IS11_NS8_IS15_NS8_IS1L_NS8_IS1D_NS8_IS1E_NS8_IS1H_NS8_IS1I_S1B_EEEEEEEEEEEEEEEEEEEEEEEEEELl100ELl75EELZ6canDatEEXadL_ZNS2G_12animadversioEvEEEEvPv
+                0x00000536       0x5c ./main.o
+                0x00000536                void srutil::Delegate<void ()>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::animadversio())>(void*)
+                0x00000536                void srutil::Delegate<void ()>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::animadversio())>(void*)
+ .text._ZN6srutil8DelegateIFvvEE11method_stubI6CanDatIN4Loki8TypelistINS6_INS5_8Int2TypeILj6280EEENS6_INS7_ILj6792EEENS5_8NullTypeEEEEENS6_INS6_INS7_ILj18024EEENS6_INS7_ILj18056EEESA_EEEENS6_INS7_ILj25575EEENS6_INS7_ILj25544EEENS6_INS6_INS7_ILj50789EEENS6_INS7_ILj50821EEENS6_INS7_ILj38917EEENS6_INS7_ILj39429EEENS6_INS7_ILj25189EEESA_EEEEEEEEEESA_EEEEEEEEEENS6_INS7_ILj2309EEENS6_INS6_INS7_ILj2568EEENS6_INS7_ILj2632EEESA_EEEENS6_INS6_INS7_ILj2824EEENS6_INS7_ILj2888EEESA_EEEENS6_INS6_INS7_ILj3585EEENS6_INS7_ILj3073EEESA_EEEENS6_INS6_INS7_ILj4096EEENS6_INS7_ILj4224EEESA_EEEENS6_INS6_INS7_ILj4128EEENS6_INS7_ILj4256EEESA_EEEENS6_INS7_ILj6375EEENS6_INS7_ILj16936EEENS6_INS6_INS7_ILj19013EEENS6_INS7_ILj25093EEESA_EEEENS6_INS7_ILj36103EEESA_EEEEEEEEEEEEEEEEEEEENS6_IS1M_NS6_ISY_NS6_IS1L_NS6_IS17_NS6_IS1K_NS6_IS1P_NS6_ISZ_NS6_IS13_NS6_IS1J_NS6_IS1B_NS6_IS1C_NS6_IS1F_NS6_IS1G_S19_EEEEEEEEEEEEEEEEEEEEEEEEEELl100ELl75EEXadL_ZNS2D_18rxInterruptHandlerEvEEEEvPv
+                0x00000592      0x2e0 ./main.o
+                0x00000592                void srutil::Delegate<void ()>::method_stub<CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, &(CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>::rxInterruptHandler())>(void*)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z8kptRiseAjEEEEvPvj
+                0x00000872      0x110 ./main.o
+                0x00000872                void srutil::Delegate<void (unsigned int)>::function_stub<&(kptRiseA(unsigned int))>(void*, unsigned int)
+ .text._ZN6srutil8DelegateIFvvEE13function_stubIXadL_Z13sysKeyReleasevEEEEvPv
+                0x00000982       0x5c ./main.o
+                0x00000982                void srutil::Delegate<void ()>::function_stub<&(sysKeyRelease())>(void*)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z16clubSendNextPagejEEEEvPvj
+                0x000009de       0x5a ./main.o
+                0x000009de                void srutil::Delegate<void (unsigned int)>::function_stub<&(clubSendNextPage(unsigned int))>(void*, unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z10canDataGetjEEEEvPvj
+                0x00000a38       0xae ./main.o
+                0x00000a38                void srutil::Delegate<void (unsigned int)>::function_stub<&(canDataGet(unsigned int))>(void*, unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z8kptRiseBjEEEEvPvj
+                0x00000ae6      0x110 ./main.o
+                0x00000ae6                void srutil::Delegate<void (unsigned int)>::function_stub<&(kptRiseB(unsigned int))>(void*, unsigned int)
+ .text.__vector_1
+                0x00000bf6       0x56 ./main.o
+                0x00000bf6                __vector_1
+ .text.__vector_2
+                0x00000c4c       0x56 ./main.o
+                0x00000c4c                __vector_2
+ .text.__vector_3
+                0x00000ca2       0x56 ./main.o
+                0x00000ca2                __vector_3
+ .text.__vector_4
+                0x00000cf8       0x56 ./main.o
+                0x00000cf8                __vector_4
+ .text.__vector_5
+                0x00000d4e       0x56 ./main.o
+                0x00000d4e                __vector_5
+ .text.__vector_6
+                0x00000da4       0x56 ./main.o
+                0x00000da4                __vector_6
+ .text.__vector_7
+                0x00000dfa       0x56 ./main.o
+                0x00000dfa                __vector_7
+ .text.__vector_8
+                0x00000e50       0x56 ./main.o
+                0x00000e50                __vector_8
+ .text.__vector_9
+                0x00000ea6       0x56 ./main.o
+                0x00000ea6                __vector_9
+ .text.__vector_10
+                0x00000efc       0x56 ./main.o
+                0x00000efc                __vector_10
+ .text.__vector_11
+                0x00000f52       0x56 ./main.o
+                0x00000f52                __vector_11
+ .text.__vector_12
+                0x00000fa8       0x56 ./main.o
+                0x00000fa8                __vector_12
+ .text.__vector_13
+                0x00000ffe       0x56 ./main.o
+                0x00000ffe                __vector_13
+ .text.__vector_14
+                0x00001054       0x56 ./main.o
+                0x00001054                __vector_14
+ .text.__vector_15
+                0x000010aa       0x56 ./main.o
+                0x000010aa                __vector_15
+ .text.__vector_16
+                0x00001100       0x56 ./main.o
+                0x00001100                __vector_16
+ .text.__vector_17
+                0x00001156       0x56 ./main.o
+                0x00001156                __vector_17
+ .text.__vector_18
+                0x000011ac       0x56 ./main.o
+                0x000011ac                __vector_18
+ .text.__vector_19
+                0x00001202       0x56 ./main.o
+                0x00001202                __vector_19
+ .text.__vector_20
+                0x00001258       0x56 ./main.o
+                0x00001258                __vector_20
+ .text.__vector_21
+                0x000012ae       0x56 ./main.o
+                0x000012ae                __vector_21
+ .text.__vector_22
+                0x00001304       0x56 ./main.o
+                0x00001304                __vector_22
+ .text.__vector_23
+                0x0000135a       0x56 ./main.o
+                0x0000135a                __vector_23
+ .text.__vector_24
+                0x000013b0       0x56 ./main.o
+                0x000013b0                __vector_24
+ .text.__vector_25
+                0x00001406       0x56 ./main.o
+                0x00001406                __vector_25
+ .text.__vector_26
+                0x0000145c       0x56 ./main.o
+                0x0000145c                __vector_26
+ .text.__vector_27
+                0x000014b2       0x56 ./main.o
+                0x000014b2                __vector_27
+ .text.__vector_28
+                0x00001508       0x56 ./main.o
+                0x00001508                __vector_28
+ .text.__vector_29
+                0x0000155e       0x56 ./main.o
+                0x0000155e                __vector_29
+ .text.__vector_30
+                0x000015b4       0x56 ./main.o
+                0x000015b4                __vector_30
+ .text.__vector_31
+                0x0000160a       0x56 ./main.o
+                0x0000160a                __vector_31
+ .text.__vector_32
+                0x00001660       0x56 ./main.o
+                0x00001660                __vector_32
+ .text.__vector_33
+                0x000016b6       0x56 ./main.o
+                0x000016b6                __vector_33
+ .text.__vector_34
+                0x0000170c       0x56 ./main.o
+                0x0000170c                __vector_34
+ .text.__vector_35
+                0x00001762       0x56 ./main.o
+                0x00001762                __vector_35
+ .text.__vector_36
+                0x000017b8       0x56 ./main.o
+                0x000017b8                __vector_36
+ .text._ZN11Programming10memAreaSetEv
+                0x0000180e       0x40 ./main.o
+                0x0000180e                Programming::memAreaSet()
+ .text._Z11canDataSendj
+                0x0000184e       0xc2 ./main.o
+                0x0000184e                canDataSend(unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z11canDataSendjEEEEvPvj
+                0x00001910        0x8 ./main.o
+                0x00001910                void srutil::Delegate<void (unsigned int)>::function_stub<&(canDataSend(unsigned int))>(void*, unsigned int)
+ .text._Z14sysDiagnosticsj
+                0x00001918      0x23c ./main.o
+                0x00001918                sysDiagnostics(unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z14sysDiagnosticsjEEEEvPvj
+                0x00001b54        0x8 ./main.o
+                0x00001b54                void srutil::Delegate<void (unsigned int)>::function_stub<&(sysDiagnostics(unsigned int))>(void*, unsigned int)
+ .text._Z6sysKeyj
+                0x00001b5c       0xb0 ./main.o
+                0x00001b5c                sysKey(unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z6sysKeyjEEEEvPvj
+                0x00001c0c        0x8 ./main.o
+                0x00001c0c                void srutil::Delegate<void (unsigned int)>::function_stub<&(sysKey(unsigned int))>(void*, unsigned int)
+ .text._Z8bandDiamPKhS0_
+                0x00001c14       0x6c ./main.o
+                0x00001c14                bandDiam(unsigned char const*, unsigned char const*)
+ .text._Z11eCardParserj
+                0x00001c80      0x134 ./main.o
+                0x00001c80                eCardParser(unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z11eCardParserjEEEEvPvj
+                0x00001db4        0x8 ./main.o
+                0x00001db4                void srutil::Delegate<void (unsigned int)>::function_stub<&(eCardParser(unsigned int))>(void*, unsigned int)
+ .text._Z8mcoStatej
+                0x00001dbc       0x92 ./main.o
+                0x00001dbc                mcoState(unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z9mcoStateAjEEEEvPvj
+                0x00001e4e        0xc ./main.o
+                0x00001e4e                void srutil::Delegate<void (unsigned int)>::function_stub<&(mcoStateA(unsigned int))>(void*, unsigned int)
+ .text._ZN6srutil8DelegateIFvjEE13function_stubIXadL_Z9mcoStateBjEEEEvPvj
+                0x00001e5a        0xc ./main.o
+                0x00001e5a                void srutil::Delegate<void (unsigned int)>::function_stub<&(mcoStateB(unsigned int))>(void*, unsigned int)
+ .text._Z13commandParserv
+                0x00001e66      0x366 ./main.o
+                0x00001e66                commandParser()
+ .text._ZN6srutil8DelegateIFvvEE13function_stubIXadL_Z13commandParservEEEEvPv
+                0x000021cc        0x6 ./main.o
+                0x000021cc                void srutil::Delegate<void ()>::function_stub<&(commandParser())>(void*)
+ .text.startup.main
+                0x000021d2      0x3e8 ./main.o
+                0x000021d2                main
+ .text._ZN7ProgSpi13ProgSpiSimpleIXadL_ZN8Register16spiStatusControlEEEXadL_ZNS1_7spiDataEEEXadL_ZNS1_5portBEEELh0ELh1ELh2ELh3EXadL_ZNS1_5portBEEELh4EE5writeILNS_7MemTypeE0EEEvj
+                0x000025ba      0x14a ./main.o
+                0x000025ba                void ProgSpi::ProgSpiSimple<&(Register::spiStatusControl), &(Register::spiData), &(Register::portB), (unsigned char)0, (unsigned char)1, (unsigned char)2, (unsigned char)3, &(Register::portB), (unsigned char)4>::write<(ProgSpi::MemType)0>(unsigned int)
+ .text._ZN7ProgSpi13ProgSpiSimpleIXadL_ZN8Register16spiStatusControlEEEXadL_ZNS1_7spiDataEEEXadL_ZNS1_5portBEEELh0ELh1ELh2ELh3EXadL_ZNS1_5portBEEELh4EE5writeILNS_7MemTypeE1EEEvj
+                0x00002704       0xe6 ./main.o
+                0x00002704                void ProgSpi::ProgSpiSimple<&(Register::spiStatusControl), &(Register::spiData), &(Register::portB), (unsigned char)0, (unsigned char)1, (unsigned char)2, (unsigned char)3, &(Register::portB), (unsigned char)4>::write<(ProgSpi::MemType)1>(unsigned int)
+ .text._ZN7ProgSpi13ProgSpiSimpleIXadL_ZN8Register16spiStatusControlEEEXadL_ZNS1_7spiDataEEEXadL_ZNS1_5portBEEELh0ELh1ELh2ELh3EXadL_ZNS1_5portBEEELh4EE8readWordILNS_7MemTypeE0EEE7ComplexIjEv
+                0x000027ea       0xb6 ./main.o
+                0x000027ea                Complex<unsigned int> ProgSpi::ProgSpiSimple<&(Register::spiStatusControl), &(Register::spiData), &(Register::portB), (unsigned char)0, (unsigned char)1, (unsigned char)2, (unsigned char)3, &(Register::portB), (unsigned char)4>::readWord<(ProgSpi::MemType)0>()
+ .text._ZN7ProgSpi13ProgSpiSimpleIXadL_ZN8Register16spiStatusControlEEEXadL_ZNS1_7spiDataEEEXadL_ZNS1_5portBEEELh0ELh1ELh2ELh3EXadL_ZNS1_5portBEEELh4EE8readWordILNS_7MemTypeE1EEE7ComplexIjEv
+                0x000028a0       0x6a ./main.o
+                0x000028a0                Complex<unsigned int> ProgSpi::ProgSpiSimple<&(Register::spiStatusControl), &(Register::spiData), &(Register::portB), (unsigned char)0, (unsigned char)1, (unsigned char)2, (unsigned char)3, &(Register::portB), (unsigned char)4>::readWord<(ProgSpi::MemType)1>()
+ .text._ZN11Programming9comParserEv
+                0x0000290a      0x48a ./main.o
+                0x0000290a                Programming::comParser()
+ .text._ZN6srutil8DelegateIFvvEE11method_stubI11ProgrammingXadL_ZNS4_9comParserEvEEEEvPv
+                0x00002d94        0x6 ./main.o
+                0x00002d94                void srutil::Delegate<void ()>::method_stub<Programming, &(Programming::comParser())>(void*)
+ .text._ZN6CanDatIN4Loki8TypelistINS1_INS0_8Int2TypeILj6280EEENS1_INS2_ILj6792EEENS0_8NullTypeEEEEENS1_INS1_INS2_ILj18024EEENS1_INS2_ILj18056EEES5_EEEENS1_INS2_ILj25575EEENS1_INS2_ILj25544EEENS1_INS1_INS2_ILj50789EEENS1_INS2_ILj50821EEENS1_INS2_ILj38917EEENS1_INS2_ILj39429EEENS1_INS2_ILj25189EEES5_EEEEEEEEEES5_EEEEEEEEEENS1_INS2_ILj2309EEENS1_INS1_INS2_ILj2568EEENS1_INS2_ILj2632EEES5_EEEENS1_INS1_INS2_ILj2824EEENS1_INS2_ILj2888EEES5_EEEENS1_INS1_INS2_ILj3585EEENS1_INS2_ILj3073EEES5_EEEENS1_INS1_INS2_ILj4096EEENS1_INS2_ILj4224EEES5_EEEENS1_INS1_INS2_ILj4128EEENS1_INS2_ILj4256EEES5_EEEENS1_INS2_ILj6375EEENS1_INS2_ILj16936EEENS1_INS1_INS2_ILj19013EEENS1_INS2_ILj25093EEES5_EEEENS1_INS2_ILj36103EEES5_EEEEEEEEEEEEEEEEEEEENS1_IS1H_NS1_IST_NS1_IS1G_NS1_IS12_NS1_IS1F_NS1_IS1K_NS1_ISU_NS1_ISY_NS1_IS1E_NS1_IS16_NS1_IS17_NS1_IS1A_NS1_IS1B_S14_EEEEEEEEEEEEEEEEEEEEEEEEEELl100ELl75EEC1Ev
+                0x00002d9a      0x486 ./main.o
+                0x00002d9a                CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>::CanDat()
+ .text._Z41__static_initialization_and_destruction_0ii.constprop.126
+                0x00003220      0x6b0 ./main.o
+ .text._ZN4Saut3ComIXadL_ZN8Register13usart1ControlEEEXadL_ZNS1_14usart1BaudRateEEEXadL_ZNS1_10usart1DataEEEXadL_ZNS1_5portDEEELh2EXadL_ZNS1_5portDEEELh3EXadL_ZNS1_5portDEEELh4EXadL_ZNS1_5portBEEELh7ELh1ENS_3DatIN4Loki8TypelistINS3_8Int2TypeILj12EEENS4_INS5_ILj13EEENS4_INS5_ILj14EEENS4_INS5_ILj15EEENS4_INS5_ILj84EEENS4_INS5_ILj85EEENS3_8NullTypeEEEEEEEEEEEEENS4_INS5_ILj8EEENS4_INS5_ILj9EEENS4_INS5_ILj10EEENS4_INS5_ILj11EEENS4_INS5_ILj80EEENS4_INS5_ILj81EEENS4_INS5_ILj82EEENS4_INS5_ILj83EEESC_EEEEEEEEEEEEEEEENS4_IS6_SE_EEEELZ4dataEE9rxHandlerEv
+                0x000038d0      0x38a ./main.o
+                0x000038d0                Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::rxHandler()
+                0x000038d0                Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::rxHandler()
+ .text._ZN6srutil8DelegateIFvvEE11method_stubIN4Saut3ComIXadL_ZN8Register13usart1ControlEEEXadL_ZNS6_14usart1BaudRateEEEXadL_ZNS6_10usart1DataEEEXadL_ZNS6_5portDEEELh2EXadL_ZNS6_5portDEEELh3EXadL_ZNS6_5portDEEELh4EXadL_ZNS6_5portBEEELh7ELh1ENS4_3DatIN4Loki8TypelistINS8_8Int2TypeILj12EEENS9_INSA_ILj13EEENS9_INSA_ILj14EEENS9_INSA_ILj15EEENS9_INSA_ILj84EEENS9_INSA_ILj85EEENS8_8NullTypeEEEEEEEEEEEEENS9_INSA_ILj8EEENS9_INSA_ILj9EEENS9_INSA_ILj10EEENS9_INSA_ILj11EEENS9_INSA_ILj80EEENS9_INSA_ILj81EEENS9_INSA_ILj82EEENS9_INSA_ILj83EEESH_EEEEEEEEEEEEEEEENS9_ISB_SJ_EEEELZ4dataEEEXadL_ZNS16_9rxHandlerEvEEEEvPv
+                0x00003c5a        0x6 ./main.o
+                0x00003c5a                void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::rxHandler())>(void*)
+                0x00003c5a                void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::rxHandler())>(void*)
+ .text._ZN24CeleritasSpatiumDimetiorIXadL_ZN8Register5portCEEEXadL_ZNS0_5portCEEELh4ELh5EXadL_ZNS0_5portBEEELh7E6CanDatIN4Loki8TypelistINS3_INS2_8Int2TypeILj6280EEENS3_INS4_ILj6792EEENS2_8NullTypeEEEEENS3_INS3_INS4_ILj18024EEENS3_INS4_ILj18056EEES7_EEEENS3_INS4_ILj25575EEENS3_INS4_ILj25544EEENS3_INS3_INS4_ILj50789EEENS3_INS4_ILj50821EEENS3_INS4_ILj38917EEENS3_INS4_ILj39429EEENS3_INS4_ILj25189EEES7_EEEEEEEEEES7_EEEEEEEEEENS3_INS4_ILj2309EEENS3_INS3_INS4_ILj2568EEENS3_INS4_ILj2632EEES7_EEEENS3_INS3_INS4_ILj2824EEENS3_INS4_ILj2888EEES7_EEEENS3_INS3_INS4_ILj3585EEENS3_INS4_ILj3073EEES7_EEEENS3_INS3_INS4_ILj4096EEENS3_INS4_ILj4224EEES7_EEEENS3_INS3_INS4_ILj4128EEENS3_INS4_ILj4256EEES7_EEEENS3_INS4_ILj6375EEENS3_INS4_ILj16936EEENS3_INS3_INS4_ILj19013EEENS3_INS4_ILj25093EEES7_EEEENS3_INS4_ILj36103EEES7_EEEEEEEEEEEEEEEEEEEENS3_IS1J_NS3_ISV_NS3_IS1I_NS3_IS14_NS3_IS1H_NS3_IS1M_NS3_ISW_NS3_IS10_NS3_IS1G_NS3_IS18_NS3_IS19_NS3_IS1C_NS3_IS1D_S16_EEEEEEEEEEEEEEEEEEEEEEEEEELl100ELl75EELZ6canDatEE7producoEv
+                0x00003c60      0x884 ./main.o
+                0x00003c60                CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::produco()
+                0x00003c60                CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::produco()
+ .text._ZN6srutil8DelegateIFvvEE11method_stubI24CeleritasSpatiumDimetiorIXadL_ZN8Register5portCEEEXadL_ZNS5_5portCEEELh4ELh5EXadL_ZNS5_5portBEEELh7E6CanDatIN4Loki8TypelistINS8_INS7_8Int2TypeILj6280EEENS8_INS9_ILj6792EEENS7_8NullTypeEEEEENS8_INS8_INS9_ILj18024EEENS8_INS9_ILj18056EEESC_EEEENS8_INS9_ILj25575EEENS8_INS9_ILj25544EEENS8_INS8_INS9_ILj50789EEENS8_INS9_ILj50821EEENS8_INS9_ILj38917EEENS8_INS9_ILj39429EEENS8_INS9_ILj25189EEESC_EEEEEEEEEESC_EEEEEEEEEENS8_INS9_ILj2309EEENS8_INS8_INS9_ILj2568EEENS8_INS9_ILj2632EEESC_EEEENS8_INS8_INS9_ILj2824EEENS8_INS9_ILj2888EEESC_EEEENS8_INS8_INS9_ILj3585EEENS8_INS9_ILj3073EEESC_EEEENS8_INS8_INS9_ILj4096EEENS8_INS9_ILj4224EEESC_EEEENS8_INS8_INS9_ILj4128EEENS8_INS9_ILj4256EEESC_EEEENS8_INS9_ILj6375EEENS8_INS9_ILj16936EEENS8_INS8_INS9_ILj19013EEENS8_INS9_ILj25093EEESC_EEEENS8_INS9_ILj36103EEESC_EEEEEEEEEEEEEEEEEEEENS8_IS1O_NS8_IS10_NS8_IS1N_NS8_IS19_NS8_IS1M_NS8_IS1R_NS8_IS11_NS8_IS15_NS8_IS1L_NS8_IS1D_NS8_IS1E_NS8_IS1H_NS8_IS1I_S1B_EEEEEEEEEEEEEEEEEEEEEEEEEELl100ELl75EELZ6canDatEEXadL_ZNS2G_7producoEvEEEEvPv
+                0x000044e4        0x6 ./main.o
+                0x000044e4                void srutil::Delegate<void ()>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::produco())>(void*)
+                0x000044e4                void srutil::Delegate<void ()>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::produco())>(void*)
+ .text._ZN8DimetiorIXadL_ZN8Register5portCEEELh4ELh5ELj4096ELj43085ELj65535ELm100EE7computoERKh
+                0x000044ea      0x1a2 ./main.o
+                0x000044ea                Dimetior<&(Register::portC), (unsigned char)4, (unsigned char)5, 4096u, 43085u, 65535u, 100ul>::computo(unsigned char const&)
+ .text._ZN8DimetiorIXadL_ZN8Register5portCEEELh4ELh5ELj4096ELj43085ELj65535ELm100EE17commoratioCanalisERKh
+                0x0000468c       0xce ./main.o
+                0x0000468c                Dimetior<&(Register::portC), (unsigned char)4, (unsigned char)5, 4096u, 43085u, 65535u, 100ul>::commoratioCanalis(unsigned char const&)
+ .text._ZN8DimetiorIXadL_ZN8Register5portCEEELh4ELh5ELj4096ELj43085ELj65535ELm100EE7punctumEh
+                0x0000475a      0x168 ./main.o
+                0x0000475a                Dimetior<&(Register::portC), (unsigned char)4, (unsigned char)5, 4096u, 43085u, 65535u, 100ul>::punctum(unsigned char)
+ .text._ZN6srutil8DelegateIFvjEE11method_stubI24CeleritasSpatiumDimetiorIXadL_ZN8Register5portCEEEXadL_ZNS5_5portCEEELh4ELh5EXadL_ZNS5_5portBEEELh7E6CanDatIN4Loki8TypelistINS8_INS7_8Int2TypeILj6280EEENS8_INS9_ILj6792EEENS7_8NullTypeEEEEENS8_INS8_INS9_ILj18024EEENS8_INS9_ILj18056EEESC_EEEENS8_INS9_ILj25575EEENS8_INS9_ILj25544EEENS8_INS8_INS9_ILj50789EEENS8_INS9_ILj50821EEENS8_INS9_ILj38917EEENS8_INS9_ILj39429EEENS8_INS9_ILj25189EEESC_EEEEEEEEEESC_EEEEEEEEEENS8_INS9_ILj2309EEENS8_INS8_INS9_ILj2568EEENS8_INS9_ILj2632EEESC_EEEENS8_INS8_INS9_ILj2824EEENS8_INS9_ILj2888EEESC_EEEENS8_INS8_INS9_ILj3585EEENS8_INS9_ILj3073EEESC_EEEENS8_INS8_INS9_ILj4096EEENS8_INS9_ILj4224EEESC_EEEENS8_INS8_INS9_ILj4128EEENS8_INS9_ILj4256EEESC_EEEENS8_INS9_ILj6375EEENS8_INS9_ILj16936EEENS8_INS8_INS9_ILj19013EEENS8_INS9_ILj25093EEESC_EEEENS8_INS9_ILj36103EEESC_EEEEEEEEEEEEEEEEEEEENS8_IS1O_NS8_IS10_NS8_IS1N_NS8_IS19_NS8_IS1M_NS8_IS1R_NS8_IS11_NS8_IS15_NS8_IS1L_NS8_IS1D_NS8_IS1E_NS8_IS1H_NS8_IS1I_S1B_EEEEEEEEEEEEEEEEEEEEEEEEEELl100ELl75EELZ6canDatEEXadL_ZNS2G_14corpusVicissimEjEEEEvPvj
+                0x000048c2      0x10e ./main.o
+                0x000048c2                void srutil::Delegate<void (unsigned int)>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::corpusVicissim(unsigned int))>(void*, unsigned int)
+                0x000048c2                void srutil::Delegate<void (unsigned int)>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::corpusVicissim(unsigned int))>(void*, unsigned int)
+ .text.startup._GLOBAL__sub_I___cxa_guard_acquire
+                0x000049d0        0xa ./main.o
+ .text.exit._GLOBAL__sub_D___cxa_guard_acquire
+                0x000049da        0xa ./main.o
+ .text.libgcc   0x000049e4       0x3e c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+                0x000049e4                __mulsi3
+ .text.libgcc   0x00004a22       0x28 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+                0x00004a22                __udivmodhi4
+ .text.libgcc   0x00004a4a       0x44 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+                0x00004a4a                __udivmodsi4
+ .text.libgcc   0x00004a8e       0x36 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+                0x00004a8e                __divmodsi4
+ .text.libgcc   0x00004ac4        0xc c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+                0x00004ac4                __tablejump2__
+                0x00004ac8                __tablejump__
+ .text.avr-libc
+                0x00004ad0      0x25e c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+                0x00004ad0                malloc
+                0x00004bfc                free
+ .text.avr-libc
+                0x00004d2e       0x10 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_byte_at90can64.o)
+                0x00004d2e                __eerd_byte_can64
+ .text.avr-libc
+                0x00004d3e        0xc c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_word_at90can64.o)
+                0x00004d3e                __eerd_word_can64
+ .text.avr-libc
+                0x00004d4a       0x22 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eeupd_byte_at90can64.o)
+                0x00004d4a                __eeupd_byte_can64
+                0x00004d4c                __eeupd_r18_can64
+ .text.avr-libc
+                0x00004d6c       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_block_at90can64.o)
+                0x00004d6c                __eerd_block_can64
+                0x00004d70                __eerd_blraw_can64
+                0x00004d8c                . = ALIGN (0x2)
+ *(.fini9)
+ .fini9         0x00004d8c        0x0 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+                0x00004d8c                _exit
+                0x00004d8c                exit
+ *(.fini9)
+ *(.fini8)
+ *(.fini8)
+ *(.fini7)
+ *(.fini7)
+ *(.fini6)
+ .fini6         0x00004d8c       0x16 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+                0x00004d8c                __do_global_dtors
+ *(.fini6)
+ *(.fini5)
+ *(.fini5)
+ *(.fini4)
+ *(.fini4)
+ *(.fini3)
+ *(.fini3)
+ *(.fini2)
+ *(.fini2)
+ *(.fini1)
+ *(.fini1)
+ *(.fini0)
+ .fini0         0x00004da2        0x4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+ *(.fini0)
+                0x00004da6                _etext = .
+
+.data           0x00800100       0x38 load address 0x00004da6
+                0x00800100                PROVIDE (__data_start, .)
+ *(.data)
+ .data          0x00800100       0x31 ./main.o
+                0x00800111                Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::ham
+                0x00800111                Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::ham
+ .data          0x00800131        0x6 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+                0x00800131                __malloc_heap_end
+                0x00800133                __malloc_heap_start
+                0x00800135                __malloc_margin
+ *(.data*)
+ *(.rodata)
+ *(.rodata*)
+ *(.gnu.linkonce.d*)
+                0x00800138                . = ALIGN (0x2)
+ *fill*         0x00800137        0x1 00
+                0x00800138                _edata = .
+                0x00800138                PROVIDE (__data_end, .)
+
+.bss            0x00800138      0x7d9
+                0x00800138                PROVIDE (__bss_start, .)
+ *(.bss)
+ .bss           0x00800138      0x7d5 ./main.o
+                0x00800138                dps
+                0x0080015f                kpt
+                0x00800171                sysKeySelfControl
+                0x00800172                sysKeyReleaseCounter
+                0x00800173                canDat
+                0x0080022b                clubPage
+                0x0080023a                com
+                0x00800242                data
+                0x00800277                SPM_READY_handler
+                0x0080027b                TWI_handler
+                0x0080027f                USART1_TX_handler
+                0x00800283                USART1_UDRE_handler
+                0x00800287                USART1_RX_handler
+                0x0080028b                TIMER3_OVF_handler
+                0x0080028f                TIMER3_COMPC_handler
+                0x00800293                TIMER3_COMPB_handler
+                0x00800297                TIMER3_COMPA_handler
+                0x0080029b                TIMER3_CAPT_handler
+                0x0080029f                EE_READY_handler
+                0x008002a3                ADC_handler
+                0x008002a7                ANALOG_COMP_handler
+                0x008002ab                USART0_TX_handler
+                0x008002af                USART0_UDRE_handler
+                0x008002b3                USART0_RX_handler
+                0x008002b7                SPI_STC_handler
+                0x008002bb                OVRIT_handler
+                0x008002bf                CANIT_handler
+                0x008002c3                TIMER0_OVF_handler
+                0x008002c7                TIMER0_COMP_handler
+                0x008002cb                TIMER1_OVF_handler
+                0x008002cf                TIMER1_COMPC_handler
+                0x008002d3                TIMER1_COMPB_handler
+                0x008002d7                TIMER1_COMPA_handler
+                0x008002db                TIMER1_CAPT_handler
+                0x008002df                TIMER2_OVF_handler
+                0x008002e3                TIMER2_COMP_handler
+                0x008002e7                INT7_handler
+                0x008002eb                INT6_handler
+                0x008002ef                INT5_handler
+                0x008002f3                INT4_handler
+                0x008002f7                INT3_handler
+                0x008002fb                INT2_handler
+                0x008002ff                INT1_handler
+                0x00800303                INT0_handler
+                0x00800307                dispatcher
+ *(.bss*)
+ *(COMMON)
+ COMMON         0x0080090d        0x4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+                0x0080090d                __brkval
+                0x0080090f                __flp
+                0x00800911                PROVIDE (__bss_end, .)
+                0x00004da6                __data_load_start = LOADADDR (.data)
+                0x00004dde                __data_load_end = (__data_load_start + SIZEOF (.data))
+
+.noinit         0x00800911        0x0
+                0x00800911                PROVIDE (__noinit_start, .)
+ *(.noinit*)
+                0x00800911                PROVIDE (__noinit_end, .)
+                0x00800911                _end = .
+                0x00800911                PROVIDE (__heap_start, .)
+
+.eeprom         0x00810000      0x100
+ *(.eeprom*)
+ .eeprom        0x00810000      0x100 ./main.o
+                0x00810000                eeprom
+                0x00810100                __eeprom_end = .
+
+.stab           0x00000000      0x9b4
+ *(.stab)
+ .stab          0x00000000      0x6a8 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+                                0x6cc (size before relaxing)
+ .stab          0x000006a8       0x90 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_byte_at90can64.o)
+                                 0x9c (size before relaxing)
+ .stab          0x00000738       0x6c c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_word_at90can64.o)
+                                 0x78 (size before relaxing)
+ .stab          0x000007a4      0x108 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eeupd_byte_at90can64.o)
+                                0x114 (size before relaxing)
+ .stab          0x000008ac      0x108 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_block_at90can64.o)
+                                0x114 (size before relaxing)
+
+.stabstr        0x00000000      0x19e
+ *(.stabstr)
+ .stabstr       0x00000000      0x19e c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment
+ *(.comment)
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo .zdebug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames .zdebug_sfnames)
+
+.debug_aranges  0x00000000      0x168
+ *(.debug_aranges .zdebug_aranges)
+ .debug_aranges
+                0x00000000       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+ .debug_aranges
+                0x00000020       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+ .debug_aranges
+                0x00000040       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+ .debug_aranges
+                0x00000060       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+ .debug_aranges
+                0x00000080       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+ .debug_aranges
+                0x000000a0       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+ .debug_aranges
+                0x000000c0       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+ .debug_aranges
+                0x000000e0       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+ .debug_aranges
+                0x00000100       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+ .debug_aranges
+                0x00000120       0x20 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+ .debug_aranges
+                0x00000140       0x28 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+
+.debug_pubnames
+ *(.debug_pubnames .zdebug_pubnames)
+
+.debug_info     0x00000000      0x9a2
+ *(.debug_info .gnu.linkonce.wi.* .zdebug_info)
+ .debug_info    0x00000000       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+ .debug_info    0x000000b4       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+ .debug_info    0x00000168       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+ .debug_info    0x0000021c       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+ .debug_info    0x000002d0       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+ .debug_info    0x00000384       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+ .debug_info    0x00000438       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+ .debug_info    0x000004ec       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+ .debug_info    0x000005a0       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+ .debug_info    0x00000654       0xb4 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+ .debug_info    0x00000708      0x29a c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+
+.debug_abbrev   0x00000000      0x1bf
+ *(.debug_abbrev .zdebug_abbrev)
+ .debug_abbrev  0x00000000       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+ .debug_abbrev  0x00000014       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+ .debug_abbrev  0x00000028       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+ .debug_abbrev  0x0000003c       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+ .debug_abbrev  0x00000050       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+ .debug_abbrev  0x00000064       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+ .debug_abbrev  0x00000078       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+ .debug_abbrev  0x0000008c       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+ .debug_abbrev  0x000000a0       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+ .debug_abbrev  0x000000b4       0x14 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+ .debug_abbrev  0x000000c8       0xf7 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+
+.debug_line     0x00000000      0x6de
+ *(.debug_line .zdebug_line)
+ .debug_line    0x00000000       0x9a c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+ .debug_line    0x0000009a       0x8f c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+ .debug_line    0x00000129       0x9d c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+ .debug_line    0x000001c6       0x96 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+ .debug_line    0x0000025c       0x7d c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+ .debug_line    0x000002d9       0x86 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+ .debug_line    0x0000035f       0x83 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+ .debug_line    0x000003e2       0x85 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+ .debug_line    0x00000467       0x85 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+ .debug_line    0x000004ec       0x81 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+ .debug_line    0x0000056d      0x171 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+
+.debug_frame    0x00000000       0x54
+ *(.debug_frame .zdebug_frame)
+ .debug_frame   0x00000000       0x54 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+
+.debug_str      0x00000000      0x169
+ *(.debug_str .zdebug_str)
+ .debug_str     0x00000000      0x169 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+                                0x1a2 (size before relaxing)
+
+.debug_loc      0x00000000      0x421
+ *(.debug_loc .zdebug_loc)
+ .debug_loc     0x00000000      0x421 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+
+.debug_macinfo
+ *(.debug_macinfo .zdebug_macinfo)
+OUTPUT(bs-dps.elf elf32-avr)
+LOAD linker stubs
+
+.debug_ranges   0x00000000       0x18
+ .debug_ranges  0x00000000       0x18 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+
+Cross Reference Table
+
+Symbol                                            File
+ADC_handler                                       ./main.o
+ANALOG_COMP_handler                               ./main.o
+CANIT_handler                                     ./main.o
+CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>::CanDat() ./main.o
+CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::produco() ./main.o
+CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::produco() ./main.o
+Complex<unsigned int> ProgSpi::ProgSpiSimple<&(Register::spiStatusControl), &(Register::spiData), &(Register::portB), (unsigned char)0, (unsigned char)1, (unsigned char)2, (unsigned char)3, &(Register::portB), (unsigned char)4>::readWord<(ProgSpi::MemType)0>() ./main.o
+Complex<unsigned int> ProgSpi::ProgSpiSimple<&(Register::spiStatusControl), &(Register::spiData), &(Register::portB), (unsigned char)0, (unsigned char)1, (unsigned char)2, (unsigned char)3, &(Register::portB), (unsigned char)4>::readWord<(ProgSpi::MemType)1>() ./main.o
+Dimetior<&(Register::portC), (unsigned char)4, (unsigned char)5, 4096u, 43085u, 65535u, 100ul>::commoratioCanalis(unsigned char const&) ./main.o
+Dimetior<&(Register::portC), (unsigned char)4, (unsigned char)5, 4096u, 43085u, 65535u, 100ul>::computo(unsigned char const&) ./main.o
+Dimetior<&(Register::portC), (unsigned char)4, (unsigned char)5, 4096u, 43085u, 65535u, 100ul>::punctum(unsigned char) ./main.o
+EE_READY_handler                                  ./main.o
+ID                                                ./main.o
+INT0_handler                                      ./main.o
+INT1_handler                                      ./main.o
+INT2_handler                                      ./main.o
+INT3_handler                                      ./main.o
+INT4_handler                                      ./main.o
+INT5_handler                                      ./main.o
+INT6_handler                                      ./main.o
+INT7_handler                                      ./main.o
+Init()                                            ./main.o
+OVRIT_handler                                     ./main.o
+Programming::comParser()                          ./main.o
+Programming::memAreaSet()                         ./main.o
+ReIndex16<Loki::Typelist<Loki::Int2Type<6u>, Loki::Typelist<Loki::Int2Type<3u>, Loki::Typelist<Loki::Int2Type<2u>, Loki::Typelist<Loki::Int2Type<2u>, Loki::Typelist<Loki::Int2Type<1u>, Loki::Typelist<Loki::Int2Type<1u>, Loki::NullType> > > > > > >::array ./main.o
+ReIndex256<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<6u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<5u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<4u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<3u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<2u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::Typelist<Loki::Int2Type<1u>, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<142u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<141u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<140u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<139u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<138u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<137u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<136u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::Typelist<Loki::Int2Type<135u>, Loki::NullType> > > > > > > > > > > > > > > > > > > > > > > > > > > > >::array ./main.o
+SPI_STC_handler                                   ./main.o
+SPM_READY_handler                                 ./main.o
+Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::ham ./main.o
+Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::ham ./main.o
+Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::rxHandler() ./main.o
+Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::rxHandler() ./main.o
+TIMER0_COMP_handler                               ./main.o
+TIMER0_OVF_handler                                ./main.o
+TIMER1_CAPT_handler                               ./main.o
+TIMER1_COMPA_handler                              ./main.o
+TIMER1_COMPB_handler                              ./main.o
+TIMER1_COMPC_handler                              ./main.o
+TIMER1_OVF_handler                                ./main.o
+TIMER2_COMP_handler                               ./main.o
+TIMER2_OVF_handler                                ./main.o
+TIMER3_CAPT_handler                               ./main.o
+TIMER3_COMPA_handler                              ./main.o
+TIMER3_COMPB_handler                              ./main.o
+TIMER3_COMPC_handler                              ./main.o
+TIMER3_OVF_handler                                ./main.o
+TWI_handler                                       ./main.o
+USART0_RX_handler                                 ./main.o
+USART0_TX_handler                                 ./main.o
+USART0_UDRE_handler                               ./main.o
+USART1_RX_handler                                 ./main.o
+USART1_TX_handler                                 ./main.o
+USART1_UDRE_handler                               ./main.o
+__bad_interrupt                                   c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__brkval                                          c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+__bss_end                                         c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+__bss_start                                       c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+__ctors_end                                       c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+__ctors_start                                     c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+__cxa_guard_abort                                 ./main.o
+__cxa_guard_acquire                               ./main.o
+__cxa_guard_release                               ./main.o
+__cxa_pure_virtual                                ./main.o
+__data_end                                        c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+__data_load_start                                 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+__data_start                                      c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+__divmodsi4                                       c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+                                                  ./main.o
+__do_clear_bss                                    c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_clear_bss.o)
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+                                                  ./main.o
+__do_copy_data                                    c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_copy_data.o)
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+                                                  ./main.o
+__do_global_ctors                                 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+                                                  ./main.o
+__do_global_dtors                                 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+                                                  ./main.o
+__dtors_end                                       c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+__dtors_start                                     c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+__eerd_block_can64                                c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_block_at90can64.o)
+__eerd_blraw_can64                                c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_block_at90can64.o)
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_word_at90can64.o)
+__eerd_byte_can64                                 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_byte_at90can64.o)
+                                                  ./main.o
+__eerd_word_can64                                 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eerd_word_at90can64.o)
+                                                  ./main.o
+__eeupd_byte_can64                                c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eeupd_byte_at90can64.o)
+                                                  ./main.o
+__eeupd_r18_can64                                 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(eeupd_byte_at90can64.o)
+__flp                                             c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+__heap_end                                        c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+__heap_start                                      c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+__init                                            c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__malloc_heap_end                                 c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+__malloc_heap_start                               c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+__malloc_margin                                   c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+__mulsi3                                          c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_mulsi3.o)
+                                                  ./main.o
+__stack                                           c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__tablejump2__                                    c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+__tablejump__                                     c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_tablejump.o)
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_dtors.o)
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_ctors.o)
+__udivmodhi4                                      c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodhi4.o)
+                                                  ./main.o
+__udivmodsi4                                      c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_udivmodsi4.o)
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_divmodsi4.o)
+                                                  ./main.o
+__vector_1                                        ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_10                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_11                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_12                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_13                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_14                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_15                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_16                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_17                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_18                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_19                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_2                                        ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_20                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_21                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_22                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_23                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_24                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_25                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_26                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_27                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_28                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_29                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_3                                        ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_30                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_31                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_32                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_33                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_34                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_35                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_36                                       ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_4                                        ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_5                                        ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_6                                        ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_7                                        ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_8                                        ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_9                                        ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vector_default                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+__vectors                                         c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+_exit                                             c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+bandDiam(unsigned char const*, unsigned char const*) ./main.o
+canDat                                            ./main.o
+canDataGet(unsigned int)                          ./main.o
+canDataSend(unsigned int)                         ./main.o
+clubPage                                          ./main.o
+clubSendNextPage(unsigned int)                    ./main.o
+clubSendNextPageInterrupt()                       ./main.o
+com                                               ./main.o
+commandParser()                                   ./main.o
+data                                              ./main.o
+dispatcher                                        ./main.o
+dps                                               ./main.o
+eCardParser(unsigned int)                         ./main.o
+eeprom                                            ./main.o
+exit                                              c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/avr5\libgcc.a(_exit.o)
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+free                                              c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+                                                  ./main.o
+ipdDate(unsigned int)                             ./main.o
+kpt                                               ./main.o
+kptCommandParse()                                 ./main.o
+kptFallA(unsigned int)                            ./main.o
+kptFallB(unsigned int)                            ./main.o
+kptRiseA(unsigned int)                            ./main.o
+kptRiseB(unsigned int)                            ./main.o
+main                                              ./main.o
+                                                  c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5/crtcan64.o
+malloc                                            c:/program files/avr-gcc-2.6.1/bin/../lib/gcc/avr/4.6.1/../../../../avr/lib/avr5\libc.a(malloc.o)
+                                                  ./main.o
+mcoState(unsigned int)                            ./main.o
+mcoStateA(unsigned int)                           ./main.o
+mcoStateB(unsigned int)                           ./main.o
+operator delete(void*)                            ./main.o
+operator delete[](void*)                          ./main.o
+operator new(unsigned int)                        ./main.o
+operator new[](unsigned int)                      ./main.o
+srutil::Delegate<void ()>::empty_function(void*)  ./main.o
+srutil::Delegate<void (unsigned int)>::empty_function(void*, unsigned int) ./main.o
+swap(unsigned int const&)                         ./main.o
+sysDiagnostics(unsigned int)                      ./main.o
+sysKey(unsigned int)                              ./main.o
+sysKeyRelease()                                   ./main.o
+sysKeyReleaseCounter                              ./main.o
+sysKeySelfControl                                 ./main.o
+void ProgSpi::ProgSpiSimple<&(Register::spiStatusControl), &(Register::spiData), &(Register::portB), (unsigned char)0, (unsigned char)1, (unsigned char)2, (unsigned char)3, &(Register::portB), (unsigned char)4>::write<(ProgSpi::MemType)0>(unsigned int) ./main.o
+void ProgSpi::ProgSpiSimple<&(Register::spiStatusControl), &(Register::spiData), &(Register::portB), (unsigned char)0, (unsigned char)1, (unsigned char)2, (unsigned char)3, &(Register::portB), (unsigned char)4>::write<(ProgSpi::MemType)1>(unsigned int) ./main.o
+void srutil::Delegate<void ()>::function_stub<&(clubSendNextPageInterrupt())>(void*) ./main.o
+void srutil::Delegate<void ()>::function_stub<&(commandParser())>(void*) ./main.o
+void srutil::Delegate<void ()>::function_stub<&(kptCommandParse())>(void*) ./main.o
+void srutil::Delegate<void ()>::function_stub<&(sysKeyRelease())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, &(CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>::rxInterruptHandler())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::animadversio())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::animadversio())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::produco())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::produco())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<Clock10ms, &(Clock10ms::timePlusPlus())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<Programming, &(Programming::comParser())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::rxHandler())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::rxHandler())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::txHandler())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::txHandler())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::udreHandler())>(void*) ./main.o
+void srutil::Delegate<void ()>::method_stub<Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>, &(Saut::Com<&(Register::usart1Control), &(Register::usart1BaudRate), &(Register::usart1Data), &(Register::portD), (unsigned char)2, &(Register::portD), (unsigned char)3, &(Register::portD), (unsigned char)4, &(Register::portB), (unsigned char)7, (unsigned char)1, Saut::Dat<Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<13u>, Loki::Typelist<Loki::Int2Type<14u>, Loki::Typelist<Loki::Int2Type<15u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > > > >, Loki::Typelist<Loki::Int2Type<8u>, Loki::Typelist<Loki::Int2Type<9u>, Loki::Typelist<Loki::Int2Type<10u>, Loki::Typelist<Loki::Int2Type<11u>, Loki::Typelist<Loki::Int2Type<80u>, Loki::Typelist<Loki::Int2Type<81u>, Loki::Typelist<Loki::Int2Type<82u>, Loki::Typelist<Loki::Int2Type<83u>, Loki::NullType> > > > > > > >, Loki::Typelist<Loki::Int2Type<12u>, Loki::Typelist<Loki::Int2Type<84u>, Loki::Typelist<Loki::Int2Type<85u>, Loki::NullType> > > >, data>::udreHandler())>(void*) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(canDataGet(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(canDataSend(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(clubSendNextPage(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(eCardParser(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(ipdDate(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(kptFallA(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(kptFallB(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(kptRiseA(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(kptRiseB(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(mcoStateA(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(mcoStateB(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(sysDiagnostics(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::function_stub<&(sysKey(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::corpusVicissim(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::method_stub<CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>, &(CeleritasSpatiumDimetior<&(Register::portC), &(Register::portC), (unsigned char)4, (unsigned char)5, &(Register::portB), (unsigned char)7, CanDat<Loki::Typelist<Loki::Typelist<Loki::Int2Type<6280u>, Loki::Typelist<Loki::Int2Type<6792u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<18024u>, Loki::Typelist<Loki::Int2Type<18056u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<25575u>, Loki::Typelist<Loki::Int2Type<25544u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<50789u>, Loki::Typelist<Loki::Int2Type<50821u>, Loki::Typelist<Loki::Int2Type<38917u>, Loki::Typelist<Loki::Int2Type<39429u>, Loki::Typelist<Loki::Int2Type<25189u>, Loki::NullType> > > > >, Loki::NullType> > > > >, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2632u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<2888u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::NullType> >, Loki::Typelist<Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<25093u>, Loki::NullType> >, Loki::Typelist<Loki::Int2Type<36103u>, Loki::NullType> > > > > > > > > >, Loki::Typelist<Loki::Int2Type<25093u>, Loki::Typelist<Loki::Int2Type<2309u>, Loki::Typelist<Loki::Int2Type<19013u>, Loki::Typelist<Loki::Int2Type<3585u>, Loki::Typelist<Loki::Int2Type<16936u>, Loki::Typelist<Loki::Int2Type<36103u>, Loki::Typelist<Loki::Int2Type<2568u>, Loki::Typelist<Loki::Int2Type<2824u>, Loki::Typelist<Loki::Int2Type<6375u>, Loki::Typelist<Loki::Int2Type<4096u>, Loki::Typelist<Loki::Int2Type<4224u>, Loki::Typelist<Loki::Int2Type<4128u>, Loki::Typelist<Loki::Int2Type<4256u>, Loki::Typelist<Loki::Int2Type<3073u>, Loki::NullType> > > > > > > > > > > > > >, 100l, 75l>, canDat>::corpusVicissim(unsigned int))>(void*, unsigned int) ./main.o
+void srutil::Delegate<void (unsigned int)>::method_stub<Kpt, &(Kpt::watchDog(unsigned int))>(void*, unsigned int) ./main.o
+wdt_init()                                        ./main.o
