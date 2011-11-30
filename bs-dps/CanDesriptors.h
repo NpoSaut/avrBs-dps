@@ -18,7 +18,9 @@ enum CanTx : uint16_t
 	 AUX_RESOURCE_IPD_A = 	((uint16_t)0x4C0	<< 5) + 5, // 9805
 	 AUX_RESOURCE_IPD_B = 	((uint16_t)0x4D0	<< 5) + 5, // 9A05
 	 AUX_RESOURCE_BS_A = 	((uint16_t)0x633	<< 5) + 5, // C665
-	 AUX_RESOURCE_BS_B = 	((uint16_t)0x634	<< 5) + 5 // C685
+	 AUX_RESOURCE_BS_B = 	((uint16_t)0x634	<< 5) + 5, // C685
+	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 8, // 9988
+	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 8  // 9988
 };
 
 enum CanRx : uint16_t

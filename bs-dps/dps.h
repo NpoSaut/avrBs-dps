@@ -63,9 +63,11 @@ public:
 			// d: 1600 - 800  => d*65536*Pi помещается в uint32_t
 			// Pi * 65536 = 205887,416172544
 		  longitudoImpulsio ( (uint32_t(diametros) * 205887) / 4200 ),
-		  commoratio_ (true), lanternaOperor (lanternaOperor_), causarius (false), positio (positio)
+		  commoratio_ (true), lanternaOperor (lanternaOperor_), positio (positio)
 	{
-		versusRotatio = !positio; // В момент включения показываем "вперёд"
+		versusRotatioCalculator = ((!positio)*2 - 1)*15; // В момент включения показываем "вперёд" (максимально достоверно)
+		validusCanalis[0] = 125; // Начинаем с достоверно исправного состояния
+		validusCanalis[1] = 125;
 //		if (lanternaOperor)
 //		{
 			(reg.*lanternaPortus).pin<lanterna0>().out ();
@@ -82,18 +84,29 @@ public:
 
 		// Получение состояния порта и нахождение фронта по каждому каналу
 		affectusNovus &= 0b11; // Обрезать лишнее
-		uint8_t affectusCommutatioNovus = (affectus ^ affectusNovus) & affectusNovus; // 1 - если состояние изменилось с 0 на 1 т.е. фронт
+		uint8_t affectusCommutatio = (affectus ^ affectusNovus) & affectusNovus; // 1 - если состояние изменилось с 0 на 1 т.е. фронт
 		affectus = affectusNovus;
 
-		if (affectusCommutatioNovus) // Если случился фронт
+		if (affectusCommutatio) // Если случился фронт
 		{
-			// Определение направления
-			if (affectusCommutatioNovus & 0b01)
-				versusRotatio = affectus / 2;
+			// Определение направления и неисправности
+			if (affectusCommutatio & 0b01)
+			{
+				if ( abs(versusRotatioCalculator) < 16 )
+					versusRotatioCalculator += (affectus - 2); // +1 если туда, -1 если обратно
 
-			// Определение исправности
-			causarius = causarius | (~(affectusCommutatio | affectusCommutatioNovus) & 0b11);
-			affectusCommutatio = affectusCommutatioNovus;
+				if (validusCanalis[0] < 15)
+					validusCanalis[0] += 2;
+				if (validusCanalis[1] > -15)
+					validusCanalis[1] --;
+			}
+			if (affectusCommutatio & 0b10)
+			{
+				if (validusCanalis[0] > -15)
+					validusCanalis[0] --;
+				if (validusCanalis[1] < 15)
+					validusCanalis[1] += 2;
+			}
 
 			// номер канала, по которому произошёл подъём
 			uint8_t canalis = affectusCommutatio / 2;
@@ -114,7 +127,7 @@ public:
 						(reg.*lanternaPortus).pin<lanterna0>().toggle ();
 				}
 
-			return ( (causarius & 0b11) ) ? longitudoImpulsio : longitudoImpulsio/2; // Если оба канала исправны,
+			return validus() ? longitudoImpulsio : longitudoImpulsio/2; // Если оба канала исправны,
 																					// то на каждый импульс выдавать полпути
 		}
 		else // Фронта не было
@@ -147,19 +160,15 @@ public:
 		return a;
 	}
 
-	struct Causarius
+	bool validus() const
 	{
-		uint8_t vicis0		:1;
-		uint8_t vicis1		:1;
-		uint8_t conjuctio	:1;	// Эти критерии исправности могут быть выставлены только извне
-		uint8_t celeritas	:1;	//
-	};
-	Bitfield<Causarius> causarius;
+		return (validusCanalis[0] >= 0 && validusCanalis[1] >= 0);
+	}
 
 	// Направление движения. 0 - вперёд
-	uint8_t versus () const
+	bool versus () const
 	{
-		return !( (versusRotatio ^ positio) & 1 );
+		return (versusRotatioCalculator < 0) ^ positio;
 	}
 	// Остановка
 	bool commoratio () const
@@ -170,7 +179,7 @@ public:
 	const uint32_t longitudoImpulsio; // Длина, которую колесо проходит за один импульс (в единицах: дм/65536)
 	const Eeprom::Saut::Configuration::DpsPosition	positio;
 
-private:
+//private:
 	enum { maxCeleritasError = maxCeleritas / minTempusPunctum };
 	const bool lanternaOperor;
 
@@ -181,9 +190,9 @@ private:
 	uint8_t impulsioLanterna[2]; // Это кол-во не обнуляется, чтобы корректно моргать лампочками
 	uint16_t tempusPunctum[2];
 	uint8_t affectus; // состояние порта
-	uint8_t affectusCommutatio; // последнее изменение порта
 	uint8_t capio; // выбранный канал
-	uint8_t versusRotatio;	// Напрвление вращения
+	int8_t versusRotatioCalculator;	// Напрвление вращения (знак означает направление)
+	int8_t validusCanalis[2]; // Исправность (+0 исправен, - неисправен)
 	bool commoratio_;	// Остановка
 
 	// Выставляет режим остановки
@@ -195,15 +204,14 @@ private:
 		acceleratioColum[can] = 0;
 		impulsio[can] = 0;
 
-		if ( !(causarius & (1 << can)) )
+		if (validusCanalis[can] >= 0)
 		{
-			affectusCommutatio = 0b11; // Чтобы при старте ложно не выставить неиспровность из-за отсутсвия чередования
 			capio = can;
 			commoratio_ = true;
 			if (lanternaOperor)
 			{
-				(reg.*lanternaPortus).pin<lanterna0>() = causarius & ~(1 << 1);
-				(reg.*lanternaPortus).pin<lanterna1>() = causarius & ~(1 << 0);
+				(reg.*lanternaPortus).pin<lanterna0>() = (validusCanalis[1] < 0);
+				(reg.*lanternaPortus).pin<lanterna1>() = (validusCanalis[0] < 0);
 			}
 		}
 	}
@@ -236,8 +244,9 @@ private:
 
 		celeritasCan[can] = celeritasNovus;
 
-		if ( !(causarius & (1 << can)) ) // Если канал исправен
-		{
+		if ( validusCanalis[can] >= 0 && // Если канал исправен
+				(validusCanalis[!can] == 15 || validusCanalis[!can] < 0) ) // А другой канал либо совсем неисправен
+		{																	// либо = 15, что свидетельсвует о нормальном чередовании
 			capio = can; // выбираем его
 			commoratio_ = false;
 		}
@@ -383,6 +392,14 @@ private:
 	uint8_t tempusOpus; // время работы в единицах productor.period (0,48 сек); для опред. перезагрузки
 	uint8_t state; // 0 - пассивен, 1 - активен
 
+	struct Causarius
+	{
+		uint8_t vicis		:1;
+		uint8_t conjuctio	:1;	// Эти критерии исправности могут быть выставлены только извне
+		uint8_t celeritas	:1;	//
+	};
+	Bitfield<Causarius> causarius[2];
+
 	// Вызывается c периодом animadversor.period (100 мкс)
 	void animadversio ()
 	{
@@ -438,43 +455,51 @@ private:
 		// Анализ показаний датчиков, выбор ДПС, установка неисправности
 		uint8_t nMax = (dimetior[0]->celeritas() + 64) < dimetior[1]->celeritas(); // +64 чтобы предотвратить постоянное переключение
 
-		if ( dimetior[nMax]->celeritas() - dimetior[!nMax]->celeritas() > dimetior[nMax]->celeritas()/4  ) // Если разброс большой
-		{
-			if (tempusDifferens == maxTempusDifferens) // довольно давно
-				dimetior[!nMax]->causarius->celeritas = true;
-			else
-				tempusDifferens ++;
-		}
-		else
-		{
-			tempusDifferens = 0;
+		causarius[0]->vicis = !dimetior[0]->validus();
+		causarius[1]->vicis = !dimetior[1]->validus();
 
-			if ( !dimetior[nCapio]->commoratio() )
-				tempusRestitutioValidus ++;
+		if ( dimetior[0]->validus() && dimetior[1]->validus() )
+		{
+			if ( abs( dimetior[nMax]->celeritas() - dimetior[!nMax]->celeritas() )
+					> dimetior[nMax]->celeritas()/4 + 1280  ) // Если разброс большой (и больше 10км/ч)
+			{
+				if (tempusDifferens == maxTempusDifferens) // довольно давно
+					causarius[!nMax]->celeritas = true;
+				else
+					tempusDifferens ++;
+			}
+			else
+			{
+				tempusDifferens = 0;
+
+				if ( !dimetior[nCapio]->commoratio() )
+					tempusRestitutioValidus ++;
+			}
 		}
 
-		if ( !dimetior[0]->causarius && !dimetior[1]->causarius )
+		if ( !causarius[0] && !causarius[1] )
 		{
-			if ( !dimetior[tractus^nMax]->commoratio() )
-				nCapio = tractus ^ nMax;
+			bool potentiaCapio = tractus ^ nMax;
+			if ( !dimetior[potentiaCapio]->commoratio() )
+				nCapio = potentiaCapio;
 			else
-				nCapio = !(tractus ^ nMax);
+				nCapio = !potentiaCapio;
 
 			tempusRestitutioValidus = 0; // Время начинать считать с момента возникновения неисправности
 		}
 		else
 		{
-			if ( dimetior[0]->causarius && !dimetior[1]->causarius ) // не работает один из каналов
+			if ( causarius[0] && !causarius[1] ) // не работает один из каналов
 				nCapio = 1; // выбираем рабочий
-			else if ( !dimetior[0]->causarius && dimetior[1]->causarius )
+			else if ( !causarius[0] && causarius[1] )
 				nCapio = 0;
-			else if ( dimetior[0]->causarius && dimetior[1]->causarius )
+			else if ( causarius[0] && causarius[1] )
 				nCapio = nMax;
 
 			if ( tempusRestitutioValidus == maxTempusRestitutioValidus ) // раз в несколько секунд сбрасывать неисправность
 			{
-				dimetior[0]->causarius = false;
-				dimetior[1]->causarius = false;
+				causarius[0]->celeritas = false;
+				causarius[1]->celeritas = false;
 			}
 		}
 
@@ -489,8 +514,8 @@ private:
 		{
 			if (++tempusTractusCommoratio == 146)
 			{
-				dimetior[0]->causarius->conjuctio = true;
-				dimetior[1]->causarius->conjuctio = true;
+				causarius[0]->conjuctio = true;
+				causarius[1]->conjuctio = true;
 			}
 		}
 		else
@@ -515,8 +540,6 @@ private:
 		if (tempusOpus <= tempusAbInitioIndicium)
 		{
 			mappa->repeto = 0; // выставление флага перезагрузки
-			dimetior[0]->causarius = false; // первый раз может сработать ложное отсутсвие чередования
-			dimetior[1]->causarius = false;
 			tempusOpus ++;
 		}
 		else
@@ -541,8 +564,8 @@ private:
 		mappa->versus1 = dimetior[1]->versus();
 		mappa->commoratio = dimetior[nCapio]->commoratio();
 		mappa->dimetior = nCapio;
-		mappa->validus0 = !dimetior[0]->causarius;
-		mappa->validus1 = !dimetior[1]->causarius;
+		mappa->validus0 = !causarius[0];
+		mappa->validus1 = !causarius[1];
 
 		// Вывод данных в линию связи
 		acceleratioEtAffectus <<= (uint16_t(dimetior[nCapio]->acceleratio()) * 256) | mappa;
@@ -583,11 +606,22 @@ private:
 					0
 							 };
 		ecDifferens = false;
+		uint8_t myDebug[8] = {
+					dispatcher.getSize(),
+					uint8_t( dimetior[0]->celeritas()/128 ),
+					uint8_t( dimetior[1]->celeritas()/128 ),
+					uint8_t ( _cast (uint8_t, causarius[0]) | (_cast (uint8_t, causarius[1]) << 4) ),
+					dimetior[0]->validusCanalis[0],
+					dimetior[0]->validusCanalis[1],
+					dimetior[1]->validusCanalis[0],
+					dimetior[1]->validusCanalis[1]
+							};
 
 		if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
 		{
 			canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 			canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+			canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
 //			if ( canDat.template send<CanTx::SAUT_INFO_A> (sautInfo) )
 //				(reg.*lanternaPortus).pin<lanterna0>().toggle ();
 //			if ( canDat.template send<CanTx::IPD_STATE_A> (ipdState) )
@@ -597,6 +631,7 @@ private:
 		{
 			canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 			canDat.template send<CanTx::IPD_STATE_B> (ipdState);
+			canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
 //			if ( canDat.template send<CanTx::SAUT_INFO_B> (sautInfo) )
 //				(reg.*lanternaPortus).pin<lanterna0>().toggle ();
 //			if ( canDat.template send<CanTx::IPD_STATE_B> (ipdState) )
