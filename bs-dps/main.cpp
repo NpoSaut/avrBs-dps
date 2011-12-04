@@ -35,11 +35,11 @@
 void Init (void) __attribute__ ((naked)) __attribute__ ((section (".init5")));
 void Init (void)
 {
-//	// Светодиоды.
-//	reg.portC.pin4.out();
-//	reg.portC.pin5.out();
-//	reg.portC.pin4 = true;
-//	reg.portC.pin5 = true;
+	// Светодиоды.
+	reg.portC.pin4.out();
+	reg.portC.pin5.out();
+	reg.portC.pin4 = true;
+	reg.portC.pin5 = true;
 
 	// Watchdog
 	wdt_enable (WDTO_500MS);
@@ -122,10 +122,11 @@ void clubSendNextPageInterrupt ()
 
 typedef INT_TYPELIST_2 (CanTx::IPD_STATE_A,	CanTx::IPD_STATE_B) IPD_STATE;
 typedef INT_TYPELIST_2 (CanTx::SAUT_INFO_A,	CanTx::SAUT_INFO_B) SAUT_INFO;
-typedef INT_TYPELIST_7 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
+typedef INT_TYPELIST_9 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 						CanTx::AUX_RESOURCE_IPD_A,	CanTx::AUX_RESOURCE_IPD_B,
 						CanTx::SYS_DATA,
-						CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B ) AUX_RESOURCE_SYS_DATA;
+						CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
+						CanTx::MY_MAP_A, CanTx::MY_MAP_B ) AUX_RESOURCE_SYS_DATA;
 
 typedef INT_TYPELIST_2 (CanRx::MCO_STATE_A, CanRx::MCO_LIMITS_A) MCO_STATE_LIMITS_A;
 typedef INT_TYPELIST_2 (CanRx::MCO_STATE_B, CanRx::MCO_LIMITS_B) MCO_STATE_LIMITS_B;
@@ -183,20 +184,28 @@ void canDataGet (uint16_t getDataAdr)
 {
 	typedef const uint8_t Data[5];
 	Data& data = *( (Data *)(getDataAdr) );
-	uint8_t parNumber = data[0]*4;
+	uint8_t parNumber = data[0];
 
 	if ( parNumber != 1 && // номер пути. Я принимаю его по адресу 23. А возвращаю по адресу 1. Логично.
 		 parNumber != 9 ) // координата постоянно меняется. Зачём её сохранять? И правда, зачем же токгда мне это отправлять....
 	{
-		uint8_t* adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + parNumber );
+		uint8_t* adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + parNumber*4 );
 
 		eeprom_update_byte (adr  , data[4]);
 		eeprom_update_byte (adr+1, data[3]);
 		eeprom_update_byte (adr+2, data[2]);
 		eeprom_update_byte (adr+3, data[1]);
 
+		uint8_t check[5] = {
+				parNumber,
+				eeprom_read_byte (adr+3),
+				eeprom_read_byte (adr+2),
+				eeprom_read_byte (adr+1),
+				eeprom_read_byte (adr)
+							};
+
 		if (reg.portB.pin7 == 0) // Отправлять только одним полукомплектом
-			canDat.send<CanTx::SYS_DATA>(data);
+			canDat.send<CanTx::SYS_DATA>(check);
 	}
 }
 
@@ -208,18 +217,21 @@ void canDataSend (uint16_t queryAdr)
 		uint8_t query = (*( (Query *)(queryAdr) ))[0];
 
 		uint8_t* adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + query*4 );
-		if (queryAdr == 1) // А номер пути мы храним под номером 23
+		if (query == 1) // А номер пути мы храним под номером 23
 			adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + 23*4 );
 
-		uint8_t data[5] = {
-				query,
-				eeprom_read_byte (adr+3),
-				eeprom_read_byte (adr+2),
-				eeprom_read_byte (adr+1),
-				eeprom_read_byte (adr)
-							};
-
-		canDat.send<CanTx::SYS_DATA> (data);
+		if (query != 9) // К сожалению, это передаю не только я. Не буду мешать людям работать..
+		{
+			uint8_t data[5] = {
+					query,
+					eeprom_read_byte (adr+3),
+					eeprom_read_byte (adr+2),
+					eeprom_read_byte (adr+1),
+					eeprom_read_byte (adr)
+								};
+			if (reg.portB.pin7 == 0) // Отправлять только одним полукомплектом
+				canDat.send<CanTx::SYS_DATA> (data);
+		}
 	}
 }
 
@@ -547,32 +559,13 @@ DpsType	dps ( 	com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
 
 void eCardParser (uint16_t a)
 {
-//	union // Путь по электронной карте
-//	{
-//		struct	{
-//			int32_t full 	:24;
-//			int32_t 	:8;
-//		};
-//		struct	{
-//			uint8_t	byte0;
-//			uint8_t	byte1;
-//			uint8_t	byte2;
-//		};
-//	} ec;
-//	ec.byte0 = canDat.get<CanRx::MM_DATA> () [3];
-//	ec.byte1 = canDat.get<CanRx::MM_DATA> () [4];
-//	ec.byte2 = canDat.get<CanRx::MM_DATA> () [5];
-
+	reg.portC.pin4.toggle();
 	Complex<int32_t> ec = 0;
 	ec[0] = canDat.get<CanRx::MM_DATA> () [3];
 	ec[1] = canDat.get<CanRx::MM_DATA> () [4];
 	ec[2] = canDat.get<CanRx::MM_DATA> () [5];
-
-//	static int32_t ecOld;
-//	dps.parity = !(ec > ecOld);
-//	ecOld = ec;
-//
-//	dps.spatiumMeters = ec;
+	if ( ec[2] & (1 << 7) ) // Отрицательное число
+		ec[3] = 0xFF;
 
 	static bool firstTime = true;
 	if (firstTime)
@@ -581,8 +574,24 @@ void eCardParser (uint16_t a)
 		dps.spatiumMeters = ec;
 	}
 
-	if ( dps.celeritas() / 256 >= 1 ) // скорость больше 2 км/ч -- не знаю почему. Если тихо едем, то зачем напрягаться...
+	uint8_t debug[8] = {
+			ec[0],
+			ec[1],
+			ec[2],
+			ec[3],
+			dps.spatiumMeters[0],
+			dps.spatiumMeters[1],
+			dps.spatiumMeters[2],
+			dps.spatiumMeters[3]
+						};
+	if (reg.portB.pin7 == 0) // первый полукомплект
+		canDat.send<CanTx::MY_MAP_A>(debug);
+	else
+		canDat.send<CanTx::MY_MAP_B>(debug);
+
+	if ( dps.celeritas() / 256 >= 1 ) // скорость больше 2 км/ч
 	{
+		reg.portC.pin5.toggle();
 		int32_t mismatch = ec - dps.spatiumMeters;
 
 		if ( abs(mismatch) > 500 )
@@ -590,8 +599,9 @@ void eCardParser (uint16_t a)
 		else
 		{
 			dps.ecDifferens = false;
-			if ( 	(dps.versus() == 0 && mismatch > 25) ||		// вперёд
-					(dps.versus() == 1 && mismatch < -25)	)	// назад
+//			if ( 	(dps.versus() == 0 && mismatch > 25) ||		// вперёд
+//					(dps.versus() == 1 && mismatch < -25)	)	// назад
+			if ( abs(mismatch) > 25 )	// назад
 				dps.spatiumMeters += mismatch/2;
 		}
 	}

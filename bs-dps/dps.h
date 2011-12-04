@@ -92,7 +92,8 @@ public:
 			// Определение направления и неисправности
 			if (affectusCommutatio & 0b01)
 			{
-				if ( abs(versusRotatioCalculator) < 16 )
+
+				if ( abs(versusRotatioCalculator + (affectus - 2)) < 16 )
 					versusRotatioCalculator += (affectus - 2); // +1 если туда, -1 если обратно
 
 				if (validusCanalis[0] < 15)
@@ -286,10 +287,10 @@ public:
 		  spatiumDecimetersMultiple10 (10)
 	{
 		Bitfield<Eeprom::Saut::Configuration> conf ( eeprom_read_byte( (uint8_t*) &eeprom.saut.configuration ) );
-//		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, 0 );
-//		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, 0 );
-		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
-		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
+		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, 0 );
+		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, 0 );
+//		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
+//		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
 
 		(reg.*accessusPortus).in ();
 		(reg.*lanternaPortus).pin<lanterna0>().out ();
@@ -622,20 +623,12 @@ private:
 			canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 			canDat.template send<CanTx::IPD_STATE_A> (ipdState);
 			canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
-//			if ( canDat.template send<CanTx::SAUT_INFO_A> (sautInfo) )
-//				(reg.*lanternaPortus).pin<lanterna0>().toggle ();
-//			if ( canDat.template send<CanTx::IPD_STATE_A> (ipdState) )
-//				(reg.*lanternaPortus).pin<lanterna1>().toggle ();
 		}
 		else
 		{
 			canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 			canDat.template send<CanTx::IPD_STATE_B> (ipdState);
 			canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
-//			if ( canDat.template send<CanTx::SAUT_INFO_B> (sautInfo) )
-//				(reg.*lanternaPortus).pin<lanterna0>().toggle ();
-//			if ( canDat.template send<CanTx::IPD_STATE_B> (ipdState) )
-//				(reg.*lanternaPortus).pin<lanterna1>().toggle ();
 
 
 			uint8_t sysDataState[7] = {

@@ -20,31 +20,33 @@ enum CanTx : uint16_t
 	 AUX_RESOURCE_BS_A = 	((uint16_t)0x633	<< 5) + 5, // C665
 	 AUX_RESOURCE_BS_B = 	((uint16_t)0x634	<< 5) + 5, // C685
 	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 8, // 9988
-	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 8  // 9988
+	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 8, // 99A8
+	 MY_MAP_A = 			((uint16_t)0x4CE	<< 5) + 8, // 99C8
+	 MY_MAP_B = 			((uint16_t)0x4CF	<< 5) + 8  // 99E8
 };
 
 enum CanRx : uint16_t
 {
-	 MCO_DATA =			  	(0x48	<< 5) + 5,
-	 MCO_STATE_A =			(0x50	<< 5) + 8,
-	 MCO_STATE_B =			(0x58	<< 5) + 8,
-	 MCO_LIMITS_A =  		(0x52	<< 5) + 8,
-	 MCO_LIMITS_B =  		(0x5A	<< 5) + 8,
-	 SYS_KEY = 				(0x60	<< 5) + 1,
-	 SYS_DATA_QUERY =		(0x70	<< 5) + 1,
-	 MP_ALS_ON_A =			(0x80 	<< 5) + 0,
-	 MP_ALS_OFF_A =			(0x84	<< 5) + 0,
-	 MP_ALS_ON_B =			(0x81 	<< 5) + 0,
-	 MP_ALS_OFF_B =			(0x85	<< 5) + 0,
-	 MP_ALS_ON_TIME_A =		(0x80 	<< 5) + 1,
-	 MP_ALS_OFF_TIME_A =	(0x84	<< 5) + 1,
-	 MP_ALS_ON_TIME_B =		(0x81 	<< 5) + 1,
-	 MP_ALS_OFF_TIME_B =	(0x85	<< 5) + 1,
-	 IPD_DATE =				(0xC7	<< 5) + 7,
-	 MM_DATA =				(0x211	<< 5) + 8,
-	 BKSI_DATA =			(0x252	<< 5) + 5,
-	 INPUT_DATA =			(0x310	<< 5) + 5,
-	 SYS_DIAGNOSTICS = 		((uint16_t)0x468	<< 5) + 7
+	 MCO_DATA =			  	(0x48	<< 5) + 5, // 905
+	 MCO_STATE_A =			(0x50	<< 5) + 8, // A08
+	 MCO_STATE_B =			(0x58	<< 5) + 8, // B08
+	 MCO_LIMITS_A =  		(0x52	<< 5) + 8, // A48
+	 MCO_LIMITS_B =  		(0x5A	<< 5) + 8, // B48
+	 SYS_KEY = 				(0x60	<< 5) + 1, // C01
+	 SYS_DATA_QUERY =		(0x70	<< 5) + 1, // E01
+	 MP_ALS_ON_A =			(0x80 	<< 5) + 0, // 1000
+	 MP_ALS_OFF_A =			(0x84	<< 5) + 0, // 1080
+	 MP_ALS_ON_B =			(0x81 	<< 5) + 0, // 1020
+	 MP_ALS_OFF_B =			(0x85	<< 5) + 0, // 10A0
+	 MP_ALS_ON_TIME_A =		(0x80 	<< 5) + 1, // 1001
+	 MP_ALS_OFF_TIME_A =	(0x84	<< 5) + 1, // 1081
+	 MP_ALS_ON_TIME_B =		(0x81 	<< 5) + 1, // 1021
+	 MP_ALS_OFF_TIME_B =	(0x85	<< 5) + 1, // 10A1
+	 IPD_DATE =				(0xC7	<< 5) + 7, // 18E7
+	 MM_DATA =				(0x211	<< 5) + 8, // 4228
+	 BKSI_DATA =			(0x252	<< 5) + 5, // 4A45
+	 INPUT_DATA =			(0x310	<< 5) + 5, // 6205
+	 SYS_DIAGNOSTICS = 		((uint16_t)0x468	<< 5) + 7 // 8D07
 };
 
 
