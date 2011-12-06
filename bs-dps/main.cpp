@@ -559,7 +559,6 @@ DpsType	dps ( 	com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
 
 void eCardParser (uint16_t a)
 {
-	reg.portC.pin4.toggle();
 	Complex<int32_t> ec = 0;
 	ec[0] = canDat.get<CanRx::MM_DATA> () [3];
 	ec[1] = canDat.get<CanRx::MM_DATA> () [4];
@@ -591,7 +590,6 @@ void eCardParser (uint16_t a)
 
 	if ( dps.celeritas() / 256 >= 1 ) // скорость больше 2 км/ч
 	{
-		reg.portC.pin5.toggle();
 		int32_t mismatch = ec - dps.spatiumMeters;
 
 		if ( abs(mismatch) > 500 )
