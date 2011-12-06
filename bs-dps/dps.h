@@ -128,8 +128,8 @@ public:
 						(reg.*lanternaPortus).pin<lanterna0>().toggle ();
 				}
 
-			return validus() ? longitudoImpulsio : longitudoImpulsio/2; // Если оба канала исправны,
-																					// то на каждый импульс выдавать полпути
+			return validus() ? longitudoImpulsio/2 : longitudoImpulsio; // Если оба канала исправны,
+																		// то на каждый импульс выдавать полпути
 		}
 		else // Фронта не было
 		{
@@ -163,7 +163,7 @@ public:
 
 	bool validus() const
 	{
-		return (validusCanalis[0] >= 0 && validusCanalis[1] >= 0);
+		return (validusCanalis[0] >= 13 && validusCanalis[1] >= 13);
 	}
 
 	// Направление движения. 0 - вперёд
