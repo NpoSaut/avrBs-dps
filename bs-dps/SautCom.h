@@ -93,9 +93,9 @@ public:
 		(reg.*scPort).pin<scPin>().inPulled ();
 
 		// Устанавливаем наши обработчики прерываний в качестве обработчиков прерываний
-		rxHandler_ = InterruptHandler::from_method<Com, &Com::rxHandler> (this);
-		txHandler_ = InterruptHandler::from_method<Com, &Com::txHandler> (this);
-		udreHandler_ = InterruptHandler::from_method<Com, &Com::udreHandler> (this);
+		rxHandler_ = InterruptHandler (this, &Com::rxHandler);
+		txHandler_ = InterruptHandler (this, &Com::txHandler);
+		udreHandler_ = InterruptHandler (this, &Com::udreHandler);
 
 		baudRateSet (115200);
 

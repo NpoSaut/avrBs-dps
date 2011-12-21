@@ -11,35 +11,8 @@
 #include <cpp/universal.h>
 #include "hw_defines.h"
 
-class Clock10ms
+namespace KptInternal
 {
-public:
-	Clock10ms ()
-		: alarm10ms ( InterruptHandler::from_method< Clock10ms, &Clock10ms::timePlusPlus > (this) ) {}
-
-	const Safe<uint8_t>& time () const
-	{
-		return time_;
-	}
-
-	SoftIntHandler overflowHandler;
-
-private:
-	Alarm<Alarm3A, 10000> alarm10ms;
-	Safe<uint8_t> time_;
-
-	void timePlusPlus ()
-	{
-		if (++time_ == 255)
-			dispatcher.add (overflowHandler, 0);
-	}
-};
-
-// Расшифровка КПТ
-//template <const Safe<uint16_t>& time>
-class Kpt
-{
-private:
 	struct Status
 	{
 		enum Color
@@ -60,11 +33,22 @@ private:
 		uint8_t correct	:1;
 		Type	type	:1;
 	};
+}
+
+// Расшифровка КПТ
+template <  typename Clock, Clock& clock,
+			typename Scheduler, Scheduler& scheduler	>
+class Kpt
+{
+private:
+	static constexpr uint16_t timePrescale = 10000 / Clock::discreetMks;
+	static constexpr uint16_t timeMod = 10000 % Clock::discreetMks;
+
+	typedef KptInternal::Status Status;
 
 	Status& status; // Ссылка на внешнюю переменную, в которую выводится состояние
 
-	Clock10ms clock;
-	uint8_t impulseWatchDogCounter;
+	bool impulseWatchDog;
 	uint8_t periodTime;
 	uint8_t impulseStartTime;
 	uint8_t shortImpNumber;
@@ -73,20 +57,22 @@ private:
 	Status statusPrevious;
 	uint8_t repeateCounter;
 
+public:
 	uint8_t getImpulseTime ()
 	{
 		uint8_t time;
 		ATOMIC
 		{
-			time = clock.time() - impulseStartTime;
-			impulseStartTime = clock.time();
+			time = clock.getTime() / timePrescale - impulseStartTime;
+			impulseStartTime = clock.getTime() / timePrescale;
 		}
 		return time;
 	}
+private:
 
 	void watchDog (uint16_t)
 	{
-		if ( impulseWatchDogCounter == 0 ) // не было изменений
+		if ( impulseWatchDog == false ) // не было изменений
 		{
 			if (status.color == Status::Color::RedYellow)
 				status = { 	Status::Color::Red,
@@ -102,16 +88,21 @@ private:
 						};
 		}
 		else
-			impulseWatchDogCounter = 0;
+			impulseWatchDog = false;
+
+		scheduler.runIn( Command{SoftIntHandler (this, &Kpt::watchDog), 0}, 2000000/Scheduler::discreetMks );
 	}
 
 
 public:
 	Kpt (uint8_t& status, uint8_t& lis)
-		: status ( _cast(Status, status) ), clock (), lis (lis)
+		: status ( _cast(Status, status) ),
+		  impulseWatchDog (false), periodTime (0), impulseStartTime (0),
+		  shortImpNumber (0), lisZeroingPermission (true), statusPrevious (Kpt::status),
+		  repeateCounter (0), lis (lis), correctKptDistance (0)
 	{
-		clock.overflowHandler = SoftIntHandler::from_method <Kpt, &Kpt::watchDog> (this);
-		lisZeroingPermission = true;
+//		static_assert (timeMod < timePrescale/256, "Выбранный таймер не даёт необходимой точности");
+		scheduler.runIn( Command{ SoftIntHandler (this, &Kpt::watchDog), 0}, 2000000/Scheduler::discreetMks );
 	}
 
 	void fall ()
@@ -122,7 +113,7 @@ public:
 	void fall (uint8_t upTime)
 	{
 		// Начало отрицательного импульса
-		impulseWatchDogCounter ++;
+		impulseWatchDog = true;
 		status.kptImp = 0;
 		periodTime += upTime;
 
@@ -136,7 +127,7 @@ public:
 	void rise (uint8_t downTime)
 	{
 		// Конец отрицательного импульса
-		impulseWatchDogCounter ++;
+		impulseWatchDog = true;
 		status.kptImp = 1;
 		periodTime += downTime;
 

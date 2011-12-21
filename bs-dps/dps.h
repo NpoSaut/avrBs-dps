@@ -63,8 +63,10 @@ public:
 			// d: 1600 - 800  => d*65536*Pi помещается в uint32_t
 			// Pi * 65536 = 205887,416172544
 		  longitudoImpulsio ( (uint32_t(diametros) * 205887) / 4200 ),
-		  positio (positio), lanternaOperor (lanternaOperor_), versusRotatio (!positio),
-		  causarius (false), commoratio (true)
+		  positio (positio), lanternaOperor (lanternaOperor_),
+		  celeritas (0), acceleratio (0), acceleratioColum (0),
+		  impulsio ({0,0}), impulsioLanterna ({0,0}), tempusPunctum ({0,0}),
+		  affectus (0), versusRotatio (!positio), causarius (false), commoratio (true)
 	{
 //		if (lanternaOperor)
 //		{
@@ -77,10 +79,8 @@ public:
 	// принимает состояние каналов
 	const uint32_t punctum (uint8_t affectusNovus) __attribute__ ((noinline))
 	{
-		if (impulsio[0]) // Считать время от первого импульса
-			tempusPunctum[0] ++;
-		if (impulsio[1])
-			tempusPunctum[1] ++;
+		tempusPunctum[0] ++;
+		tempusPunctum[1] ++;
 
 		// Получение состояния порта и нахождение фронта по каждому каналу
 		affectusNovus &= 0b11; // Обрезать лишнее
@@ -95,6 +95,11 @@ public:
 			impulsio		 [canalis] ++;
 			impulsioLanterna [canalis] ++;
 
+			if ( impulsio[canalis] == 1 )
+				tempusPunctum[canalis] = 0; // Начинаем считать время с 1-го импульса
+											// После остановки (оба счётчика = 0) необходимо 2 импульса по одному и 1 по другому,
+											// для того, чтобы вывести скорость
+
 			if ( tempusPunctum[canalis] >= minTempusPunctum )  // Прошло достаточно времени для точного определения скорости
 			{
 				causarius = ( abs(impulsio[canalis] - impulsio[!canalis]) > 1 ); // Значит было нормальное чередование (ну не факт...)
@@ -108,9 +113,9 @@ public:
 				commoratio = false;
 
 				// Для нового расчёта
-				impulsio [canalis] = 0; // Себя
+				impulsio [canalis] = 1; // Сам начинаю считать время от текущего импульса
 				tempusPunctum [canalis] = 0;
-				impulsio [!canalis] = 0; // И соседа
+				impulsio [!canalis] = 0; // А сосед пусть сначала дождётся импульса и тогда начнёт считать время
 				tempusPunctum [!canalis] = 0;
 			}
 
@@ -176,7 +181,9 @@ public:
 	const uint32_t longitudoImpulsio; // Длина, которую колесо проходит за один импульс (в единицах: дм/65536)
 	const Eeprom::Saut::Configuration::DpsPosition	positio;
 
-//private:
+	uint16_t celeritasEmulate;
+
+private:
 	enum { maxCeleritasError = maxCeleritas / minTempusPunctum };
 	const bool lanternaOperor;
 
@@ -198,11 +205,11 @@ public:
 	{
 		tempusPunctum[can] = 0;
 		impulsio[can] = 0;
-		celeritas = 0;
+		celeritas = celeritasEmulate;
+		commoratio = (celeritas == 0);
 		acceleratio = 0;
 		acceleratioColum = 0;
-
-		commoratio = true;
+		causarius = false;
 		if (lanternaOperor)
 		{
 			(reg.*lanternaPortus).pin<lanterna0>() = sicinCausarius();
@@ -214,7 +221,7 @@ public:
 	{
 		// Считаем скорость
 		uint16_t celeritasNovus =
-					(((34468 * uint32_t (diametros)) / period) * impulsio[can]) / tempusPunctum[can];
+					(((34468 * uint32_t (diametros)) / period) * (impulsio[can] - 1)) / tempusPunctum[can];
 
 		// Считаем ускорение
 		// Предотвращаем перегрузку (A не более 4м/c^2)
@@ -263,13 +270,25 @@ public:
 								uint8_t& odometer16dm0, uint8_t& odometer16dm1,
 								uint8_t (&spatiumClubPage)[3], uint8_t (&celeritasClubPage)[3],
 								uint16_t diametros0, uint16_t diametros1  )
-		: odometer16dm({ &odometer16dm0, &odometer16dm1 }),
-		  animadversor( InterruptHandler::from_method< myType, &myType::animadversio > (this) ),
-		  productor( InterruptHandler::from_method< myType, &myType::produco > (this) ),
+		: spatiumMeters (0),
+		  odometer16dm({ &odometer16dm0, &odometer16dm1 }),
+		  ecDifferens (false), tractus (false), blockStatus (BlockStatus::InitState),
+		  animadversor( InterruptHandler (this, &myType::animadversio) ),
+		  productor( InterruptHandler (this, &myType::produco) ),
 		  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus(acceleratioEtAffectus),
 		  spatiumClubPage (spatiumClubPage), celeritasClubPage (celeritasClubPage),
-		  spatiumDecimetersMultiple10 (10)
+		  spatiumDecimeters65536 (0),
+		  spatiumDecimetersMultiple10 (10),
+		  spatiumDecimetersMulitple16 (0),
+		  nCapio (0),
+		  tempusRestitutioValidus (0),
+		  tempusDifferens (0),
+		  tempusTractusCommoratio (0),
+		  tempusOpus (0),
+		  activus (0)
 	{
+		causarius[0] = {0,0,0};
+		causarius[1] = {0,0,0};
 		Bitfield<Eeprom::Saut::Configuration> conf ( eeprom_read_byte( (uint8_t*) &eeprom.saut.configuration ) );
 //		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, 0 );
 //		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, 0 );
@@ -286,26 +305,26 @@ public:
 		delete dimetior[1];
 	}
 
-	void activus ()
+	void constituoActivus ()
 	{
-		if (state == 0)
+		if (!activus)
 		{
-			state = 1;
+			activus = true;
 			animadversor.enable ();
 			productor.enable();
 		}
 	}
-	void passivus ()
+	void constituoPassivus ()
 	{
-		if (state == 1)
+		if (activus)
 		{
-			state = 0;
+			activus = false;
 			animadversor.disable ();
 			productor.disable ();
 		}
 	}
 
-	// Скрость в км/ч/128
+	// Скрость в км/ч/256 + старший бит в младшем бите
 	const uint16_t celeritas () const
 	{
 		return signCeleritas( dimetior[nCapio]->accipioCeleritas() );
@@ -323,6 +342,12 @@ public:
 	bool ecDifferens; // Выставлять ли критическое расхождение с электронной картой
 //	uint8_t parity; // чётность направления. Чётное направление (0) - увеличение ЖД-координаты. Нечётное (1) - уменьшение
 	bool tractus; // 0 - торможение, 1...- тяга
+
+	void constutioCeleritasEmulate (uint16_t cel)
+	{
+		dimetior[0]->celeritasEmulate = (cel >> 1);
+		dimetior[1]->celeritasEmulate = (cel >> 1);
+	}
 
 	// О УЖАС!!!!!! -- !УБЕРИТЕ ЭТО ОТСЮДА!
 	enum class BlockStatus: uint8_t
@@ -375,7 +400,7 @@ private:
 	uint8_t tempusDifferens; // время, в течении которого сохраняется разность показаний ДПС более 25%
 	uint8_t tempusTractusCommoratio; // время, в течении которого отсутсвует скорость по обоим ДПС в режиме Тяга
 	uint8_t tempusOpus; // время работы в единицах productor.period (0,48 сек); для опред. перезагрузки
-	uint8_t state; // 0 - пассивен, 1 - активен
+	uint8_t activus; // 0 - пассивен, 1 - активен
 
 	struct Causarius
 	{
@@ -389,14 +414,14 @@ private:
 	void animadversio ()
 	{
 		dispatcher.add (
-				SoftIntHandler::from_method< myType, &myType::corpusVicissim > (this),
+				SoftIntHandler (this, &myType::corpusVicissim),
 				(reg.*accessusPortus)
 						);
 		sei (); // Если прерывание ждёт, то пустить его
 				// Это может быть принципиально.
 				// Т.к. в коммуникаторе после завершения отправки нужно выставить флаг за 18 мкс,
 				// это делается в прерывании
-				// Вход и add здесь - 11 мкс, вход туда - 4 мкс. Выход отсюда - 4 мкс.
+				// Вход и add здесь - 12,5 мкс, вход туда - 5,5 мкс. Выход отсюда - 4 мкс.
 	}
 
 	void corpusVicissim (uint16_t affectus)
@@ -591,29 +616,16 @@ private:
 					0
 							 };
 		ecDifferens = false;
-		uint8_t myDebug[8] = {
-					dispatcher.getSize(),
-					uint8_t( dimetior[0]->accipioCeleritas()/128 ),
-					uint8_t( dimetior[1]->accipioCeleritas()/128 ),
-					uint8_t ( _cast (uint8_t, causarius[0]) | (_cast (uint8_t, causarius[1]) << 4) ),
-					uint8_t (dimetior[0]->debugImpulsio[0] >> 8),
-					uint8_t (dimetior[0]->debugImpulsio[0] & 0xFF),
-					uint8_t (dimetior[0]->debugImpulsio[1] >> 8),
-					uint8_t (dimetior[0]->debugImpulsio[1] & 0xFF),
-							};
 
 		if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
 		{
 			canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 			canDat.template send<CanTx::IPD_STATE_A> (ipdState);
-			canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
 		}
 		else
 		{
 			canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 			canDat.template send<CanTx::IPD_STATE_B> (ipdState);
-			canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
-
 
 			uint8_t sysDataState[7] = {
 					0, // Результаты выполнения тестов...

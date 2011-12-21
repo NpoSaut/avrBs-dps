@@ -108,7 +108,7 @@
 
 	int main ()
 	{
-		canDat.rxHandler<0x1000>() = SoftIntHandler::from_function<f> (); // Передаём делегат на нашу функцию в CanDat
+		canDat.rxHandler<0x1000>() = SoftIntHandler (f); // Передаём делегат на нашу функцию в CanDat
 		//...
 	}
  *
@@ -351,7 +351,7 @@ public:
 
 		reg.canGeneralInterruptEnable->receive_ = true;
 		reg.canGeneralInterruptEnable->general_ = true;
-		CANIT_handler = InterruptHandler::from_method<CanDat, &CanDat::rxInterruptHandler> (this);
+		CANIT_handler = InterruptHandler (this, &CanDat::rxInterruptHandler);
 
 		reg.canGeneralConfig->enable = true;
 		while (!reg.canGeneralStatus->enable);

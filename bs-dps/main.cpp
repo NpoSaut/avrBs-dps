@@ -15,6 +15,7 @@
 #include <cpp/io.h>
 #include <cpp/universal.h>
 #include <cpp/dispatcher.h>
+#include <cpp/scheduler.h>
 #include <cpp/timers.h>
 #include <util/delay.h>
 
@@ -48,6 +49,13 @@ void Init (void)
 	reg.portB.pin5.in();
 }
 
+// ----------------------------------- Системные часы и планировщик -----------------------------►
+
+typedef Clock< Alarm< Alarm3A, 1000 >, uint32_t > ClockType;
+ClockType clock;
+
+typedef Scheduler< ClockType, clock, 6, uint16_t > SchedulerType;
+SchedulerType scheduler;
 
 // -------------------------------------------- RS-485 ------------------------------------------►
 
@@ -63,6 +71,8 @@ enum {		   					// adr, intput, port
 	Dps3 				= SautPacketHead (1, true, 3),
 	Club0				= SautPacketHead (10, true, 0),
 	Club1				= SautPacketHead (10, true, 1),
+	BprQuery			= SautPacketHead (13, false, 0),
+	BprVelocity			= SautPacketHead (13, false, 3),
 	// Исходящие
 	DpsOut0 			= SautPacketHead (1, false, 0),
 	DpsOut1 			= SautPacketHead (1, false, 1),
@@ -74,14 +84,14 @@ enum {		   					// adr, intput, port
 	ClubOut3			= SautPacketHead (10, false, 3)
 };
 
-typedef Dat <	INT_TYPELIST_6 (	// Данные для приёма
-						Dps0, Dps1, Dps2, Dps3, Club0, Club1
+typedef Dat <	INT_TYPELIST_8 (	// Данные для приёма
+						Dps0, Dps1, Dps2, Dps3, Club0, Club1, BprQuery, BprVelocity
 								),
 				INT_TYPELIST_8 (	// Данные для передачи
 						DpsOut0, DpsOut1, DpsOut2, DpsOut3, ClubOut0, ClubOut1, ClubOut2, ClubOut3
 								),
-				INT_TYPELIST_3 (	// Данные, по приходу которых вызываются прерывания
-						Dps0, Club0, Club1
+				INT_TYPELIST_4 (	// Данные, по приходу которых вызываются прерывания
+						Dps0, Club0, Club1, BprVelocity
 								)
 			> DatType;
 DatType	data;
@@ -115,7 +125,7 @@ void clubSendNextPage (uint16_t none)
 // Ставит в очередь dispatcher'а clubSendNextPage () - чтобы не загрузить частично заполненную страницу
 void clubSendNextPageInterrupt ()
 {
-	dispatcher.add( SoftIntHandler::from_function<&clubSendNextPage>(), 0 );
+	dispatcher.add( SoftIntHandler (&clubSendNextPage), 0 );
 }
 
 // ---------------------------------------------- CAN -------------------------------------------►
@@ -376,21 +386,16 @@ void sysDiagnostics (uint16_t a)
 
 // ------------------------------------- Рукоятки: CAN -> RS-485 --------------------------------►
 
-void sysKeyRelease ();
-uint8_t sysKeyReleaseCounter;
-
-Alarm<Alarm2, 21760> sysKeySelfControl( InterruptHandler::from_function<&sysKeyRelease> () );
-
-void sysKeyRelease ()
-{
-	if (++sysKeyReleaseCounter == 46)
-	{
-		sysKeySelfControl.disable ();
-		ATOMIC	data.member<ClubOut2>() &= 0xF0FF; // Сбрасываем состояние кнопок
-		ATOMIC	data.member<ClubOut0>() &= ~(1 << 15); // Сбрасываем РБ
-		sysKeyReleaseCounter = 0;
-	}
-}
+//void sysKeyRelease ()
+//{
+//	if (++sysKeyReleaseCounter == 46)
+//	{
+//		sysKeySelfControl.disable ();
+//		ATOMIC	data.member<ClubOut2>() &= 0xF0FF; // Сбрасываем состояние кнопок
+//		ATOMIC	data.member<ClubOut0>() &= ~(1 << 15); // Сбрасываем РБ
+//		sysKeyReleaseCounter = 0;
+//	}
+//}
 
 void sysKey (uint16_t a)
 {
@@ -409,29 +414,42 @@ void sysKey (uint16_t a)
 		RESET_1	= 0x30,
 		RESET_2	= 0x31
 	};
+
 	if ( canDat.get<CanRx::SYS_KEY>()[0] & (1 << 6) ) // нажата кнопка (рукоятка)
 	{
 		switch ( (Key) (canDat.get<CanRx::SYS_KEY>()[0] & 0x3F) )
 		{
 			case Key::K20:
 				ATOMIC data.member<ClubOut2>() |= (1 << 8);
-				sysKeyReleaseCounter = 0;
-				sysKeySelfControl.enable ();
+				scheduler.runIn(
+							Command{ SoftIntHandler( [](uint16_t a){ATOMIC data.member<ClubOut2>() &= ~(1 << 8); } ), 0},
+							1000 );
+//				sysKeyReleaseCounter = 0;
+//				sysKeySelfControl.enable ();
 				break;
 			case Key::PULL_UP:
 				ATOMIC data.member<ClubOut2>() |= (1 << 9);
-				sysKeyReleaseCounter = 0;
-				sysKeySelfControl.enable ();
+				scheduler.runIn(
+							Command{ SoftIntHandler( [](uint16_t a){ATOMIC data.member<ClubOut2>() &= ~(1 << 9); } ), 0},
+							1000 );
+//				sysKeyReleaseCounter = 0;
+//				sysKeySelfControl.enable ();
 				break;
 			case Key::DEPART:
 				ATOMIC data.member<ClubOut2>() |= (1 << 10);
-				sysKeyReleaseCounter = 0;
-				sysKeySelfControl.enable ();
+				scheduler.runIn(
+							Command{ SoftIntHandler( [](uint16_t a){ATOMIC data.member<ClubOut2>() &= ~(1 << 10); } ), 0},
+							1000 );
+//				sysKeyReleaseCounter = 0;
+//				sysKeySelfControl.enable ();
 				break;
 			case Key::OS:
 				ATOMIC data.member<ClubOut2>() |= (1 << 11);
-				sysKeyReleaseCounter = 0;
-				sysKeySelfControl.enable ();
+				scheduler.runIn(
+							Command{ SoftIntHandler( [](uint16_t a){ATOMIC data.member<ClubOut2>() &= ~(1 << 11); } ), 0},
+							1000 );
+//				sysKeyReleaseCounter = 0;
+//				sysKeySelfControl.enable ();
 				break;
 		}
 	}
@@ -451,7 +469,8 @@ void ipdDate (uint16_t none)
 
 // ---------------------------------------------- КПТ -------------------------------------------►
 
-Kpt kpt ( _cast( Complex<uint16_t>, data.member<ClubOut1>() )[0], _cast( Complex<uint16_t> ,data.member<ClubOut1>() )[1] );
+Kpt<ClockType, clock, SchedulerType, scheduler>
+	kpt ( _cast( Complex<uint16_t>, data.member<ClubOut1>() )[0], _cast( Complex<uint16_t> ,data.member<ClubOut1>() )[1] );
 
 void kptRiseA (uint16_t)
 {
@@ -483,7 +502,11 @@ void kptRiseTimeA (uint16_t dataPointer)
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
+		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.rise (data[0]);
+
+		uint8_t myDebug[2] = {data[0], myTime};
+		canDat.send<CanTx::MY_DEBUG_A> (myDebug);
 	}
 }
 
@@ -493,7 +516,11 @@ void kptRiseTimeB (uint16_t dataPointer)
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
+		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.rise (data[0]);
+
+		uint8_t myDebug[2] = {data[0], myTime};
+		canDat.send<CanTx::MY_DEBUG_B> (myDebug);
 	}
 }
 
@@ -503,7 +530,11 @@ void kptFallTimeA (uint16_t dataPointer)
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
+		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.fall (data[0]);
+
+		uint8_t myDebug[2] = {data[0], myTime};
+		canDat.send<CanTx::MY_DEBUG_A> (myDebug);
 	}
 }
 
@@ -513,7 +544,11 @@ void kptFallTimeB (uint16_t dataPointer)
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
+		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.fall (data[0]);
+
+		uint8_t myDebug[2] = {data[0], myTime};
+		canDat.send<CanTx::MY_DEBUG_B> (myDebug);
 	}
 }
 
@@ -628,8 +663,11 @@ void mcoState (uint16_t pointer)
 	if ( message[5] & ((1 << 6) | (1 << 7)) ) // РБ или РБС
 	{
 		signals |= (1 << 7); // нажимаем РБ
-		sysKeyReleaseCounter = 0;
-		sysKeySelfControl.enable (); // через секунду отпускаем
+		scheduler.runIn(
+					Command{ SoftIntHandler( [](uint16_t a){ ATOMIC	data.member<ClubOut0>() &= ~(1 << 15); } ), 0},
+					1000 );
+//		sysKeyReleaseCounter = 0;
+//		sysKeySelfControl.enable (); // через секунду отпускаем
 	}
 	_cast( Complex<uint16_t>, data.member<ClubOut0>() )[1] = signals;
 
@@ -651,7 +689,41 @@ void mcoStateB (uint16_t pointer)
 		mcoState (pointer);
 }
 
+// --------------------------------------- Эмуляция скорости ------------------------------------►
 
+class Emulation
+{
+public:
+	Emulation ()
+		: active (false)
+	{
+		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
+	}
+
+	void getVelocity ()
+	{
+		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) ) // Команда на эмуляцию
+			dps.constutioCeleritasEmulate( uint16_t( _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1] ) * 256 );
+		else
+			dps.constutioCeleritasEmulate (0);
+
+		active = true;
+	}
+
+private:
+	void watchDog (uint16_t)
+	{
+		if (active)
+			active = false;
+		else
+			dps.constutioCeleritasEmulate (0);
+
+		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
+	}
+
+	bool active;
+};
+Emulation emulation;
 
 // ---------------------------------- Парсер команд по линии связи ------------------------------►
 
@@ -678,11 +750,11 @@ void commandParser ()
 		data.member<DpsOut2>() = dps.diametros(0); // выводим диаметры бандажа
 		data.member<DpsOut3>() = dps.diametros(1);
 
-		dps.activus ();
+		dps.constituoActivus ();
 	}
 	else
 	{
-		dps.passivus ();
+		dps.constituoPassivus ();
 
 		if (command->idRead)
 		{
@@ -704,12 +776,12 @@ void commandParser ()
 
 	if (data.member<DpsCommand>() == 0x0efe)			// Переход в режим программирования
 	{
-		dps.passivus ();
+		dps.constituoPassivus ();
 
 		Programming* P1 = new Programming (
 				data.member<Dps0>(),	data.member<Dps1>(),	data.member<Dps2>(),	data.member<Dps3>(),
 				data.member<DpsOut0>(),	data.member<DpsOut1>(),	data.member<DpsOut2>(),	data.member<DpsOut3>() );
-		data.interruptHandler<Dps0> () = InterruptHandler::from_method <Programming, &Programming::comParser> (P1);
+		data.interruptHandler<Dps0> () = InterruptHandler( P1, &Programming::comParser);
 //		data.interruptHandler<Dps0> () = SoftIntHandler::from_method <Programming, &Programming::comParser> (P1);
 	}
 }
@@ -718,51 +790,36 @@ void commandParser ()
 
 int main ()
 {
-//	// Перенесение постоянных характеристик КЛУБа (если до этого была старая прошивка)
-//	bool detectedOldEeprom = false;
-//	for (uint8_t i = 1; i <= 192; i ++)
-//		detectedOldEeprom = detectedOldEeprom || eeprom_read_byte( &eeprom.oldStyleClubEeprom + i );
-//	if (detectedOldEeprom)
-//	{
-//		for (uint8_t i = 1; i <= 192; i ++)
-//		{
-//			uint8_t newAdr = (i & 0xFC) | ( (i & 0x3) ^ 0x3 );
-//			eeprom_update_byte( (uint8_t *)(&eeprom.club)+newAdr, eeprom_read_byte (&eeprom.oldStyleClubEeprom+i) );
-//		}
-//		for (uint8_t i = 1; i <= 192; i ++)
-//			eeprom_update_byte( &eeprom.oldStyleClubEeprom+i, 0 ); // Стираем старый EEPROM
-//	}
+	data.interruptHandler<DpsCommand> () = InterruptHandler (&commandParser);
+	data.interruptHandler<Club0> () = InterruptHandler (&kptCommandParse);
+	data.interruptHandler<Club1> () = InterruptHandler (&clubSendNextPageInterrupt);
+	data.interruptHandler<BprVelocity> () = InterruptHandler (&emulation, &Emulation::getVelocity);
 
-	data.interruptHandler<DpsCommand> () = InterruptHandler::from_function <&commandParser> ();
-	data.interruptHandler<Club0> () = InterruptHandler::from_function <&kptCommandParse> ();
-	data.interruptHandler<Club1> () = InterruptHandler::from_function <&clubSendNextPageInterrupt> ();
+	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler (&canDataGet);
+	canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler (&canDataGet);
+	canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler (&canDataGet);
+	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler (&canDataSend);
 
-	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_function <&canDataGet> ();
-	canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_function <&canDataGet> ();
-	canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_function <&canDataGet> ();
-	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_function <&canDataSend> ();
+	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler (&eCardParser);
 
-	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_function <&eCardParser> ();
+	canDat.rxHandler<CanRx::SYS_DIAGNOSTICS>() = SoftIntHandler (&sysDiagnostics);
 
-	canDat.rxHandler<CanRx::SYS_DIAGNOSTICS>() = SoftIntHandler::from_function <&sysDiagnostics> ();
+	canDat.rxHandler<CanRx::MCO_STATE_A>() = SoftIntHandler (&mcoStateA);
+	canDat.rxHandler<CanRx::MCO_STATE_B>() = SoftIntHandler (&mcoStateB);
 
-	canDat.rxHandler<CanRx::MCO_STATE_A>() = SoftIntHandler::from_function <&mcoStateA> ();
-	canDat.rxHandler<CanRx::MCO_STATE_B>() = SoftIntHandler::from_function <&mcoStateB> ();
+	canDat.rxHandler<CanRx::IPD_DATE>() = SoftIntHandler (&ipdDate);
+	canDat.rxHandler<CanRx::SYS_KEY>() = SoftIntHandler (&sysKey);
 
-	canDat.rxHandler<CanRx::IPD_DATE>() = SoftIntHandler::from_function <&ipdDate> ();
-	canDat.rxHandler<CanRx::SYS_KEY>() = SoftIntHandler::from_function <&sysKey> ();
+	canDat.rxHandler<CanRx::MP_ALS_ON_A>() = SoftIntHandler (&kptRiseA);
+	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_A>() = SoftIntHandler (&kptRiseTimeA);
+	canDat.rxHandler<CanRx::MP_ALS_OFF_A>() = SoftIntHandler (&kptFallA);
+	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_A>() = SoftIntHandler (&kptFallTimeA);
+	canDat.rxHandler<CanRx::MP_ALS_ON_B>() = SoftIntHandler (&kptRiseB);
+	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_B>() = SoftIntHandler (&kptRiseTimeB);
+	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler (&kptFallB);
+	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler (&kptFallTimeB);
 
-	canDat.rxHandler<CanRx::MP_ALS_ON_A>() = SoftIntHandler::from_function <&kptRiseA> ();
-	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_A>() = SoftIntHandler::from_function <&kptRiseA> ();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_A>() = SoftIntHandler::from_function <&kptFallA> ();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_A>() = SoftIntHandler::from_function <&kptFallA> ();
-	canDat.rxHandler<CanRx::MP_ALS_ON_B>() = SoftIntHandler::from_function <&kptRiseB> ();
-	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_B>() = SoftIntHandler::from_function <&kptRiseB> ();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler::from_function <&kptFallB> ();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallB> ();
-
-
-	dps.activus();
+	dps.constituoActivus();
 
 	sei();
 
@@ -791,7 +848,6 @@ int main ()
 		}
 	}
 
-
     for (;;)
     {
     	static bool resetButtonWasFree = false;
@@ -808,6 +864,8 @@ int main ()
     	}
 
     	dispatcher.invoke();
+    	wdt_reset();
+    	scheduler.invoke();
     	wdt_reset();
 
 //    	asm volatile ("nop");

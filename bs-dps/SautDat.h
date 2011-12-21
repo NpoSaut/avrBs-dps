@@ -108,7 +108,7 @@
 		// ...
 	}
 
-	data.interruptHandler(SomeInDataName2) = InterruptHandler::from_function <&f> ();
+	data.interruptHandler(SomeInDataName2) = InterruptHandler (&f);
  *
  */
 
