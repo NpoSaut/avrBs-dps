@@ -469,7 +469,7 @@ private:
 		reg.canPage->autoIncrementDisable_ = false;
 
 		reg.canMobStatus->receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
-//		sei (); // После этого можно разрешить прерывания глобально
+		sei (); // После этого можно разрешить прерывания глобально
 
 		uint8_t len = reg.canMobControl->dataLength_;
 		uint16_t descript = reg.canMobId->idA_ * 0x20 + len;

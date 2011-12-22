@@ -181,8 +181,6 @@ public:
 	const uint32_t longitudoImpulsio; // Длина, которую колесо проходит за один импульс (в единицах: дм/65536)
 	const Eeprom::Saut::Configuration::DpsPosition	positio;
 
-	uint16_t celeritasEmulate;
-
 private:
 	enum { maxCeleritasError = maxCeleritas / minTempusPunctum };
 	const bool lanternaOperor;
@@ -205,8 +203,8 @@ private:
 	{
 		tempusPunctum[can] = 0;
 		impulsio[can] = 0;
-		celeritas = celeritasEmulate;
-		commoratio = (celeritas == 0);
+		celeritas = 0;
+		commoratio = true;
 		acceleratio = 0;
 		acceleratioColum = 0;
 		causarius = false;
@@ -254,8 +252,7 @@ private:
 // Cкоростемер
 // -----------
 
-template <	Port Register::* accessusPortus,
-			Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, Port Register::*semiSynthesisPortus, uint8_t semiSynthesisPes,
+template <	Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, Port Register::*semiSynthesisPortus, uint8_t semiSynthesisPes,
 			typename CanType, CanType& canDat  >
 class CeleritasSpatiumDimetior
 {
@@ -266,11 +263,13 @@ public:
 		return dimetior[n]->diametros;
 	}
 
-	CeleritasSpatiumDimetior (	uint8_t& spatium, Safe<uint16_t>& celeritas, Safe<uint16_t>& acceleratioEtAffectus,
+	CeleritasSpatiumDimetior (	Port Register::* accessusPortus,
+								uint8_t& spatium, Safe<uint16_t>& celeritas, Safe<uint16_t>& acceleratioEtAffectus,
 								uint8_t& odometer16dm0, uint8_t& odometer16dm1,
 								uint8_t (&spatiumClubPage)[3], uint8_t (&celeritasClubPage)[3],
 								uint16_t diametros0, uint16_t diametros1  )
-		: spatiumMeters (0),
+		: accessusPortus (accessusPortus),
+		  spatiumMeters (0),
 		  odometer16dm({ &odometer16dm0, &odometer16dm1 }),
 		  ecDifferens (false), tractus (false), blockStatus (BlockStatus::InitState),
 		  animadversor( InterruptHandler (this, &myType::animadversio) ),
@@ -310,8 +309,8 @@ public:
 		if (!activus)
 		{
 			activus = true;
-			animadversor.enable ();
-			productor.enable();
+			animadversor.start ();
+			productor.start();
 		}
 	}
 	void constituoPassivus ()
@@ -336,18 +335,13 @@ public:
 		return dimetior[nCapio]->accipioVersus();
 	}
 
+	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters; // пройденный путь в метрах
 	uint8_t* odometer16dm[2]; // cсылки на одометры
 
 	bool ecDifferens; // Выставлять ли критическое расхождение с электронной картой
 //	uint8_t parity; // чётность направления. Чётное направление (0) - увеличение ЖД-координаты. Нечётное (1) - уменьшение
 	bool tractus; // 0 - торможение, 1...- тяга
-
-	void constutioCeleritasEmulate (uint16_t cel)
-	{
-		dimetior[0]->celeritasEmulate = (cel >> 1);
-		dimetior[1]->celeritasEmulate = (cel >> 1);
-	}
 
 	// О УЖАС!!!!!! -- !УБЕРИТЕ ЭТО ОТСЮДА!
 	enum class BlockStatus: uint8_t
@@ -359,7 +353,7 @@ public:
 	BlockStatus blockStatus;
 
 private:
-	typedef CeleritasSpatiumDimetior< accessusPortus, lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat > myType;
+	typedef CeleritasSpatiumDimetior< lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat > myType;
 	// После прошествия этого времени по первому спаду произойдёт подсчёт
 	// 1/minTempusPunctum - относительная погрешность определения скорости.
 	// Время обновления показания на больших скоростях: minTempusPunctum * animadversor.period

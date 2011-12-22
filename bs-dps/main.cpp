@@ -579,12 +579,12 @@ uint16_t bandDiam (const uint8_t* avarage, const uint8_t* correction)
 }
 
 typedef
-CeleritasSpatiumDimetior  < &Register::portC,
-							&Register::portC, 4, 5, &Register::portB, 7,
+CeleritasSpatiumDimetior  < &Register::portC, 4, 5, &Register::portB, 7,
 							CanDatType, canDat >
 DpsType;
 
-DpsType	dps ( 	com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
+DpsType	dps ( 	&Register::portC,
+				com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
 				kpt.lis, kpt.correctKptDistance,
 				clubPage[1], clubPage[3],
 				bandDiam (&eeprom.saut.DiameterAvarage, &eeprom.saut.DiameterCorrection[0]),
@@ -689,39 +689,85 @@ void mcoStateB (uint16_t pointer)
 		mcoState (pointer);
 }
 
-// --------------------------------------- Эмуляция скорости ------------------------------------►
+// --------------------------------------- Эмуляция движения ------------------------------------►
 
 class Emulation
 {
 public:
 	Emulation ()
-		: active (false)
+		: engine ( 0x5555, InterruptHandler(this, &Emulation::makeAStep) )
 	{
 		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
 	}
 
 	void getVelocity ()
 	{
-		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) ) // Команда на эмуляцию
-			dps.constutioCeleritasEmulate( uint16_t( _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1] ) * 256 );
-		else
-			dps.constutioCeleritasEmulate (0);
+		uint8_t newVelocity = _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1];
+		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) &&  // Команда на эмуляцию
+				newVelocity >= 2 ) // Меньше 8-битный таймер не позволяет
+		{
+			enable();
+			if ( newVelocity != currentVelocity )
+			{
+				currentVelocity = newVelocity;
 
-		active = true;
+				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
+				if (period > 150) // Чтобы не повесить систему слишком частым заходом
+					engine.setPeriod ( period );
+			}
+		}
+		else
+			disable ();
+
+		getMessage = true;
 	}
 
 private:
 	void watchDog (uint16_t)
 	{
-		if (active)
-			active = false;
-		else
-			dps.constutioCeleritasEmulate (0);
+		if ( !( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) ) ||
+				getMessage == false )
+			disable ();
 
+		getMessage = false;
 		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
 	}
+	void makeAStep ()
+	{
+		if (parity)
+		{
+			toggle (1);
+			toggle (2);
+		}
+		else
+		{
+			toggle (0);
+			toggle (3);
+		}
+		parity = !parity;
+	}
+	void enable ()
+	{
+		dps.accessusPortus = (Port Register::*) (&Register::general0);
+		engine.enable();
+	}
+	void disable ()
+	{
+		dps.accessusPortus = &Register::portC;
+		engine.disable();
+	}
+	void toggle (const uint8_t& n)
+	{
+		if ( reg.general0 & (1<<n) )
+			reg.general0 &= ~(1<<n);
+		else
+			reg.general0 |= (1<<n);
+	}
 
-	bool active;
+	AlarmAdjust<Alarm2> engine;
+	uint8_t currentVelocity;
+	bool getMessage;
+	bool parity;
 };
 Emulation emulation;
 
