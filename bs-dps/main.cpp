@@ -557,7 +557,7 @@ void kptCommandParse ()
 
 	uint8_t commandNew = _cast( Complex<uint16_t>, data.member<Club0>() )[1];
 
-	if ( ((commandNew ^ commandOld) & commandOld) & (1 << 0) ) // спад бита 0 в комманде
+	if ( ((commandNew ^ commandOld) & commandOld) & (1 << 0) ) // спад бита 0 в команде
 		kpt.lisReadConfirm();
 	if ( !(commandNew & (1 << 3)) )
 		kpt.lisCountBan();
@@ -591,50 +591,80 @@ DpsType	dps ( 	&Register::portC,
 
 // ---------------------------------- Сверка с электронной картой -------------------------------►
 
+//template <typename Scheduler, Scheduler scheduler>
+//class ECardAdjustment
+//{
+//public:
+//	ECardAdjustment ()
+//	{}
+//	void eCardData (uint32_t )
+//private:
+//};
+
 void eCardParser (uint16_t a)
 {
-	Complex<int32_t> ec = 0;
-	ec[0] = canDat.get<CanRx::MM_DATA> () [3];
-	ec[1] = canDat.get<CanRx::MM_DATA> () [4];
-	ec[2] = canDat.get<CanRx::MM_DATA> () [5];
-	if ( ec[2] & (1 << 7) ) // Отрицательное число
-		ec[3] = 0xFF;
-
-	static bool firstTime = true;
-	if (firstTime)
+	struct CardState
 	{
-		firstTime = false;
-		dps.spatiumMeters = ec;
+		uint8_t extrapolation	:1;
+		uint8_t station			:1;
+		uint8_t map2			:1;
+		uint8_t zeroing			:1;
+		uint8_t snsOk			:1;
+		uint8_t error			:1;
+		uint8_t map				:1;
+		uint8_t tks				:1;
+	};
+	Bitfield<CardState> cardState (canDat.get<CanRx::MM_DATA>()[0]);
+
+	if ( cardState->zeroing )
+	{
+		dps.spatiumMeters = 0;
 	}
-
-	uint8_t debug[8] = {
-			ec[0],
-			ec[1],
-			ec[2],
-			ec[3],
-			dps.spatiumMeters[0],
-			dps.spatiumMeters[1],
-			dps.spatiumMeters[2],
-			dps.spatiumMeters[3]
-						};
-	if (reg.portB.pin7 == 0) // первый полукомплект
-		canDat.send<CanTx::MY_MAP_A>(debug);
-	else
-		canDat.send<CanTx::MY_MAP_B>(debug);
-
-	if ( dps.celeritas() / 256 >= 1 ) // скорость больше 2 км/ч
+	else if ( !cardState->error && cardState->map && cardState->map2 )
 	{
-		int32_t mismatch = ec - dps.spatiumMeters;
+		Complex<int32_t> ec = 0;
+		ec[0] = canDat.get<CanRx::MM_DATA> () [3];
+		ec[1] = canDat.get<CanRx::MM_DATA> () [4];
+		ec[2] = canDat.get<CanRx::MM_DATA> () [5];
+		if ( ec[2] & (1 << 7) ) // Отрицательное число
+			ec[3] = 0xFF;
 
-		if ( abs(mismatch) > 500 )
-			dps.ecDifferens = true;
-		else
+		static bool firstTime = true;
+		if (firstTime)
 		{
-			dps.ecDifferens = false;
-//			if ( 	(dps.versus() == 0 && mismatch > 25) ||		// вперёд
-//					(dps.versus() == 1 && mismatch < -25)	)	// назад
-			if ( abs(mismatch) > 25 )	// назад
-				dps.spatiumMeters += mismatch/2;
+			firstTime = false;
+			dps.spatiumMeters = ec;
+		}
+
+		uint8_t debug[8] = {
+				ec[0],
+				ec[1],
+				ec[2],
+				ec[3],
+				dps.spatiumMeters[0],
+				dps.spatiumMeters[1],
+				dps.spatiumMeters[2],
+				dps.spatiumMeters[3]
+							};
+		if (reg.portB.pin7 == 0) // первый полукомплект
+			canDat.send<CanTx::MY_MAP_A>(debug);
+		else
+			canDat.send<CanTx::MY_MAP_B>(debug);
+
+		if ( dps.celeritas() / 256 >= 1 ) // скорость больше 2 км/ч
+		{
+			int32_t mismatch = ec - dps.spatiumMeters;
+
+			if ( abs(mismatch) > 500 )
+				dps.ecDifferens = true;
+			else
+			{
+				dps.ecDifferens = false;
+	//			if ( 	(dps.versus() == 0 && mismatch > 25) ||		// вперёд
+	//					(dps.versus() == 1 && mismatch < -25)	)	// назад
+				if ( abs(mismatch) > 25 )	// назад
+					dps.spatiumMeters += mismatch/2;
+			}
 		}
 	}
 }

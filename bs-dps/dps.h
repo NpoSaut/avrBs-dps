@@ -100,6 +100,11 @@ public:
 											// После остановки (оба счётчика = 0) необходимо 2 импульса по одному и 1 по другому,
 											// для того, чтобы вывести скорость
 
+			uint32_t longitudo = 0;
+			if ( impulsio[canalis] > impulsio[!canalis] )	// Метры идут только по одному каналу. По большему.
+				longitudo = longitudoImpulsio;				// при переключении будет небольшая погрешность в большую сторону.
+
+
 			if ( tempusPunctum[canalis] >= minTempusPunctum )  // Прошло достаточно времени для точного определения скорости
 			{
 				causarius = ( abs(impulsio[canalis] - impulsio[!canalis]) > 1 ); // Значит было нормальное чередование (ну не факт...)
@@ -129,7 +134,7 @@ public:
 						(reg.*lanternaPortus).pin<lanterna0>().toggle ();
 				}
 
-			return longitudoImpulsio/2;
+			return longitudo;
 		}
 		else // Фронта не было
 		{
@@ -543,11 +548,11 @@ private:
 		// Определение времени работы и выставление флага перезагрузки
 		if (tempusOpus <= tempusAbInitioIndicium)
 		{
-			mappa->repeto = 0; // выставление флага перезагрузки
+			mappa->repeto = 1; // выставление флага перезагрузки
 			tempusOpus ++;
 		}
 		else
-			mappa->repeto = 1;
+			mappa->repeto = 0;
 
 		// Перезагрузка, если выключили БЛОК
 		if (blockStatus != BlockStatus::InitState)
