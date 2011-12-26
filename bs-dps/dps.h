@@ -266,7 +266,7 @@ public:
 	CeleritasSpatiumDimetior (	Port Register::* accessusPortus,
 								uint8_t& spatium, Safe<uint16_t>& celeritas, Safe<uint16_t>& acceleratioEtAffectus,
 								uint8_t& odometer16dm0, uint8_t& odometer16dm1,
-								uint8_t (&spatiumClubPage)[3], uint8_t (&celeritasClubPage)[3],
+//								uint8_t (&spatiumClubPage)[3], uint8_t (&celeritasClubPage)[3],
 								uint16_t diametros0, uint16_t diametros1  )
 		: accessusPortus (accessusPortus),
 		  spatiumMeters (0),
@@ -275,7 +275,7 @@ public:
 		  animadversor( InterruptHandler (this, &myType::animadversio) ),
 		  productor( InterruptHandler (this, &myType::produco) ),
 		  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus(acceleratioEtAffectus),
-		  spatiumClubPage (spatiumClubPage), celeritasClubPage (celeritasClubPage),
+//		  spatiumClubPage (spatiumClubPage), celeritasClubPage (celeritasClubPage),
 		  spatiumDecimeters65536 (0),
 		  spatiumDecimetersMultiple10 (10),
 		  spatiumDecimetersMulitple16 (0),
@@ -382,8 +382,8 @@ private:
 	Safe<uint16_t>& celeritasProdo;
 	Safe<uint16_t>& acceleratioEtAffectus;
 
-	uint8_t (&spatiumClubPage) [3];
-	uint8_t (&celeritasClubPage) [3];
+//	uint8_t (&spatiumClubPage) [3];
+//	uint8_t (&celeritasClubPage) [3];
 
 	uint32_t spatiumDecimeters65536; // пройденный путь в дм/65536
 	uint8_t spatiumDecimetersMultiple10; // путь в дециметрах, кратный 10; для перевода в метры
@@ -577,13 +577,13 @@ private:
 		uint16_t sigCel = signCeleritas( dimetior[nCapio]->accipioCeleritas() );
 		celeritasProdo <<= sigCel;
 
-		// Вывод данных в страницы БС-КЛУБ
-		celeritasClubPage[0] = dimetior[nCapio]->accipioCeleritas() >> 7;
-		celeritasClubPage[1] |= uint8_t(dimetior[nCapio]->accipioCeleritas() >> 10) & 0x20;
-
-		spatiumClubPage[0] = spatiumMeters[2];
-		spatiumClubPage[1] = spatiumMeters[1];
-		spatiumClubPage[2] = spatiumMeters[0];
+//		// Вывод данных в страницы БС-КЛУБ
+//		celeritasClubPage[0] = dimetior[nCapio]->accipioCeleritas() >> 7;
+//		celeritasClubPage[1] |= uint8_t(dimetior[nCapio]->accipioCeleritas() >> 10) & 0x20;
+//
+//		spatiumClubPage[0] = spatiumMeters[2];
+//		spatiumClubPage[1] = spatiumMeters[1];
+//		spatiumClubPage[2] = spatiumMeters[0];
 
 		// Вывод данных в CAN
 		uint8_t sautInfo[8] = {

@@ -226,12 +226,11 @@ void canDataSend (uint16_t queryAdr)
 		typedef const uint8_t Query[1];
 		uint8_t query = (*( (Query *)(queryAdr) ))[0];
 
-		uint8_t* adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + query*4 );
-		if (query == 1) // А номер пути мы храним под номером 23
-			adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + 23*4 );
-
-		if (query != 9) // К сожалению, это передаю не только я. Не буду мешать людям работать..
+		if ( query != 1 &&
+			 query != 9 ) // К сожалению, это передаю не только я. Не буду мешать людям работать..
 		{
+			uint8_t* adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + query*4 );
+
 			uint8_t data[5] = {
 					query,
 					eeprom_read_byte (adr+3),
@@ -586,7 +585,7 @@ DpsType;
 DpsType	dps ( 	&Register::portC,
 				com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
 				kpt.lis, kpt.correctKptDistance,
-				clubPage[1], clubPage[3],
+//				clubPage[1], clubPage[3],
 				bandDiam (&eeprom.saut.DiameterAvarage, &eeprom.saut.DiameterCorrection[0]),
 				bandDiam (&eeprom.saut.DiameterAvarage, &eeprom.saut.DiameterCorrection[1]) );
 
@@ -653,8 +652,8 @@ void mcoState (uint16_t pointer)
 	clubPage[0][2] = (message[0] & 0x4F) | // целевая скорость и ключь ЭПК 1-ой кабины
 					 ((message[3] & 0xC0) >> 2);
 
-	clubPage[1][1] |= message[3] & 0xF;
-	clubPage[1][2] = message[4];
+	clubPage[1][1] |= message[3] & 0xF;	// Расстояние до цели
+	clubPage[1][2] = message[4];		//
 
 	// Передача сигналов КЛУБ
 	uint8_t signals = _cast( Complex<uint16_t>, data.member<ClubOut0>() )[1] & 0x80; // Сохраняем текущее значение РБ
