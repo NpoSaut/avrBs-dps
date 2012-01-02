@@ -616,11 +616,11 @@ void eCardParser (uint16_t a)
 	};
 	Bitfield<CardState> cardState (canDat.get<CanRx::MM_DATA>()[0]);
 
-	if ( cardState->zeroing )
-	{
-		dps.spatiumMeters = 0;
-	}
-	else if ( !cardState->error && cardState->map && cardState->map2 )
+//	if ( cardState->zeroing )
+//	{
+//		dps.spatiumMeters = 0;
+//	}
+	if ( !cardState->error && cardState->map && cardState->map2 )
 	{
 		Complex<int32_t> ec = 0;
 		ec[0] = canDat.get<CanRx::MM_DATA> () [3];
