@@ -28,6 +28,7 @@
 using namespace Saut;
 #include "CanDesriptors.h"
 #include "eeprom.h"
+#include <stdint.h>
 
 
 // Датчик пути и скорости
@@ -66,7 +67,8 @@ public:
 		  positio (positio), lanternaOperor (lanternaOperor_),
 		  celeritas (0), acceleratio (0), acceleratioColum (0),
 		  impulsio ({0,0}), impulsioLanterna ({0,0}), tempusPunctum ({0,0}),
-		  affectus (0), versusRotatio (!positio), causarius (false), commoratio (true)
+		  affectus (0), versusRotatio ({!positio, !positio}), causarius (false), commoratio (true),
+		  retroCan (0), vicisNum (0)
 	{
 //		if (lanternaOperor)
 //		{
@@ -107,8 +109,14 @@ public:
 
 			if ( tempusPunctum[canalis] >= minTempusPunctum )  // Прошло достаточно времени для точного определения скорости
 			{
-				causarius = ( abs(impulsio[canalis] - impulsio[!canalis]) > 1 ); // Значит было нормальное чередование (ну не факт...)
-				versusRotatio = ((affectus + canalis) / 2) & 1;
+				causarius = ( abs(impulsio[canalis] - impulsio[!canalis]) > 2 ); // Значит было нормальное чередование (ну не факт...)
+
+				// Определение направления движения
+				uint8_t vr = ((affectus + canalis) / 2) & 1;
+				if ( vr == versusRotatio->retro )				 // Направление "применяется" только после подтверждения
+					versusRotatio->modo = versusRotatio->retro;	//  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
+				versusRotatio->retro = vr;
+
 
 				debugImpulsio[0] = impulsio[0];
 				debugImpulsio[1] = impulsio[1];
@@ -169,7 +177,7 @@ public:
 	// Направление движения. 0 - вперёд
 	bool accipioVersus () const
 	{
-		return !(versusRotatio ^ positio);
+		return !(versusRotatio->modo ^ positio);
 	}
 	// Остановка
 	bool sicinCommoratio () const
@@ -186,6 +194,11 @@ public:
 	const uint32_t longitudoImpulsio; // Длина, которую колесо проходит за один импульс (в единицах: дм/65536)
 	const Eeprom::Saut::Configuration::DpsPosition	positio;
 
+	// --- ДЛЯ ОТЛАДКИ ---
+	uint8_t retroCan; // последний канал, по которому производился расчёт
+	uint8_t vicisNum; // кол-во переключений между каналами
+	// --- КОНЕЦ ---
+
 private:
 	enum { maxCeleritasError = maxCeleritas / minTempusPunctum };
 	const bool lanternaOperor;
@@ -197,7 +210,12 @@ private:
 	uint8_t impulsioLanterna[2]; // Это кол-во не обнуляется, чтобы корректно моргать лампочками
 	uint16_t tempusPunctum[2];
 	uint8_t affectus; // состояние порта
-	bool versusRotatio;	// Напрвление вращения (true - туда, false - обратно)
+	struct VersusRotatio // Напрвление вращения (true - туда, false - обратно)
+	{
+		uint8_t modo	:1;	// Сейчас
+		uint8_t retro	:1; // В прошлый раз (для контроля)
+	};
+	Bitfield<VersusRotatio> versusRotatio;
 	bool causarius; // Испорченность (недостоверность данных)
 	bool commoratio;	// Остановка
 
@@ -222,6 +240,12 @@ private:
 
 	void computo (const uint8_t& can) __attribute__ ((noinline))
 	{
+		// Для отладки --- УБРАТЬ
+		if ( retroCan != can )
+			vicisNum ++;
+		retroCan = can;
+		// конец --- для отладки -- УБРАТЬ
+
 		// Считаем скорость
 		uint16_t celeritasNovus =
 					(((34468 * uint32_t (diametros)) / period) * (impulsio[can] - 1)) / tempusPunctum[can];
@@ -280,10 +304,10 @@ public:
 		  animadversor( InterruptHandler (this, &myType::animadversio) ),
 		  productor( InterruptHandler (this, &myType::produco) ),
 		  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus(acceleratioEtAffectus),
-//		  spatiumClubPage (spatiumClubPage), celeritasClubPage (celeritasClubPage),
 		  spatiumDecimeters65536 (0),
 		  spatiumDecimetersMultiple10 (10),
 		  spatiumDecimetersMulitple16 (0),
+		  retroRotundatioCeleritas (0),
 		  nCapio (0),
 		  tempusRestitutioValidus (0),
 		  tempusDifferens (0),
@@ -393,6 +417,8 @@ private:
 	uint32_t spatiumDecimeters65536; // пройденный путь в дм/65536
 	uint8_t spatiumDecimetersMultiple10; // путь в дециметрах, кратный 10; для перевода в метры
 	uint8_t spatiumDecimetersMulitple16; // путь в 1,6 м. Используется для ++ одометров
+
+	uint16_t retroRotundatioCeleritas; // прошлое округлённое значение скорости. Для нужд округления с гистерезисом.
 
 	bool nCapio;
 	uint8_t tempusRestitutioValidus; // время после последнего сброса показаний исправности
@@ -582,13 +608,12 @@ private:
 		uint16_t sigCel = signCeleritas( dimetior[nCapio]->accipioCeleritas() );
 		celeritasProdo <<= sigCel;
 
-//		// Вывод данных в страницы БС-КЛУБ
-//		celeritasClubPage[0] = dimetior[nCapio]->accipioCeleritas() >> 7;
-//		celeritasClubPage[1] |= uint8_t(dimetior[nCapio]->accipioCeleritas() >> 10) & 0x20;
-//
-//		spatiumClubPage[0] = spatiumMeters[2];
-//		spatiumClubPage[1] = spatiumMeters[1];
-//		spatiumClubPage[2] = spatiumMeters[0];
+		// ОТЛАДКА
+		uint8_t myDebug[3] = {
+					dimetior[0]->vicisNum,
+					dimetior[1]->vicisNum,
+					dispatcher.maxSize
+							};
 
 		// Вывод данных в CAN
 		uint8_t sautInfo[8] = {
@@ -602,16 +627,20 @@ private:
 					mappa
 							 };
 
+		// Округление скорости с гистерезисом
+		Complex<uint16_t> rotCel;
+		rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
+
 		uint8_t ipdState[8] = {
 					(mappa->validus0 == false && mappa->validus1 == false) ? (uint8_t)2 : (uint8_t)0,
 					uint8_t(  (versus() * 128)
 							| (!dimetior[nCapio]->sicinCommoratio() << 2)
-							| uint8_t(sigCel & 0x1) ), // направление + наличие импульсов ДПС + старший бит скорости в км/ч
-					uint8_t(sigCel >> 8), // скорость в км/ч
-					uint8_t(spatiumMeters[1]),
-					uint8_t(spatiumMeters[0]),
-					uint8_t(spatiumMeters[2]),
-					uint8_t(ecDifferens << 5),
+							| uint8_t( rotCel[1] & 0x1) ), // направление + наличие импульсов ДПС + старший бит скорости в км/ч
+					uint8_t( rotCel[0] ), // скорость в км/ч
+					uint8_t( spatiumMeters[1] ),
+					uint8_t( spatiumMeters[0] ),
+					uint8_t( spatiumMeters[2] ),
+					uint8_t( ecDifferens << 5 ),
 					0
 							 };
 		ecDifferens = false;
@@ -620,11 +649,13 @@ private:
 		{
 			canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 			canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+			canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
 		}
 		else
 		{
 			canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 			canDat.template send<CanTx::IPD_STATE_B> (ipdState);
+			canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
 
 			uint8_t sysDataState[7] = {
 					0, // Результаты выполнения тестов...
@@ -659,6 +690,16 @@ private:
 	{
 		uint8_t superiorAliquam = cel >> 15;
 		return (cel << 1) | superiorAliquam;
+	}
+
+	// Округление скорости до целых с гистерезисом
+	const uint16_t& rotundatioCeleritas (const uint16_t& cel) const
+	{
+		if ( cel/128 < retroRotundatioCeleritas )
+			((CeleritasSpatiumDimetior*)this)->retroRotundatioCeleritas = (cel + 96) / 128;
+		else
+			((CeleritasSpatiumDimetior*)this)->retroRotundatioCeleritas = (cel + 32) / 128;
+		return retroRotundatioCeleritas;
 	}
 };
 

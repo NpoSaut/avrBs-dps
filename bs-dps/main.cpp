@@ -503,9 +503,6 @@ void kptRiseTimeA (uint16_t dataPointer)
 		Data& data = *( (Data *)(dataPointer) );
 		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.rise (data[0]);
-
-		uint8_t myDebug[2] = {data[0], myTime};
-		canDat.send<CanTx::MY_DEBUG_A> (myDebug);
 	}
 }
 
@@ -517,9 +514,6 @@ void kptRiseTimeB (uint16_t dataPointer)
 		Data& data = *( (Data *)(dataPointer) );
 		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.rise (data[0]);
-
-		uint8_t myDebug[2] = {data[0], myTime};
-		canDat.send<CanTx::MY_DEBUG_B> (myDebug);
 	}
 }
 
@@ -531,9 +525,6 @@ void kptFallTimeA (uint16_t dataPointer)
 		Data& data = *( (Data *)(dataPointer) );
 		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.fall (data[0]);
-
-		uint8_t myDebug[2] = {data[0], myTime};
-		canDat.send<CanTx::MY_DEBUG_A> (myDebug);
 	}
 }
 
@@ -545,9 +536,6 @@ void kptFallTimeB (uint16_t dataPointer)
 		Data& data = *( (Data *)(dataPointer) );
 		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.fall (data[0]);
-
-		uint8_t myDebug[2] = {data[0], myTime};
-		canDat.send<CanTx::MY_DEBUG_B> (myDebug);
 	}
 }
 
@@ -616,10 +604,6 @@ void eCardParser (uint16_t a)
 	};
 	Bitfield<CardState> cardState (canDat.get<CanRx::MM_DATA>()[0]);
 
-//	if ( cardState->zeroing )
-//	{
-//		dps.spatiumMeters = 0;
-//	}
 	if ( !cardState->error && cardState->map && cardState->map2 )
 	{
 		Complex<int32_t> ec = 0;
@@ -635,21 +619,6 @@ void eCardParser (uint16_t a)
 			firstTime = false;
 			dps.spatiumMeters = ec;
 		}
-
-		uint8_t debug[8] = {
-				ec[0],
-				ec[1],
-				ec[2],
-				ec[3],
-				dps.spatiumMeters[0],
-				dps.spatiumMeters[1],
-				dps.spatiumMeters[2],
-				dps.spatiumMeters[3]
-							};
-		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.send<CanTx::MY_MAP_A>(debug);
-		else
-			canDat.send<CanTx::MY_MAP_B>(debug);
 
 		if ( dps.celeritas() / 256 >= 1 ) // скорость больше 2 км/ч
 		{
@@ -861,6 +830,12 @@ void commandParser ()
 	}
 }
 
+void dispatcherSizeReset (uint16_t)
+{
+	dispatcher.maxSize = 0;
+	scheduler.runIn( Command {&dispatcherSizeReset, 0},	10000 );
+}
+
 // --------------------------------------------- main -------------------------------------------►
 
 int main ()
@@ -922,6 +897,8 @@ int main ()
 			canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
 		}
 	}
+
+	scheduler.runIn( Command {&dispatcherSizeReset, 0},	10000 );
 
     for (;;)
     {
