@@ -54,7 +54,7 @@ void Init (void)
 typedef Clock< Alarm< Alarm3A, 1000 >, uint32_t > ClockType;
 ClockType clock;
 
-typedef Scheduler< ClockType, clock, 6, uint16_t > SchedulerType;
+typedef Scheduler< ClockType, clock, 3, uint16_t > SchedulerType;
 SchedulerType scheduler;
 
 // -------------------------------------------- RS-485 ------------------------------------------►

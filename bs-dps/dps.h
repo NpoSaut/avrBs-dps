@@ -460,7 +460,7 @@ private:
 		{
 			// Выводим в линию связи пройденный путь ...
 			spatiumDecimeters65536 += appendicula;
-			spatium = uint8_t(spatiumDecimeters65536 >> 16);
+//			spatium = uint8_t(spatiumDecimeters65536 >> 16);
 			// Обновляем показания одометров
 			uint8_t spatiumDecimetersMulitple16New = uint8_t(spatiumDecimeters65536 >> 20);
 			if ( spatiumDecimetersMulitple16 != spatiumDecimetersMulitple16New )

@@ -481,13 +481,13 @@ private:
 
 		if (n != 255) // Пришедший Descriptor есть в наших списках
 		{
-		for (uint8_t i = 0; i < len; ++i)
-			data[n][i] = reg.canMobData;
+			for (uint8_t i = 0; i < len; ++i)
+				data[n][i] = reg.canMobData;
 
-		// Добавляем в очередь пользовательский обработчик
-		uint8_t ni = IndexFinder<RxDescriptorInterruptList>::index(descript);
-		if (ni != 255)
-			dispatcher.add (handler[ni], uint16_t(&data[n]));
+			// Добавляем в очередь пользовательский обработчик
+			uint8_t ni = IndexFinder<RxDescriptorInterruptList>::index(descript);
+			if (ni != 255)
+				dispatcher.add (handler[ni], uint16_t(&data[n]));
 		}
 
 		reg.canMobControl->type = CanMobControl::Receive; // реинициализация

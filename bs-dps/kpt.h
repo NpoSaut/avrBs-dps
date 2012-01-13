@@ -61,11 +61,9 @@ public:
 	uint8_t getImpulseTime ()
 	{
 		uint8_t time;
-		ATOMIC
-		{
-			time = clock.getTime() / timePrescale - impulseStartTime;
-			impulseStartTime = clock.getTime() / timePrescale;
-		}
+		uint8_t now = clock.getTime() / timePrescale;
+		time = now - impulseStartTime;
+		impulseStartTime = now;
 		return time;
 	}
 private:

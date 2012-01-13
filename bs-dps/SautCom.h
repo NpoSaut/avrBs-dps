@@ -53,6 +53,8 @@
 #include "hw_defines.h"
 
 
+
+
 namespace Saut
 {
 
@@ -137,6 +139,9 @@ public:
 //	INTERRUPT_HANDLER(udreHandler);
 
 //private:
+	uint16_t start;
+	bool flag;
+
 	//Коды Хэмминга
 	enum MessageType
 	{
@@ -242,7 +247,7 @@ const uint8_t Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort,
 template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
 			Port Register::* rxPort, uint8_t rxPin, Port Register::* txPort, uint8_t txPin, Port Register::* ioSwitchPort, uint8_t ioSwitchPin, Port Register::* scPort, uint8_t scPin,
 			uint8_t myAdr,
-			typename DatType, DatType& dat >
+			typename DatType, DatType& dat  >
 void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, ioSwitchPort, ioSwitchPin, scPort, scPin, myAdr, DatType, dat>::rxHandler ()
 {
 //	tcnt0 = 0;
@@ -313,6 +318,9 @@ start:
 				{
 					outMode ();
 					(reg.*usartData) = ham[Data][decimeters&0x0f]; 			// Отправляем
+					start = reg.timer3Counter;
+					flag = true;
+
 //					_(udr) = ham[Data][tcnt0>>4]; 				// Отправляем
 					step = Get3Byte;							// ещё +1 на выходе. Реально step = Data0  - Перепрыгиваем через получение 3-го байта
 
@@ -393,6 +401,23 @@ reset:		reset ();
 	}
 //	else
 //		(reg.*usartControl)->rxCompleteInterrupt = true;		// Закончиил обработку. Можно принемать новые.
+
+	if (flag)
+	{
+		flag = false;
+			uint16_t delay;
+			if ( reg.timer3Counter >= start )
+				delay = reg.timer3Counter - start;
+			else
+				delay = 12000 - start + reg.timer3Counter;
+			delay = (delay / 12 - 96)/4; // В мкс и минус время передачи
+
+			if (delay >= 16)
+				delay = 15;
+
+			decimeters = delay;
+	}
+
 }
 
 template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
@@ -423,18 +448,12 @@ template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<Usart
 void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, ioSwitchPort, ioSwitchPin, scPort, scPin, myAdr, DatType, dat>::txHandler()
 {
 	inMode ();
-	if (step == End)											// Закончили отправку данных
-	{
+	if ( step == End )											// Закончили отправку данных
 		reset ();
-//		if ( completeIntEnable & (1 << (intAddr&0b0011)) )
-//		{
-//			enable = false;
-//			sei();
-//			completeOutInt (intAddr&0b0011);
-//			enable = true;
-//		}
-//		else
-//			complete |= 1 << (intAddr&0b0011);
+	else
+	{
+
+
 	}
 }
 
