@@ -95,9 +95,12 @@ public:
 		(reg.*scPort).pin<scPin>().inPulled ();
 
 		// Устанавливаем наши обработчики прерываний в качестве обработчиков прерываний
-		rxHandler_ = InterruptHandler (this, &Com::rxHandler);
-		txHandler_ = InterruptHandler (this, &Com::txHandler);
-		udreHandler_ = InterruptHandler (this, &Com::udreHandler);
+		rxHandler_ = InterruptHandler::from_method <Com, &Com::rxHandler>(this);
+		txHandler_ = InterruptHandler::from_method <Com, &Com::txHandler>(this);
+		udreHandler_ = InterruptHandler::from_method <Com, &Com::udreHandler>(this);
+//		rxHandler_ = InterruptHandler (this, &Com::rxHandler);
+//		txHandler_ = InterruptHandler (this, &Com::txHandler);
+//		udreHandler_ = InterruptHandler (this, &Com::udreHandler);
 
 		baudRateSet (115200);
 
@@ -318,8 +321,8 @@ start:
 				{
 					outMode ();
 					(reg.*usartData) = ham[Data][decimeters&0x0f]; 			// Отправляем
-					start = reg.timer3Counter;
-					flag = true;
+//					start = reg.timer3Counter;
+//					flag = true;
 
 //					_(udr) = ham[Data][tcnt0>>4]; 				// Отправляем
 					step = Get3Byte;							// ещё +1 на выходе. Реально step = Data0  - Перепрыгиваем через получение 3-го байта
@@ -402,21 +405,7 @@ reset:		reset ();
 //	else
 //		(reg.*usartControl)->rxCompleteInterrupt = true;		// Закончиил обработку. Можно принемать новые.
 
-	if (flag)
-	{
-		flag = false;
-			uint16_t delay;
-			if ( reg.timer3Counter >= start )
-				delay = reg.timer3Counter - start;
-			else
-				delay = 12000 - start + reg.timer3Counter;
-			delay = (delay / 12 - 96)/4; // В мкс и минус время передачи
 
-			if (delay >= 16)
-				delay = 15;
-
-			decimeters = delay;
-	}
 
 }
 
@@ -450,11 +439,25 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 	inMode ();
 	if ( step == End )											// Закончили отправку данных
 		reset ();
-	else
-	{
-
-
-	}
+//	else
+//	{
+////		if (flag)
+////		{
+////			flag = false;
+//				uint16_t delay;
+//				if ( reg.timer3Counter >= start )
+//					delay = reg.timer3Counter - start;
+//				else
+//					delay = 12000 - start + reg.timer3Counter;
+//				delay = (delay / 12 - 96)/4; // В мкс и минус время передачи
+//
+//				if (delay >= 16)
+//					delay = 15;
+//
+//				decimeters = delay;
+////		}
+//
+//	}
 }
 
 } // namespace Saut

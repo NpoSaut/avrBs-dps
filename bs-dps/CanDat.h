@@ -351,7 +351,8 @@ public:
 
 		reg.canGeneralInterruptEnable->receive_ = true;
 		reg.canGeneralInterruptEnable->general_ = true;
-		CANIT_handler = InterruptHandler (this, &CanDat::rxInterruptHandler);
+		CANIT_handler = InterruptHandler::from_method <CanDat, &CanDat::rxInterruptHandler>(this);
+//		CANIT_handler = InterruptHandler (this, &CanDat::rxInterruptHandler);
 
 		reg.canGeneralConfig->enable = true;
 		while (!reg.canGeneralStatus->enable);

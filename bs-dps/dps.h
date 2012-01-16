@@ -298,11 +298,13 @@ public:
 //								uint8_t (&spatiumClubPage)[3], uint8_t (&celeritasClubPage)[3],
 								uint16_t diametros0, uint16_t diametros1  )
 		: accessusPortus (accessusPortus),
-		  spatiumMeters (0),
+		  spatiumMeters (0), spatiumMetersAdditioPermissus (true),
 		  odometer16dm({ &odometer16dm0, &odometer16dm1 }),
 		  ecDifferens (false), tractus (false), blockStatus (BlockStatus::InitState),
-		  animadversor( InterruptHandler (this, &myType::animadversio) ),
-		  productor( InterruptHandler (this, &myType::produco) ),
+		  animadversor( InterruptHandler::from_method <myType, &myType::animadversio>(this) ),
+		  productor( InterruptHandler::from_method <myType, &myType::produco>(this) ),
+//		  animadversor( InterruptHandler (this, &myType::animadversio) ),
+//		  productor( InterruptHandler (this, &myType::produco) ),
 		  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus(acceleratioEtAffectus),
 		  spatiumDecimeters65536 (0),
 		  spatiumDecimetersMultiple10 (10),
@@ -366,6 +368,7 @@ public:
 
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters; // пройденный путь в метрах
+	bool spatiumMetersAdditioPermissus;
 	uint8_t* odometer16dm[2]; // cсылки на одометры
 
 	bool ecDifferens; // Выставлять ли критическое расхождение с электронной картой
@@ -439,7 +442,8 @@ private:
 	void animadversio ()
 	{
 		dispatcher.add (
-				SoftIntHandler (this, &myType::corpusVicissim),
+				SoftIntHandler::from_method <myType, &myType::corpusVicissim> (this),
+//				SoftIntHandler (this, &myType::corpusVicissim),
 				(reg.*accessusPortus)
 						);
 		sei (); // Если прерывание ждёт, то пустить его
@@ -460,7 +464,7 @@ private:
 		{
 			// Выводим в линию связи пройденный путь ...
 			spatiumDecimeters65536 += appendicula;
-//			spatium = uint8_t(spatiumDecimeters65536 >> 16);
+			spatium = uint8_t(spatiumDecimeters65536 >> 16);
 			// Обновляем показания одометров
 			uint8_t spatiumDecimetersMulitple16New = uint8_t(spatiumDecimeters65536 >> 20);
 			if ( spatiumDecimetersMulitple16 != spatiumDecimetersMulitple16New )
@@ -476,7 +480,7 @@ private:
 //				if ( versus() ^ parity )
 				if ( versus() )
 					spatiumMeters --;
-				else
+				else if ( spatiumMetersAdditioPermissus )
 					spatiumMeters ++;
 			}
 		}
