@@ -10,6 +10,7 @@
 
 #include <cpp/universal.h>
 #include "hw_defines.h"
+#include "CanDesriptors.h"
 
 namespace KptInternal
 {
@@ -37,7 +38,8 @@ namespace KptInternal
 
 // Расшифровка КПТ
 template <  typename Clock, Clock& clock,
-			typename Scheduler, Scheduler& scheduler	>
+			typename Scheduler, Scheduler& scheduler,
+			typename CanDat, CanDat& canDat  >
 class Kpt
 {
 private:
@@ -68,6 +70,15 @@ public:
 	}
 private:
 
+	void canSend ()
+	{
+		uint8_t send[1] = { _cast (uint8_t, status) };
+		if (reg.portB.pin7 == 0) // первый полукомплект
+			canDat.template send<MY_KPT_A> (send);
+		else
+			canDat.template send<MY_KPT_B> (send);
+	}
+
 	void watchDog (uint16_t)
 	{
 		if ( impulseWatchDog == false ) // не было изменений
@@ -84,6 +95,7 @@ private:
 							false,
 							status.type
 						};
+			canSend ();
 		}
 		else
 			impulseWatchDog = false;
@@ -177,6 +189,7 @@ public:
 			statusPrevious = statusNew;
 
 			periodTime = 0; // Начало нового периода
+			canSend ();
 		}
 		else // короткий импульс
 			if (++shortImpNumber == 3) // Трёх коротких имульсов подряд быть не может

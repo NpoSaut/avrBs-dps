@@ -21,8 +21,8 @@ enum CanTx : uint16_t
 	 AUX_RESOURCE_BS_B = 	((uint16_t)0x634	<< 5) + 5, // C685
 	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 3, // 9983
 	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 3, // 99A3
-	 MY_MAP_A = 			((uint16_t)0x4CE	<< 5) + 2, // 99C8
-	 MY_MAP_B = 			((uint16_t)0x4CF	<< 5) + 2  // 99E8
+	 MY_KPT_A = 			((uint16_t)0x4CE	<< 5) + 1, // 99C1
+	 MY_KPT_B = 			((uint16_t)0x4CF	<< 5) + 1  // 99E1
 };
 
 enum CanRx : uint16_t

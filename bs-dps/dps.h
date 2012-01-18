@@ -109,7 +109,7 @@ public:
 
 			if ( tempusPunctum[canalis] >= minTempusPunctum )  // Прошло достаточно времени для точного определения скорости
 			{
-				causarius = ( abs(impulsio[canalis] - impulsio[!canalis]) > 2 ); // Значит было нормальное чередование (ну не факт...)
+				causarius = ( abs(impulsio[canalis] - impulsio[!canalis]) > 1 ); // Не было нормального чередования
 
 				// Определение направления движения
 				uint8_t vr = ((affectus + canalis) / 2) & 1;
@@ -392,7 +392,7 @@ private:
 	static constexpr uint16_t minTempusPunctum = 4096;
 	// Если в течении maxTempusPunctum отсутсвуют импульсы, то считаем, что скорость = 0.
 	// В секундах: maxTempusPunctum * animadversor.period
-	static constexpr uint16_t maxTempusPunctum = 43085;
+	static constexpr uint16_t maxTempusPunctum = 16384;
 	// Максимальная скорость в единицах (км/ч / 128)
 	static constexpr uint16_t maxCeleritas = 65535;
 	static constexpr uint8_t maxCeleritasError = maxCeleritas / minTempusPunctum;
@@ -603,8 +603,23 @@ private:
 		mappa->versus1 = dimetior[1]->accipioVersus();
 		mappa->commoratio = dimetior[nCapio]->sicinCommoratio();
 		mappa->dimetior = nCapio;
-		mappa->validus0 = !causarius[0];
-		mappa->validus1 = !causarius[1];
+		// Неисправность != недостоверность
+		// Неисправность - это недостверность при достаточно большой скорости
+		// Потому что при смене направления и дребезге на стоянке возникает недостоверность
+		mappa->validus0 = !(	( causarius[0]->vicis
+									&& dimetior[0]->accipioCeleritas() > 128*4
+									&& !dimetior[1]->sicinCommoratio()
+								)
+							|| causarius[0]->celeritas
+							|| causarius[0]->conjuctio
+							);
+		mappa->validus1 = !(	( causarius[1]->vicis
+									&& dimetior[1]->accipioCeleritas() > 128*4
+									&& !dimetior[0]->sicinCommoratio()
+								)
+							|| causarius[1]->celeritas
+							|| causarius[1]->conjuctio
+							);
 
 		// Вывод данных в линию связи
 		acceleratioEtAffectus <<= (uint16_t(dimetior[nCapio]->accipioAcceleratio()) * 256) | mappa;
