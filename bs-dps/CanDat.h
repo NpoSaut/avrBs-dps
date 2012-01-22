@@ -470,11 +470,12 @@ private:
 		reg.canPage->autoIncrementDisable_ = false;
 
 		reg.canMobStatus->receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
-		sei (); // После этого можно разрешить прерывания глобально
+//		sei (); // После этого можно разрешить прерывания глобально
 
 		uint8_t len = reg.canMobControl->dataLength_;
 		uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
 		uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
+		sei (); // После этого можно разрешить прерывания глобально
 
 //		lam<0, 1> ();
 //		if (reg.canMobStatus->acknowledgmentError_ || reg.canMobStatus->formError_ || reg.canMobStatus->crcError_ || reg.canMobStatus->stuffError_ || reg.canMobStatus->bitError_ || reg.canMobStatus->dataLengthWarning_ )
@@ -491,6 +492,7 @@ private:
 				dispatcher.add (handler[ni], uint16_t(&data[n]));
 		}
 
+		cli ();
 		reg.canMobControl->type = CanMobControl::Receive; // реинициализация
 		reg.canPage = canPageSave;
 	}

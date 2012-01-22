@@ -197,8 +197,8 @@ void canDataGet (uint16_t getDataAdr)
 	Data& data = *( (Data *)(getDataAdr) );
 	uint8_t parNumber = data[0];
 
-	if ( parNumber != 1 && // номер пути. Я принимаю его по адресу 23. А возвращаю по адресу 1. Логично.
-		 parNumber != 9 ) // координата постоянно меняется. Зачём её сохранять? И правда, зачем же токгда мне это отправлять....
+	if ( parNumber != 1 && // К сожалению, это передаю не только я. Тогда не буду и сохранять.
+		 parNumber != 9 )
 	{
 		uint8_t* adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + parNumber*4 );
 
@@ -222,10 +222,11 @@ void canDataGet (uint16_t getDataAdr)
 
 void canDataSend (uint16_t queryAdr)
 {
+	typedef const uint8_t Query[1];
+	uint8_t query = (*( (Query *)(queryAdr) ))[0];
+
 	if (reg.portB.pin7 == 0) // Отправлять только одним полукомплектом
 	{
-		typedef const uint8_t Query[1];
-		uint8_t query = (*( (Query *)(queryAdr) ))[0];
 
 		if ( query != 1 &&
 			 query != 9 ) // К сожалению, это передаю не только я. Не буду мешать людям работать..
@@ -400,6 +401,10 @@ void sysDiagnostics (uint16_t a)
 void sysKeyRelease (uint16_t bitN)
 {
 	ATOMIC data.member<ClubOut2>() &= ~(1 << bitN);
+}
+void sysKeyRbRelease (uint16_t)
+{
+	ATOMIC data.member<ClubOut0>() &= ~(1 << 15);
 }
 
 void sysKey (uint16_t a)
@@ -598,7 +603,7 @@ void eCardWatchDog (uint16_t)
 	if (!eCardActive)
 		dps.spatiumMetersAdditioPermissus = true;
 	eCardActive = false;
-	scheduler.runIn( Command {SoftIntHandler::from_function<&eCardWatchDog>(), 0}, 3000 );
+	scheduler.runIn( Command {SoftIntHandler::from_function<&eCardWatchDog>(), 0}, 1500 );
 }
 
 void eCardParser (uint16_t a)
@@ -648,6 +653,10 @@ void eCardParser (uint16_t a)
 					dps.spatiumMeters += mismatch/2;
 			}
 		}
+		else
+		{
+			dps.spatiumMetersAdditioPermissus = true;
+		}
 	}
 }
 
@@ -675,7 +684,7 @@ void mcoState (uint16_t pointer)
 	{
 		signals |= (1 << 7); // нажимаем РБ
 		scheduler.runIn(
-					Command{ SoftIntHandler::from_function<&sysKeyRelease>(), 15 },
+					Command{ SoftIntHandler::from_function<&sysKeyRbRelease>(), 0 },
 //					Command{ SoftIntHandler( [](uint16_t a){ ATOMIC	data.member<ClubOut0>() &= ~(1 << 15); } ), 0},
 					1000 );
 //		sysKeyReleaseCounter = 0;
@@ -686,7 +695,16 @@ void mcoState (uint16_t pointer)
 	// Определение, есть ли тяга
 	dps.tractus = !(message[0] & (1 << 5));
 
-	dps.blockStatus = DpsType::BlockStatus::SystemOnLine;
+	dps.blockStatus = DpsType::BlockStatus::SystemOnLine; // Для контроля за перезагрузкой системы
+
+	// При выходе из конфигурации пробуем перезагрузиться
+	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) &&	// выход БС-ДПС или ИПД
+			clock.getTime() > 60000 && 	// проработали больше минуты
+			dps.sicinActivus() ) // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
+	{
+		reboot ();
+	}
+
 }
 
 void mcoStateA (uint16_t pointer)
@@ -955,15 +973,7 @@ int main ()
     	static bool resetButtonWasFree = false;
     	resetButtonWasFree |= reg.portB.pin5;
     	if ( resetButtonWasFree && !reg.portB.pin5 ) // Нажата кнопка перезагрузки (а до этого была отпущена)
-    	{
-    		cli ();
-    		do															// Перезагружаем самих себя
-    		{
-    			wdt_enable(WDTO_15MS);
-    			for (;;) { asm volatile ("nop"); }
-    		}
-    		while (0);
-    	}
+    		reboot();
 
     	dispatcher.invoke();
     	wdt_reset();

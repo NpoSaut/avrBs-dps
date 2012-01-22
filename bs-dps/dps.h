@@ -353,6 +353,7 @@ public:
 			productor.disable ();
 		}
 	}
+	bool sicinActivus () const { return activus; }
 
 	// Скрость в км/ч/256 + старший бит в младшем бите
 	const uint16_t celeritas () const

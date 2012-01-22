@@ -45,27 +45,19 @@
 #ifndef PROGRAMMING_H_
 #define PROGRAMMING_H_
 
-#include <avr/interrupt.h>
+
 #include <avr/io.h>
 #include <util/delay.h>
 #define F_CPU 12000000UL 	// 12 MHz
-#include <util/atomic.h>
-#include <avr/wdt.h>
+//#include <util/atomic.h>
+#include <cpp/universal.h>
+
 
 
 #include "ProgSpi.h"
 #include "SautDat.h"
 #include "hw_defines.h"
 
-
-// Выключаение WatchDog после программной перезагрузки
-void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
-void wdt_init(void)
-{
-	MCUSR = 0;
-	wdt_disable();
-	return;
-}
 
 
 class Programming
@@ -164,13 +156,7 @@ void Programming::comParser ()
 	case FUSEExit:
 		Return (4);
 		neighbour.~ProgSpiSimple ();
-		cli ();
-		do															// Перезагружаем самих себя
-		{
-			wdt_enable(WDTO_15MS);
-			for (;;) { asm volatile ("nop"); }
-		}
-		while (0);
+		reboot();
 		break;
 
 	case FlashWrite:
