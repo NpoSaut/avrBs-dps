@@ -144,7 +144,7 @@ typedef INT_TYPELIST_2 (CanRx::MCO_STATE_B, CanRx::MCO_LIMITS_B) MCO_STATE_LIMIT
 typedef INT_TYPELIST_2 (CanRx::SYS_DATA_QUERY, CanRx::SYS_KEY) SYS;
 typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_ON_TIME_A, CanRx::MP_ALS_OFF_TIME_A) MP_ALS_A;
 typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_B, CanRx::MP_ALS_OFF_B, CanRx::MP_ALS_ON_TIME_B, CanRx::MP_ALS_OFF_TIME_B) MP_ALS_B;
-typedef INT_TYPELIST_2 (CanRx::BKSI_DATA, CanRx::INPUT_DATA) INPUT;
+typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA) INPUT;
 
 typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов для отправки
 						IPD_STATE,
@@ -191,6 +191,70 @@ CanDatType canDat;
 
 // ------------------------------ Хранение постоянных характеристик -----------------------------►
 
+template < typename PointerType, PointerType eepromStartAdr,
+		   typename CanDatType, CanDatType canDat >
+class Memory
+{
+public:
+	void writeConfirm (uint16_t commandDataAdr) {}
+
+	void write (uint16_t commandDataAdr)
+	{
+		Command& command = *( (Command *)(getDataAdr) );
+
+		if ( command.parameter == 9 )
+			return;
+
+		if ( command.parameter == 1 )
+			command.parameter = 23;
+
+		write ( command.parameter, command.data );
+	}
+
+	void read (uint16_t commandParameterAdr)
+	{
+		const uint8_t& parameter = (uint8_t *) commandParameterAdr;
+
+		if ( parameter == 9 || parameter == 1 )
+			return;
+
+		Command command = {
+					parameter,
+					;
+		};
+
+	}
+
+private:
+	struct Command
+	{
+		uint8_t parameter;
+		uint8_t data[4];
+	};
+
+	void write (const uint8_t& parameter, const uint8_t (&data)[4])
+	{
+		uint8_t* adr = (uint8_t *) ( (uint16_t)(eepromStartAdr) + parameter*4 );
+
+		eeprom_update_byte (adr  , data[3]);
+		eeprom_update_byte (adr+1, data[2]);
+		eeprom_update_byte (adr+2, data[1]);
+		eeprom_update_byte (adr+3, data[0]);
+	}
+
+	uint32_t read (const uint8_t& parameter) const
+	{
+		uint8_t* adr = (uint8_t *) ( (uint16_t)(eepromStartAdr) + parameter*4 );
+
+		uint8_t data[4] = {
+				eeprom_read_byte (adr+3),
+				eeprom_read_byte (adr+2),
+				eeprom_read_byte (adr+1),
+				eeprom_read_byte (adr)
+							};
+	}
+};
+
 void canDataGet (uint16_t getDataAdr)
 {
 	typedef const uint8_t Data[5];
@@ -219,6 +283,7 @@ void canDataGet (uint16_t getDataAdr)
 			canDat.send<CanTx::SYS_DATA>(check);
 	}
 }
+
 
 void canDataSend (uint16_t queryAdr)
 {
@@ -913,6 +978,7 @@ int main ()
 	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_function <&canDataGet>();
 	canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_function <&canDataGet>();
 	canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_function <&canDataGet>();
+	canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_function <&canDataGet>(); // Если кто-то ещё ответит, то обновить мои данные
 	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_function <&canDataSend>();
 
 	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_function <&eCardParser>();
