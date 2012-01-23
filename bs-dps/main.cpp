@@ -591,6 +591,7 @@ DpsType	dps ( 	&Register::portC,
 //private:
 //};
 
+bool eCardInit;
 bool eCardActive;
 
 void eCardWatchDog (uint16_t)
@@ -625,11 +626,11 @@ void eCardParser (uint16_t a)
 		if ( ec[2] & (1 << 7) ) // Отрицательное число
 			ec[3] = 0xFF;
 
-		static bool firstTime = true;
-		if (firstTime)
+		if ( !eCardInit ) // Первая посылка с момента загрузки
 		{
-			firstTime = false;
+			eCardInit = true;
 			dps.spatiumMeters = ec;
+			dps.constituoActivus();
 		}
 
 		eCardActive = true;
@@ -687,6 +688,20 @@ void mcoState (uint16_t pointer)
 	dps.tractus = !(message[0] & (1 << 5));
 
 	dps.blockStatus = DpsType::BlockStatus::SystemOnLine;
+
+	// При выходе из конфигурации пробуем перезагрузиться
+	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) &&	// выход БС-ДПС или ИПД
+			clock.getTime() > 6000 && 	// проработали больше 6 секунд
+			dps.sicinActivus() ) // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
+	{
+		cli ();
+		do
+		{
+			wdt_enable(WDTO_15MS);
+			for (;;) { asm volatile ("nop"); }
+		}
+		while (0);
+	}
 }
 
 void mcoStateA (uint16_t pointer)
@@ -811,7 +826,8 @@ void commandParser ()
 		data.member<DpsOut2>() = dps.diametros(0); // выводим диаметры бандажа
 		data.member<DpsOut3>() = dps.diametros(1);
 
-		dps.constituoActivus ();
+		if ( eCardInit || clock.getTime() > 3000 )
+			dps.constituoActivus ();
 	}
 	else
 	{
@@ -915,8 +931,6 @@ int main ()
 	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_B>() = SoftIntHandler::from_function <&kptRiseTimeB>();
 	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler::from_function <&kptFallB>();
 	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallTimeB>();
-
-	dps.constituoActivus();
 
 	sei();
 
