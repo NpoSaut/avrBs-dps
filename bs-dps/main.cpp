@@ -29,6 +29,7 @@
 #include "CanDat.h"
 #include "CanDesriptors.h"
 #include "kpt.h"
+#include "mph.h"
 
 
 
@@ -54,7 +55,7 @@ void Init (void)
 typedef Clock< Alarm< Alarm3A, 1000 >, uint32_t > ClockType;
 ClockType clock;
 
-typedef Scheduler< ClockType, clock, 8, uint16_t > SchedulerType;
+typedef Scheduler< ClockType, clock, 10, uint16_t > SchedulerType;
 SchedulerType scheduler;
 
 // -------------------------------------------- RS-485 ------------------------------------------►
@@ -169,8 +170,8 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
+						 Int2Type< CanTx::SYS_DATA >,
 						 Int2Type< CanRx::SYS_DATA_QUERY >,
-						 Int2Type< CanRx::MM_DATA >,
 						 Int2Type< CanRx::SYS_DIAGNOSTICS >,
 						 Int2Type< CanRx::MCO_STATE_A >,
 						 Int2Type< CanRx::MCO_STATE_B >,
@@ -189,127 +190,6 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 	CanDatType;
 CanDatType canDat;
 
-// ------------------------------ Хранение постоянных характеристик -----------------------------►
-
-template < typename PointerType, PointerType eepromStartAdr,
-		   typename CanDatType, CanDatType canDat >
-class Memory
-{
-public:
-	void writeConfirm (uint16_t commandDataAdr) {}
-
-	void write (uint16_t commandDataAdr)
-	{
-		Command& command = *( (Command *)(getDataAdr) );
-
-		if ( command.parameter == 9 )
-			return;
-
-		if ( command.parameter == 1 )
-			command.parameter = 23;
-
-		write ( command.parameter, command.data );
-	}
-
-	void read (uint16_t commandParameterAdr)
-	{
-		const uint8_t& parameter = (uint8_t *) commandParameterAdr;
-
-		if ( parameter == 9 || parameter == 1 )
-			return;
-
-		Command command = {
-					parameter,
-					;
-		};
-
-	}
-
-private:
-	struct Command
-	{
-		uint8_t parameter;
-		uint8_t data[4];
-	};
-
-	void write (const uint8_t& parameter, const uint8_t (&data)[4])
-	{
-		uint8_t* adr = (uint8_t *) ( (uint16_t)(eepromStartAdr) + parameter*4 );
-
-		eeprom_update_byte (adr  , data[3]);
-		eeprom_update_byte (adr+1, data[2]);
-		eeprom_update_byte (adr+2, data[1]);
-		eeprom_update_byte (adr+3, data[0]);
-	}
-
-	uint32_t read (const uint8_t& parameter) const
-	{
-		uint8_t* adr = (uint8_t *) ( (uint16_t)(eepromStartAdr) + parameter*4 );
-
-		uint8_t data[4] = {
-				eeprom_read_byte (adr+3),
-				eeprom_read_byte (adr+2),
-				eeprom_read_byte (adr+1),
-				eeprom_read_byte (adr)
-							};
-	}
-};
-
-void canDataGet (uint16_t getDataAdr)
-{
-	typedef const uint8_t Data[5];
-	Data& data = *( (Data *)(getDataAdr) );
-	uint8_t parNumber = data[0];
-
-	if ( parNumber != 1 && // К сожалению, это передаю не только я. Тогда не буду и сохранять.
-		 parNumber != 9 )
-	{
-		uint8_t* adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + parNumber*4 );
-
-		eeprom_update_byte (adr  , data[4]);
-		eeprom_update_byte (adr+1, data[3]);
-		eeprom_update_byte (adr+2, data[2]);
-		eeprom_update_byte (adr+3, data[1]);
-
-		uint8_t check[5] = {
-				parNumber,
-				eeprom_read_byte (adr+3),
-				eeprom_read_byte (adr+2),
-				eeprom_read_byte (adr+1),
-				eeprom_read_byte (adr)
-							};
-
-		if (reg.portB.pin7 == 0) // Отправлять только одним полукомплектом
-			canDat.send<CanTx::SYS_DATA>(check);
-	}
-}
-
-
-void canDataSend (uint16_t queryAdr)
-{
-	typedef const uint8_t Query[1];
-	uint8_t query = (*( (Query *)(queryAdr) ))[0];
-
-	if (reg.portB.pin7 == 0) // Отправлять только одним полукомплектом
-	{
-
-		if ( query != 1 &&
-			 query != 9 ) // К сожалению, это передаю не только я. Не буду мешать людям работать..
-		{
-			uint8_t* adr = (uint8_t *) ( (uint16_t)&(eeprom.club) + query*4 );
-
-			uint8_t data[5] = {
-					query,
-					eeprom_read_byte (adr+3),
-					eeprom_read_byte (adr+2),
-					eeprom_read_byte (adr+1),
-					eeprom_read_byte (adr)
-								};
-			if (reg.portB.pin7 == 0) // Отправлять только одним полукомплектом
-				canDat.send<CanTx::SYS_DATA> (data);
-		}
-	}
-}
 
 // ---------------------------------- SYS_DIAGNOSTICS / AUX_RESOURCE ----------------------------►
 
@@ -540,8 +420,9 @@ void ipdDate (uint16_t none)
 
 // ---------------------------------------------- КПТ -------------------------------------------►
 
-Kpt<ClockType, clock, SchedulerType, scheduler, CanDatType, canDat >
-	kpt ( _cast( Complex<uint16_t>, data.member<ClubOut1>() )[0], _cast( Complex<uint16_t> ,data.member<ClubOut1>() )[1] );
+typedef Kpt<ClockType, clock, SchedulerType, scheduler, CanDatType, canDat > KptType;
+
+KptType kpt ( _cast( Complex<uint16_t>, data.member<ClubOut1>() )[0], _cast( Complex<uint16_t>, data.member<ClubOut1>() )[1] );
 
 void kptRiseA (uint16_t)
 {
@@ -573,7 +454,6 @@ void kptRiseTimeA (uint16_t dataPointer)
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
-		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.rise (data[0]);
 	}
 }
@@ -584,7 +464,6 @@ void kptRiseTimeB (uint16_t dataPointer)
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
-		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.rise (data[0]);
 	}
 }
@@ -595,7 +474,6 @@ void kptFallTimeA (uint16_t dataPointer)
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
-		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.fall (data[0]);
 	}
 }
@@ -606,30 +484,25 @@ void kptFallTimeB (uint16_t dataPointer)
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
-		uint8_t myTime = kpt.getImpulseTime ();
 		kpt.fall (data[0]);
 	}
 }
 
 void kptCommandParse ()
 {
-	static uint8_t commandOld;
+	uint8_t command = _cast( Complex<uint16_t>, data.member<Club0>() )[1];
 
-	uint8_t commandNew = _cast( Complex<uint16_t>, data.member<Club0>() )[1];
-
-	if ( ((commandNew ^ commandOld) & commandOld) & (1 << 0) ) // спад бита 0 в команде
-		kpt.lisReadConfirm();
-	if ( !(commandNew & (1 << 3)) )
-		kpt.lisCountBan();
-
-	commandOld = commandNew;
+	if ( (command & (1 << 0)) && (command & (1 << 3)) )
+		kpt.setActive ();
+	else
+		kpt.setPassive ();
 }
 
 // ---------------------------------------------- ДПС -------------------------------------------►
 
 uint16_t bandDiam (const uint8_t* avarage, const uint8_t* correction)
 {
-	uint16_t av = eeprom_read_byte(avarage);
+	uint16_t av = eeprom_read_byte (avarage);
 	uint8_t cor = eeprom_read_byte (correction);
 	if (cor & (1<<7)) // отрицательное число по понятиям САУТ
 		return av * 10 - (cor & 0x7F);
@@ -639,91 +512,18 @@ uint16_t bandDiam (const uint8_t* avarage, const uint8_t* correction)
 
 typedef
 CeleritasSpatiumDimetior  < &Register::portC, 4, 5, &Register::portB, 7,
-							CanDatType, canDat >
+							CanDatType, canDat,
+							SchedulerType, scheduler >
 DpsType;
 
 DpsType	dps ( 	&Register::portC,
 				com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
-				kpt.lis, kpt.correctKptDistance,
+				InterruptHandler::from_method <KptType, &KptType::lisPlusPlus> (&kpt),
+				InterruptHandler::from_method <KptType, &KptType::correctKptDistancePlusPlus> (&kpt),
 //				clubPage[1], clubPage[3],
 				bandDiam (&eeprom.saut.DiameterAvarage, &eeprom.saut.DiameterCorrection[0]),
 				bandDiam (&eeprom.saut.DiameterAvarage, &eeprom.saut.DiameterCorrection[1]) );
 
-// ---------------------------------- Сверка с электронной картой -------------------------------►
-
-//template <typename Scheduler, Scheduler scheduler>
-//class ECardAdjustment
-//{
-//public:
-//	ECardAdjustment ()
-//	{}
-//	void eCardData (uint32_t )
-//private:
-//};
-
-bool eCardActive;
-
-void eCardWatchDog (uint16_t)
-{
-	if (!eCardActive)
-		dps.spatiumMetersAdditioPermissus = true;
-	eCardActive = false;
-	scheduler.runIn( Command {SoftIntHandler::from_function<&eCardWatchDog>(), 0}, 1500 );
-}
-
-void eCardParser (uint16_t a)
-{
-	struct CardState
-	{
-		uint8_t extrapolation	:1;
-		uint8_t station			:1;
-		uint8_t map2			:1;
-		uint8_t zeroing			:1;
-		uint8_t snsOk			:1;
-		uint8_t error			:1;
-		uint8_t map				:1;
-		uint8_t tks				:1;
-	};
-	Bitfield<CardState> cardState (canDat.get<CanRx::MM_DATA>()[0]);
-
-	if ( !cardState->error && cardState->map && cardState->map2 )
-	{
-		Complex<int32_t> ec = 0;
-		ec[0] = canDat.get<CanRx::MM_DATA> () [3];
-		ec[1] = canDat.get<CanRx::MM_DATA> () [4];
-		ec[2] = canDat.get<CanRx::MM_DATA> () [5];
-		if ( ec[2] & (1 << 7) ) // Отрицательное число
-			ec[3] = 0xFF;
-
-		static bool firstTime = true;
-		if (firstTime)
-		{
-			firstTime = false;
-			dps.spatiumMeters = ec;
-		}
-
-		eCardActive = true;
-
-		if ( dps.celeritas() / 256 >= 1 ) // скорость больше 2 км/ч
-		{
-			int32_t mismatch = ec - dps.spatiumMeters;
-
-			if ( abs(mismatch) > 500 )
-				dps.ecDifferens = true;
-			else
-			{
-				dps.ecDifferens = false;
-				dps.spatiumMetersAdditioPermissus = !(mismatch < -25);
-				if ( mismatch > 25 )
-					dps.spatiumMeters += mismatch/2;
-			}
-		}
-		else
-		{
-			dps.spatiumMetersAdditioPermissus = true;
-		}
-	}
-}
 
 // --------------------------------------------- mcoState ---------------------------------------►
 
@@ -760,12 +560,18 @@ void mcoState (uint16_t pointer)
 	// Определение, есть ли тяга
 	dps.tractus = !(message[0] & (1 << 5));
 
-	dps.blockStatus = DpsType::BlockStatus::SystemOnLine; // Для контроля за перезагрузкой системы
+	// Контроль перезагрузки ЦО.
+	static uint32_t lastTime = 0;
+	uint32_t time = clock.getTime();
+	if ( time - lastTime > 4000 )
+		reboot();
+	lastTime = time;
 
-	// При выходе из конфигурации пробуем перезагрузиться
+	// Контроль выхода из конфигурации
 	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) &&	// выход БС-ДПС или ИПД
-			clock.getTime() > 60000 && 	// проработали больше минуты
-			dps.sicinActivus() ) // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
+			clock.getTime() > 7000 && 	// проработали больше 7 секунд
+			dps.sicinActivus() && // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
+			!dps.sicinCausarius() ) // если оба датчика неисправны, то перезагрузку не делать
 	{
 		reboot ();
 	}
@@ -862,7 +668,7 @@ private:
 			reg.general0 |= (1<<n);
 	}
 
-	AlarmAdjust<Alarm2> engine;
+	AlarmAdjust<Alarm1A> engine;
 	uint8_t currentVelocity;
 	bool getMessage;
 	bool parity;
@@ -937,6 +743,11 @@ void dispatcherSizeReset (uint16_t)
 //	scheduler.runIn( Command {&dispatcherSizeReset, 0},	10000 );
 }
 
+void unsetResetFlag (uint16_t)
+{
+	dps.repeto = false;
+}
+
 // --------------------------------------------- main -------------------------------------------►
 
 int main ()
@@ -975,13 +786,18 @@ int main ()
 	data.interruptHandler<Club1> () = InterruptHandler::from_function<&clubSendNextPageInterrupt>();
 	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getVelocity> (&emulation);
 
-	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_function <&canDataGet>();
-	canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_function <&canDataGet>();
-	canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_function <&canDataGet>();
-	canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_function <&canDataGet>(); // Если кто-то ещё ответит, то обновить мои данные
-	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_function <&canDataSend>();
+	// ------------------------------ Хранение постоянных характеристик -----------------------------►
+	if (reg.portB.pin7 == 0) // первый полукомплект
+	{
+		typedef MPH <CanDatType, canDat, SchedulerType, scheduler> MPHType;
+		MPHType mph;
 
-	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_function <&eCardParser>();
+		canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
+		canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
+		canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
+		canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::write> (&mph); // Если кто-то ещё ответит, то обновить мои данные
+		canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::read> (&mph);
+	}
 
 	canDat.rxHandler<CanRx::SYS_DIAGNOSTICS>() = SoftIntHandler::from_function <&sysDiagnostics>();
 
@@ -1031,8 +847,7 @@ int main ()
 
 	scheduler.runIn( Command {SoftIntHandler::from_function<&dispatcherSizeReset>(), 0},	10000 );
 //	scheduler.runIn( Command {&dispatcherSizeReset, 0},	10000 );
-
-	scheduler.runIn( Command {SoftIntHandler::from_function<&eCardWatchDog>(), 0}, 3000 );
+	scheduler.runIn( Command {SoftIntHandler::from_function<&unsetResetFlag>(), 0}, 7000 );
 
     for (;;)
     {

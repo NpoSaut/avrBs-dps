@@ -50,6 +50,8 @@ private:
 
 	Status& status; // Ссылка на внешнюю переменную, в которую выводится состояние
 
+	bool active; // Разрешение выводить в линию связи
+
 	bool impulseWatchDog;
 	uint8_t periodTime;
 	uint8_t impulseStartTime;
@@ -59,7 +61,6 @@ private:
 	Status statusPrevious;
 	uint8_t repeateCounter;
 
-public:
 	uint8_t getImpulseTime ()
 	{
 		uint8_t time;
@@ -68,7 +69,6 @@ public:
 		impulseStartTime = now;
 		return time;
 	}
-private:
 
 	void canSend ()
 	{
@@ -113,6 +113,7 @@ public:
 		  repeateCounter (0), lis (lis), correctKptDistance (0)
 	{
 //		static_assert (timeMod < timePrescale/256, "Выбранный таймер не даёт необходимой точности");
+		setPassive ();
 		scheduler.runIn( Command{ SoftIntHandler::from_method <Kpt, &Kpt::watchDog>(this), 0}, 2000000/Scheduler::discreetMks );
 //		scheduler.runIn( Command{ SoftIntHandler (this, &Kpt::watchDog), 0}, 2000000/Scheduler::discreetMks );
 	}
@@ -196,13 +197,25 @@ public:
 				status.correct = false;
 	}
 
-	void lisReadConfirm ()
+	void lisPlusPlus ()
 	{
-		lisZeroingPermission = true;
+		if ( active )
+			lis ++;
 	}
 
-	void lisCountBan ()
+	void correctKptDistancePlusPlus ()
 	{
+		lisZeroingPermission ++;
+	}
+
+	void setActive ()
+	{
+		active = true;
+	}
+
+	void setPassive ()
+	{
+		active = false;
 		lisZeroingPermission = true;
 	}
 

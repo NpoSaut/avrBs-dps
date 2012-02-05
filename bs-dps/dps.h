@@ -16,19 +16,20 @@
 #define DPS_H_
 
 #include <avr/eeprom.h>
+#include <stdint.h>
 
 #include <cpp/timers.h>
 #include <cpp/universal.h>
 #include <cpp/io.h>
 #include <cpp/dispatcher.h>
+#include <cpp/interrupt-dynamic.h>
 
 #include "hw_defines.h"
 
-#include "SautDat.h"
-using namespace Saut;
+#include "CanDat.h"
 #include "CanDesriptors.h"
 #include "eeprom.h"
-#include <stdint.h>
+#include "ec-adjust.h"
 
 
 // Датчик пути и скорости
@@ -282,7 +283,8 @@ private:
 // -----------
 
 template <	Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, Port Register::*semiSynthesisPortus, uint8_t semiSynthesisPes,
-			typename CanType, CanType& canDat  >
+			typename CanType, CanType& canDat,
+			typename Scheduler, Scheduler& scheduler >
 class CeleritasSpatiumDimetior
 {
 public:
@@ -294,15 +296,15 @@ public:
 
 	CeleritasSpatiumDimetior (	Port Register::* accessusPortus,
 								uint8_t& spatium, Safe<uint16_t>& celeritas, Safe<uint16_t>& acceleratioEtAffectus,
-								uint8_t& odometer16dm0, uint8_t& odometer16dm1,
+								InterruptHandler odometer16dm0PlusPlus, InterruptHandler odometer16dm1PlusPlus,
 //								uint8_t (&spatiumClubPage)[3], uint8_t (&celeritasClubPage)[3],
 								uint16_t diametros0, uint16_t diametros1  )
 		: accessusPortus (accessusPortus),
-		  spatiumMeters (0), spatiumMetersAdditioPermissus (true),
-		  odometer16dm({ &odometer16dm0, &odometer16dm1 }),
-		  ecDifferens (false), tractus (false), blockStatus (BlockStatus::InitState),
+		  spatiumMeters (0),
+		  spatiumMeters2 (0),
+		  odometer16dmPlusPlus({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
+		  tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
 		  animadversor( InterruptHandler::from_method <myType, &myType::animadversio>(this) ),
-		  productor( InterruptHandler::from_method <myType, &myType::produco>(this) ),
 //		  animadversor( InterruptHandler (this, &myType::animadversio) ),
 //		  productor( InterruptHandler (this, &myType::produco) ),
 		  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus(acceleratioEtAffectus),
@@ -314,7 +316,6 @@ public:
 		  tempusRestitutioValidus (0),
 		  tempusDifferens (0),
 		  tempusTractusCommoratio (0),
-		  tempusOpus (0),
 		  activus (0)
 	{
 		causarius[0] = {0,0,0};
@@ -328,6 +329,14 @@ public:
 		(reg.*accessusPortus).in ();
 		(reg.*lanternaPortus).pin<lanterna0>().out ();
 		(reg.*lanternaPortus).pin<lanterna1>().out ();
+
+		// Инициализация линии связи
+		acceleratioEtAffectus <<= 74; // оба вперёд и исправны. Флаг перезагрузки
+		celeritasProdo <<= 0;
+
+		scheduler.runIn(
+				Command { SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0},
+				1500 ); // Запустит вывод сообщений через 2 секунды. За это время я подхвачу пройденный путь от ЭК.
 	}
 	~CeleritasSpatiumDimetior ()
 	{
@@ -341,7 +350,6 @@ public:
 		{
 			activus = true;
 			animadversor.start ();
-			productor.start();
 		}
 	}
 	void constituoPassivus ()
@@ -350,10 +358,10 @@ public:
 		{
 			activus = false;
 			animadversor.disable ();
-			productor.disable ();
 		}
 	}
 	bool sicinActivus () const { return activus; }
+	bool sicinCausarius () const { return causarius[0] && causarius[1]; }
 
 	// Скрость в км/ч/256 + старший бит в младшем бите
 	const uint16_t celeritas () const
@@ -369,24 +377,14 @@ public:
 
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters; // пройденный путь в метрах
-	bool spatiumMetersAdditioPermissus;
-	uint8_t* odometer16dm[2]; // cсылки на одометры
+	Complex<int32_t> spatiumMeters2;
+	InterruptHandler odometer16dmPlusPlus[2]; // Делагаты функций, делающийх ++ к одометрам
 
-	bool ecDifferens; // Выставлять ли критическое расхождение с электронной картой
-//	uint8_t parity; // чётность направления. Чётное направление (0) - увеличение ЖД-координаты. Нечётное (1) - уменьшение
 	bool tractus; // 0 - торможение, 1...- тяга
-
-	// О УЖАС!!!!!! -- !УБЕРИТЕ ЭТО ОТСЮДА!
-	enum class BlockStatus: uint8_t
-	{
-		InitState			= 0,
-		SystemOnLine		= 1,
-		LoseSystemMessage	= 2
-	};
-	BlockStatus blockStatus;
+	bool repeto; // флаг перезагрузки в линию связи
 
 private:
-	typedef CeleritasSpatiumDimetior< lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat > myType;
+	typedef CeleritasSpatiumDimetior< lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat, Scheduler, scheduler > myType;
 	// После прошествия этого времени по первому спаду произойдёт подсчёт
 	// 1/minTempusPunctum - относительная погрешность определения скорости.
 	// Время обновления показания на больших скоростях: minTempusPunctum * animadversor.period
@@ -403,20 +401,15 @@ private:
 	static constexpr uint8_t maxTempusTractusCommoratio = 127;
 	// Время в единицах productor.period, по истечении которого происходит восстановление испорченности, если не было расхождения более 25%
 	static constexpr uint8_t maxTempusRestitutioValidus = 63;
-	// Время от старта програграммы в единицах productor.period, по истечению котого нужно снять флаг перезагрузки
-	static constexpr uint8_t tempusAbInitioIndicium = 14;
 
 	Alarm<Alarm0, 100> animadversor;
-	Alarm<Alarm1A, 480000> productor;
 	typedef Dimetior< lanternaPortus, lanterna0, lanterna1, minTempusPunctum, maxTempusPunctum, maxCeleritas, 100 > DimetiorType;
 	DimetiorType* dimetior[2];
+	EcAdjust<CanType, canDat> ecAdjust;
 
 	uint8_t& spatium;
 	Safe<uint16_t>& celeritasProdo;
 	Safe<uint16_t>& acceleratioEtAffectus;
-
-//	uint8_t (&spatiumClubPage) [3];
-//	uint8_t (&celeritasClubPage) [3];
 
 	uint32_t spatiumDecimeters65536; // пройденный путь в дм/65536
 	uint8_t spatiumDecimetersMultiple10; // путь в дециметрах, кратный 10; для перевода в метры
@@ -428,7 +421,6 @@ private:
 	uint8_t tempusRestitutioValidus; // время после последнего сброса показаний исправности
 	uint8_t tempusDifferens; // время, в течении которого сохраняется разность показаний ДПС более 25%
 	uint8_t tempusTractusCommoratio; // время, в течении которого отсутсвует скорость по обоим ДПС в режиме Тяга
-	uint8_t tempusOpus; // время работы в единицах productor.period (0,48 сек); для опред. перезагрузки
 	uint8_t activus; // 0 - пассивен, 1 - активен
 
 	struct Causarius
@@ -470,239 +462,207 @@ private:
 			uint8_t spatiumDecimetersMulitple16New = uint8_t(spatiumDecimeters65536 >> 20);
 			if ( spatiumDecimetersMulitple16 != spatiumDecimetersMulitple16New )
 			{
-				(*(odometer16dm[0])) ++;
-				(*(odometer16dm[1])) ++;
+				(odometer16dmPlusPlus[0]) ();
+				(odometer16dmPlusPlus[1]) ();
 			}
 			spatiumDecimetersMulitple16 = spatiumDecimetersMulitple16New;
 
 			if ( uint8_t(spatiumDecimeters65536 >> 16) == spatiumDecimetersMultiple10  ) // посчитать в метрах
 			{
 				spatiumDecimetersMultiple10 += 10;
-//				if ( versus() ^ parity )
-				if ( versus() )
-					spatiumMeters --;
-				else if ( spatiumMetersAdditioPermissus )
+				if ( versus() == 0 )
+				{
 					spatiumMeters ++;
+					spatiumMeters2 ++;
+				}
+				else
+				{
+					spatiumMeters --;
+					spatiumMeters2 --;
+				}
 			}
 		}
 	}
 
-	// Вызывается с периодом productor.period (0,48 сек)
-	void produco ()
+	// Выводит результат работы датчиков в линию связи и CAN
+	void produco (uint16_t)
 	{
-		sei ();
-
-		// Анализ показаний датчиков, выбор ДПС, установка неисправности
-		uint8_t nMax = (dimetior[0]->accipioCeleritas() + 64) < dimetior[1]->accipioCeleritas(); // +64 чтобы предотвратить постоянное переключение
-
-		causarius[0]->vicis = dimetior[0]->sicinCausarius();
-		causarius[1]->vicis = dimetior[1]->sicinCausarius();
-
-		if ( !dimetior[0]->sicinCausarius() && !dimetior[1]->sicinCausarius() )
+		if (activus)
 		{
-			if ( abs( dimetior[nMax]->accipioCeleritas() - dimetior[!nMax]->accipioCeleritas() )
-					> dimetior[nMax]->accipioCeleritas()/4 + 1280  ) // Если разброс большой (и больше 10км/ч)
+			// Анализ показаний датчиков, выбор ДПС, установка неисправности
+			uint8_t nMax = (dimetior[0]->accipioCeleritas() + 64) < dimetior[1]->accipioCeleritas(); // +64 чтобы предотвратить постоянное переключение
+
+			causarius[0]->vicis = dimetior[0]->sicinCausarius();
+			causarius[1]->vicis = dimetior[1]->sicinCausarius();
+
+			if ( !dimetior[0]->sicinCausarius() && !dimetior[1]->sicinCausarius() )
 			{
-				if (tempusDifferens == maxTempusDifferens) // довольно давно
-					causarius[!nMax]->celeritas = true;
+				if ( abs( dimetior[nMax]->accipioCeleritas() - dimetior[!nMax]->accipioCeleritas() )
+						> dimetior[nMax]->accipioCeleritas()/4 + 1280  ) // Если разброс большой (и больше 10км/ч)
+				{
+					if (tempusDifferens == maxTempusDifferens) // довольно давно
+						causarius[!nMax]->celeritas = true;
+					else
+						tempusDifferens ++;
+				}
 				else
-					tempusDifferens ++;
+				{
+					tempusDifferens = 0;
+
+					if ( !dimetior[nCapio]->sicinCommoratio() )
+						tempusRestitutioValidus ++;
+				}
+			}
+
+			if ( !causarius[0] && !causarius[1] )
+			{
+				bool potentiaCapio = tractus ^ nMax;
+				if ( !dimetior[potentiaCapio]->sicinCommoratio() )
+					nCapio = potentiaCapio;
+				else
+					nCapio = !potentiaCapio;
+
+				tempusRestitutioValidus = 0; // Время начинать считать с момента возникновения неисправности
 			}
 			else
 			{
-				tempusDifferens = 0;
+				if ( causarius[0] && !causarius[1] ) // не работает один из каналов
+					nCapio = 1; // выбираем рабочий
+				else if ( !causarius[0] && causarius[1] )
+					nCapio = 0;
+				else if ( causarius[0] && causarius[1] )
+					nCapio = nMax;
 
-				if ( !dimetior[nCapio]->sicinCommoratio() )
-					tempusRestitutioValidus ++;
+				if ( tempusRestitutioValidus == maxTempusRestitutioValidus ) // раз в несколько секунд сбрасывать неисправность
+				{
+					causarius[0]->celeritas = false;
+					causarius[1]->celeritas = false;
+				}
 			}
-		}
 
-		if ( !causarius[0] && !causarius[1] )
-		{
-			bool potentiaCapio = tractus ^ nMax;
-			if ( !dimetior[potentiaCapio]->sicinCommoratio() )
-				nCapio = potentiaCapio;
+			// Контроль обрыва обоих ДПС
+			bool duplarisTractus;
+			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
+				duplarisTractus = ( canDat.template get<CanRx::MCO_LIMITS_A> ()[7] & 0b11 ); // признак двойной тяги
 			else
-				nCapio = !potentiaCapio;
+				duplarisTractus = ( canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11 ); // признак двойной тяги
 
-			tempusRestitutioValidus = 0; // Время начинать считать с момента возникновения неисправности
-		}
-		else
-		{
-			if ( causarius[0] && !causarius[1] ) // не работает один из каналов
-				nCapio = 1; // выбираем рабочий
-			else if ( !causarius[0] && causarius[1] )
-				nCapio = 0;
-			else if ( causarius[0] && causarius[1] )
-				nCapio = nMax;
-
-			if ( tempusRestitutioValidus == maxTempusRestitutioValidus ) // раз в несколько секунд сбрасывать неисправность
+			if ( tractus && dimetior[0]->sicinCommoratio() && dimetior[1]->sicinCommoratio() && !duplarisTractus ) // При тяге стоят оба ДПС
 			{
-				causarius[0]->celeritas = false;
-				causarius[1]->celeritas = false;
+				if (++tempusTractusCommoratio == 146)
+				{
+					causarius[0]->conjuctio = true;
+					causarius[1]->conjuctio = true;
+				}
+			}
+			else
+				tempusTractusCommoratio = 0;
+
+
+			// Выставление флагов
+			struct Mappa
+			{
+				uint8_t versus0		:1;
+				uint8_t versus1		:1;
+				uint8_t commoratio 	:1;
+				uint8_t dimetior	:1;
+				uint8_t validus0	:1;
+				uint8_t validus1	:1;
+				uint8_t repeto		:1;
+				uint8_t				:1;
+			};
+			Bitfield<Mappa> mappa;
+
+			mappa->repeto = repeto;
+			mappa->versus0 = dimetior[0]->accipioVersus();
+			mappa->versus1 = dimetior[1]->accipioVersus();
+			mappa->commoratio = dimetior[nCapio]->sicinCommoratio();
+			mappa->dimetior = nCapio;
+			// Неисправность != недостоверность
+			// Неисправность - это недостверность при достаточно большой скорости
+			// Потому что при смене направления и дребезге на стоянке возникает недостоверность
+			mappa->validus0 = !(	( causarius[0]->vicis
+										&& dimetior[0]->accipioCeleritas() > 128*4
+										&& !dimetior[1]->sicinCommoratio()
+									)
+								|| causarius[0]->celeritas
+								|| causarius[0]->conjuctio
+								);
+			mappa->validus1 = !(	( causarius[1]->vicis
+										&& dimetior[1]->accipioCeleritas() > 128*4
+										&& !dimetior[0]->sicinCommoratio()
+									)
+								|| causarius[1]->celeritas
+								|| causarius[1]->conjuctio
+								);
+
+			// Вывод данных в линию связи
+			acceleratioEtAffectus <<= (uint16_t(dimetior[nCapio]->accipioAcceleratio()) * 256) | mappa;
+
+			uint16_t sigCel = signCeleritas( dimetior[nCapio]->accipioCeleritas() );
+			celeritasProdo <<= sigCel;
+
+			// ОТЛАДКА
+			uint8_t myDebug[3] = {
+					uint8_t( spatiumMeters2[0] ),
+					uint8_t( spatiumMeters2[1] ),
+					uint8_t( spatiumMeters2[2] ),
+								};
+
+			// Вывод данных в CAN
+			// SAUT_INFO ---
+			uint8_t sautInfo[8] = {
+						uint8_t(sigCel >> 8),
+						uint8_t(sigCel),
+						dimetior[nCapio]->accipioAcceleratio(),
+						uint8_t(dimetior[0]->diametros >> 8),
+						uint8_t(dimetior[0]->diametros),
+						uint8_t(dimetior[1]->diametros >> 8),
+						uint8_t(dimetior[1]->diametros),
+						mappa
+								 };
+
+			// IPD_STATE ---
+
+			// Округление скорости с гистерезисом
+			Complex<uint16_t> rotCel;
+			rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
+
+			// Подстройка под ЭК
+			ecAdjust.setDpsDirection( versus() );
+			ecAdjust.adjust (spatiumMeters);
+
+			uint8_t ipdState[8] = {
+						(mappa->validus0 == false && mappa->validus1 == false) ? (uint8_t)2 : (uint8_t)0,
+						uint8_t(  (versus() * 128)
+								| (!dimetior[nCapio]->sicinCommoratio() << 2)
+								| uint8_t( rotCel[1] & 0x1) ), // направление + наличие импульсов ДПС + старший бит скорости в км/ч
+						uint8_t( rotCel[0] ), // скорость в км/ч
+						uint8_t( spatiumMeters[1] ),
+						uint8_t( spatiumMeters[0] ),
+						uint8_t( spatiumMeters[2] ),
+						uint8_t( ecAdjust.isMismatchCritical() << 5 ),
+						0
+								 };
+
+			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
+			{
+				canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
+				canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+				canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
+			}
+			else
+			{
+				canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
+				canDat.template send<CanTx::IPD_STATE_B> (ipdState);
+				canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
 			}
 		}
 
-		// Контроль обрыва обоих ДПС
-		bool duplarisTractus;
-		if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
-			duplarisTractus = ( canDat.template get<CanRx::MCO_LIMITS_A> ()[7] & 0b11 ); // признак двойной тяги
-		else
-			duplarisTractus = ( canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11 ); // признак двойной тяги
-
-		if ( tractus && dimetior[0]->sicinCommoratio() && dimetior[1]->sicinCommoratio() && !duplarisTractus ) // При тяге стоят оба ДПС
-		{
-			if (++tempusTractusCommoratio == 146)
-			{
-				causarius[0]->conjuctio = true;
-				causarius[1]->conjuctio = true;
-			}
-		}
-		else
-			tempusTractusCommoratio = 0;
-
-
-		// Выставление флагов
-		struct Mappa
-		{
-			uint8_t versus0		:1;
-			uint8_t versus1		:1;
-			uint8_t commoratio 	:1;
-			uint8_t dimetior	:1;
-			uint8_t validus0	:1;
-			uint8_t validus1	:1;
-			uint8_t repeto		:1;
-			uint8_t				:1;
-		};
-		Bitfield<Mappa> mappa;
-
-		// Определение времени работы и выставление флага перезагрузки
-		if (tempusOpus <= tempusAbInitioIndicium)
-		{
-			mappa->repeto = 1; // выставление флага перезагрузки
-			tempusOpus ++;
-		}
-		else
-			mappa->repeto = 0;
-
-		// Перезагрузка, если выключили БЛОК
-		if (blockStatus != BlockStatus::InitState)
-			blockStatus = (BlockStatus) ( (uint8_t) blockStatus + 1 );
-
-		if ( (uint8_t) blockStatus == 8 )
-		{
-    		cli ();
-    		do															// Перезагружаем самих себя
-    		{
-    			wdt_enable(WDTO_15MS);
-    			for (;;) { asm volatile ("nop"); }
-    		}
-    		while (0);
-		}
-
-		mappa->versus0 = dimetior[0]->accipioVersus();
-		mappa->versus1 = dimetior[1]->accipioVersus();
-		mappa->commoratio = dimetior[nCapio]->sicinCommoratio();
-		mappa->dimetior = nCapio;
-		// Неисправность != недостоверность
-		// Неисправность - это недостверность при достаточно большой скорости
-		// Потому что при смене направления и дребезге на стоянке возникает недостоверность
-		mappa->validus0 = !(	( causarius[0]->vicis
-									&& dimetior[0]->accipioCeleritas() > 128*4
-									&& !dimetior[1]->sicinCommoratio()
-								)
-							|| causarius[0]->celeritas
-							|| causarius[0]->conjuctio
-							);
-		mappa->validus1 = !(	( causarius[1]->vicis
-									&& dimetior[1]->accipioCeleritas() > 128*4
-									&& !dimetior[0]->sicinCommoratio()
-								)
-							|| causarius[1]->celeritas
-							|| causarius[1]->conjuctio
-							);
-
-		// Вывод данных в линию связи
-		acceleratioEtAffectus <<= (uint16_t(dimetior[nCapio]->accipioAcceleratio()) * 256) | mappa;
-
-		uint16_t sigCel = signCeleritas( dimetior[nCapio]->accipioCeleritas() );
-		celeritasProdo <<= sigCel;
-
-		// ОТЛАДКА
-		uint8_t myDebug[3] = {
-					dimetior[0]->vicisNum,
-					dimetior[1]->vicisNum,
-					dispatcher.maxSize
-							};
-
-		// Вывод данных в CAN
-		uint8_t sautInfo[8] = {
-					uint8_t(sigCel >> 8),
-					uint8_t(sigCel),
-					dimetior[nCapio]->accipioAcceleratio(),
-					uint8_t(dimetior[0]->diametros >> 8),
-					uint8_t(dimetior[0]->diametros),
-					uint8_t(dimetior[1]->diametros >> 8),
-					uint8_t(dimetior[1]->diametros),
-					mappa
-							 };
-
-		// Округление скорости с гистерезисом
-		Complex<uint16_t> rotCel;
-		rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
-
-		uint8_t ipdState[8] = {
-					(mappa->validus0 == false && mappa->validus1 == false) ? (uint8_t)2 : (uint8_t)0,
-					uint8_t(  (versus() * 128)
-							| (!dimetior[nCapio]->sicinCommoratio() << 2)
-							| uint8_t( rotCel[1] & 0x1) ), // направление + наличие импульсов ДПС + старший бит скорости в км/ч
-					uint8_t( rotCel[0] ), // скорость в км/ч
-					uint8_t( spatiumMeters[1] ),
-					uint8_t( spatiumMeters[0] ),
-					uint8_t( spatiumMeters[2] ),
-					uint8_t( ecDifferens << 5 ),
-					0
-							 };
-		ecDifferens = false;
-
-		if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
-		{
-			canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
-			canDat.template send<CanTx::IPD_STATE_A> (ipdState);
-			canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
-		}
-		else
-		{
-			canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
-			canDat.template send<CanTx::IPD_STATE_B> (ipdState);
-			canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
-
-			uint8_t sysDataState[7] = {
-					0, // Результаты выполнения тестов...
-					(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.configuration),
-					(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.category),
-					(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.vRedYellow),
-					(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.vGreen),
-					(uint8_t) (
-							( eeprom_read_byte ((const uint8_t *) ((uint8_t*)&eeprom.club.vGreen +1)) * 128 )
-							| (eeprom_read_word ((const uint16_t *) &eeprom.club.blockLength) / 100)
-							 	 ),
-					(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.lengthWagon)
-									};
-			canDat.template send<CanTx::SYS_DATA_STATE> (sysDataState);
-
-			uint8_t sysDataState2[8] = {
-					0, // Результаты выполнения тестов...
-					(uint8_t) eeprom_read_byte ((const uint8_t *) ((uint8_t*)&eeprom.club.configuration +1)), 	// старший
-					(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.configuration),					// младший
-					(uint8_t) eeprom_read_byte ((const uint8_t *) ((uint8_t*)&eeprom.club.typeLoco +1)), 	// старший
-					(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.typeLoco),					// младший
-					0,
-					0,
-					0
-									};
-			canDat.template send<CanTx::SYS_DATA_STATE2> (sysDataState2);
-		}
+		scheduler.runIn(
+				Command { SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0},
+				500
+						); // Выводить сообщения раз в 0,5 сек.
 	}
 
 	// Выдаёт скорость в требуемом формате
