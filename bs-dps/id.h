@@ -11,7 +11,7 @@
 
 #include <avr/pgmspace.h>
 
-#define VerProg_Pr 121
+#define VerProg_Pr 122
 
 struct IdentifyDoc {
 	uint16_t size; // [100] 0-1 - байт размер программы в параграфах

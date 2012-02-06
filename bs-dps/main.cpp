@@ -52,7 +52,7 @@ void Init (void)
 
 // ----------------------------------- Системные часы и планировщик -----------------------------►
 
-typedef Clock< Alarm< Alarm3A, 1000 >, uint32_t > ClockType;
+typedef Clock< Alarm< Alarm3A, 1000 >, uint32_t > ClockType;  // Обнуление через 50 суток
 ClockType clock;
 
 typedef Scheduler< ClockType, clock, 10, uint16_t > SchedulerType;
@@ -146,6 +146,7 @@ typedef INT_TYPELIST_2 (CanRx::SYS_DATA_QUERY, CanRx::SYS_KEY) SYS;
 typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_ON_TIME_A, CanRx::MP_ALS_OFF_TIME_A) MP_ALS_A;
 typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_B, CanRx::MP_ALS_OFF_B, CanRx::MP_ALS_ON_TIME_B, CanRx::MP_ALS_OFF_TIME_B) MP_ALS_B;
 typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA) INPUT;
+typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
 
 typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов для отправки
 						IPD_STATE,
@@ -164,15 +165,17 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 Int2Type< CanRx::IPD_DATE >,
 						 Int2Type< CanRx::MM_DATA >,
 						 INPUT,
-						 Int2Type< CanRx::SYS_DIAGNOSTICS >
+						 DIAGNOSTICS
 						 	 	 ),
-				 LOKI_TYPELIST_18(
+				 LOKI_TYPELIST_20(
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
 						 Int2Type< CanTx::SYS_DATA >,
 						 Int2Type< CanRx::SYS_DATA_QUERY >,
 						 Int2Type< CanRx::SYS_DIAGNOSTICS >,
+						 Int2Type< CanRx::AUX_RESOURCE_MCO_A >,
+						 Int2Type< CanRx::AUX_RESOURCE_MCO_B >,
 						 Int2Type< CanRx::MCO_STATE_A >,
 						 Int2Type< CanRx::MCO_STATE_B >,
 						 Int2Type< CanRx::IPD_DATE >,
@@ -590,6 +593,32 @@ void mcoStateB (uint16_t pointer)
 		mcoState (pointer);
 }
 
+// Для контроля выхода из конфигурации МПХ
+void mcoAuxResControl (uint16_t pointer)
+{
+	typedef const uint8_t Message[5];
+	Message& message = *( (Message *)(pointer) );
+
+	if ( message[0] == 2 && message[1] == 3 && !(message[2] & (1 << 2)) && // Кодовая комбинация, означающая выход МПХ из конфиграции
+			clock.getTime() > 7000 && 	// проработали больше 7 секунд
+			dps.sicinActivus() ) // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
+	{
+		reboot ();
+	}
+}
+
+void mcoAuxResA (uint16_t pointer)
+{
+	if (reg.portB.pin7 == 0) // первый полукомплект
+		mcoAuxResControl (pointer);
+}
+
+void mcoAuxResB (uint16_t pointer)
+{
+	if (reg.portB.pin7 == 1) // второй полукомплект
+		mcoAuxResControl (pointer);
+}
+
 // --------------------------------------- Эмуляция движения ------------------------------------►
 
 class Emulation
@@ -803,6 +832,8 @@ int main ()
 
 	canDat.rxHandler<CanRx::MCO_STATE_A>() = SoftIntHandler::from_function <&mcoStateA>();
 	canDat.rxHandler<CanRx::MCO_STATE_B>() = SoftIntHandler::from_function <&mcoStateB>();
+	canDat.rxHandler<CanRx::AUX_RESOURCE_MCO_A>() = SoftIntHandler::from_function <&mcoAuxResA>();
+	canDat.rxHandler<CanRx::AUX_RESOURCE_MCO_B>() = SoftIntHandler::from_function <&mcoAuxResB>();
 
 	canDat.rxHandler<CanRx::IPD_DATE>() = SoftIntHandler::from_function <&ipdDate>();
 	canDat.rxHandler<CanRx::SYS_KEY>() = SoftIntHandler::from_function <&sysKey>();

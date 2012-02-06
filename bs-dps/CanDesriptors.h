@@ -46,7 +46,9 @@ enum CanRx : uint16_t
 	 MM_DATA =				(0x211	<< 5) + 8, // 4228
 	 BKSI_DATA =			(0x252	<< 5) + 5, // 4A45
 	 INPUT_DATA =			(0x310	<< 5) + 5, // 6205
-	 SYS_DIAGNOSTICS = 		((uint16_t)0x468	<< 5) + 7 // 8D07
+	 SYS_DIAGNOSTICS = 		((uint16_t)0x468	<< 5) + 7, // 8D07
+	 AUX_RESOURCE_MCO_A =	((uint16_t)0x440	<< 5) + 5, // 8805
+	 AUX_RESOURCE_MCO_B =	((uint16_t)0x450	<< 5) + 5  // 8A05
 };
 
 

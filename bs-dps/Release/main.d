@@ -22,8 +22,8 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypeManip.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypelistMacros.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h ../id.h \
- ../programming.h ../ProgSpi.h ../dps.h ../CanDesriptors.h ../eeprom.h \
- ../CanDat.h ../kpt.h
+ ../programming.h ../ProgSpi.h ../dps.h ../CanDat.h ../CanDesriptors.h \
+ ../eeprom.h ../ec-adjust.h ../kpt.h ../mph.h
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h:
 
@@ -85,10 +85,14 @@ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h:
 
 ../dps.h:
 
+../CanDat.h:
+
 ../CanDesriptors.h:
 
 ../eeprom.h:
 
-../CanDat.h:
+../ec-adjust.h:
 
 ../kpt.h:
+
+../mph.h:
