@@ -516,6 +516,7 @@ uint16_t bandDiam (const uint8_t* avarage, const uint8_t* correction)
 typedef
 CeleritasSpatiumDimetior  < &Register::portC, 4, 5, &Register::portB, 7,
 							CanDatType, canDat,
+							ClockType, clock,
 							SchedulerType, scheduler >
 DpsType;
 

@@ -284,6 +284,7 @@ private:
 
 template <	Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, Port Register::*semiSynthesisPortus, uint8_t semiSynthesisPes,
 			typename CanType, CanType& canDat,
+			typename ClockType, ClockType& clock,
 			typename Scheduler, Scheduler& scheduler >
 class CeleritasSpatiumDimetior
 {
@@ -304,7 +305,7 @@ public:
 		  spatiumMeters2 (0),
 		  odometer16dmPlusPlus({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
 		  tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
-		  animadversor( InterruptHandler::from_method <myType, &myType::animadversio>(this) ),
+		  animadversor( InterruptHandler::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio>(this) ),
 //		  animadversor( InterruptHandler (this, &myType::animadversio) ),
 //		  productor( InterruptHandler (this, &myType::produco) ),
 		  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus(acceleratioEtAffectus),
@@ -331,12 +332,12 @@ public:
 		(reg.*lanternaPortus).pin<lanterna1>().out ();
 
 		// Инициализация линии связи
-		acceleratioEtAffectus <<= 74; // оба вперёд и исправны. Флаг перезагрузки
+		acceleratioEtAffectus <<= 0x74; // оба вперёд и исправны. Флаг перезагрузки
 		celeritasProdo <<= 0;
 
 		scheduler.runIn(
 				Command { SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0},
-				1500 ); // Запустит вывод сообщений через 2 секунды. За это время я подхвачу пройденный путь от ЭК.
+				500 );
 	}
 	~CeleritasSpatiumDimetior ()
 	{
@@ -384,7 +385,7 @@ public:
 	bool repeto; // флаг перезагрузки в линию связи
 
 private:
-	typedef CeleritasSpatiumDimetior< lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat, Scheduler, scheduler > myType;
+//	typedef CeleritasSpatiumDimetior< lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat, Scheduler, scheduler > myType;
 	// После прошествия этого времени по первому спаду произойдёт подсчёт
 	// 1/minTempusPunctum - относительная погрешность определения скорости.
 	// Время обновления показания на больших скоростях: minTempusPunctum * animadversor.period
@@ -435,7 +436,7 @@ private:
 	void animadversio ()
 	{
 		dispatcher.add (
-				SoftIntHandler::from_method <myType, &myType::corpusVicissim> (this),
+				SoftIntHandler::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::corpusVicissim> (this),
 //				SoftIntHandler (this, &myType::corpusVicissim),
 				(reg.*accessusPortus)
 						);
@@ -610,52 +611,55 @@ private:
 								};
 
 			// Вывод данных в CAN
-			// SAUT_INFO ---
-			uint8_t sautInfo[8] = {
-						uint8_t(sigCel >> 8),
-						uint8_t(sigCel),
-						dimetior[nCapio]->accipioAcceleratio(),
-						uint8_t(dimetior[0]->diametros >> 8),
-						uint8_t(dimetior[0]->diametros),
-						uint8_t(dimetior[1]->diametros >> 8),
-						uint8_t(dimetior[1]->diametros),
-						mappa
-								 };
-
-			// IPD_STATE ---
-
-			// Округление скорости с гистерезисом
-			Complex<uint16_t> rotCel;
-			rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
-
-			// Подстройка под ЭК
-			ecAdjust.setDpsDirection( versus() );
-			ecAdjust.adjust (spatiumMeters);
-
-			uint8_t ipdState[8] = {
-						(mappa->validus0 == false && mappa->validus1 == false) ? (uint8_t)2 : (uint8_t)0,
-						uint8_t(  (versus() * 128)
-								| (!dimetior[nCapio]->sicinCommoratio() << 2)
-								| uint8_t( rotCel[1] & 0x1) ), // направление + наличие импульсов ДПС + старший бит скорости в км/ч
-						uint8_t( rotCel[0] ), // скорость в км/ч
-						uint8_t( spatiumMeters[1] ),
-						uint8_t( spatiumMeters[0] ),
-						uint8_t( spatiumMeters[2] ),
-						uint8_t( ecAdjust.isMismatchCritical() << 5 ),
-						0
-								 };
-
-			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
+			if ( clock.getTime() > 1500 ) // Запустит вывод сообщений через 1,5 секунды. За это время я подхвачу пройденный путь от ЭК.
 			{
-				canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
-				canDat.template send<CanTx::IPD_STATE_A> (ipdState);
-				canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
-			}
-			else
-			{
-				canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
-				canDat.template send<CanTx::IPD_STATE_B> (ipdState);
-				canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
+				// SAUT_INFO ---
+				uint8_t sautInfo[8] = {
+							uint8_t(sigCel >> 8),
+							uint8_t(sigCel),
+							dimetior[nCapio]->accipioAcceleratio(),
+							uint8_t(dimetior[0]->diametros >> 8),
+							uint8_t(dimetior[0]->diametros),
+							uint8_t(dimetior[1]->diametros >> 8),
+							uint8_t(dimetior[1]->diametros),
+							mappa
+									 };
+
+				// IPD_STATE ---
+
+				// Округление скорости с гистерезисом
+				Complex<uint16_t> rotCel;
+				rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
+
+				// Подстройка под ЭК
+				ecAdjust.setDpsDirection( versus() );
+				ecAdjust.adjust (spatiumMeters);
+
+				uint8_t ipdState[8] = {
+							(mappa->validus0 == false && mappa->validus1 == false) ? (uint8_t)2 : (uint8_t)0,
+							uint8_t(  (versus() * 128)
+									| (!dimetior[nCapio]->sicinCommoratio() << 2)
+									| uint8_t( rotCel[1] & 0x1) ), // направление + наличие импульсов ДПС + старший бит скорости в км/ч
+							uint8_t( rotCel[0] ), // скорость в км/ч
+							uint8_t( spatiumMeters[1] ),
+							uint8_t( spatiumMeters[0] ),
+							uint8_t( spatiumMeters[2] ),
+							uint8_t( ecAdjust.isMismatchCritical() << 5 ),
+							0
+									 };
+
+				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
+				{
+					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
+					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
+				}
+				else
+				{
+					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
+					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
+				}
 			}
 		}
 

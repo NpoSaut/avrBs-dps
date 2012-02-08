@@ -182,8 +182,9 @@ public:
 					correctKptDistance = 0;
 					if ( lisZeroingPermission )
 						lis = 0;
+
+					status = statusNew;
 				}
-				status = statusNew;
 			}
 			else
 				status.correct = false;
@@ -200,12 +201,14 @@ public:
 	void lisPlusPlus ()
 	{
 		if ( active )
-			lis ++;
+			if (lis < 255)
+				lis ++;
 	}
 
 	void correctKptDistancePlusPlus ()
 	{
-		lisZeroingPermission ++;
+		if (correctKptDistance < 255)
+			correctKptDistance ++;
 	}
 
 	void setActive ()
