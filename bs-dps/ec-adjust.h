@@ -20,12 +20,43 @@ class EcAdjust
 {
 public:
 	EcAdjust ()
-		: cardState( _cast(Bitfield<CardState>, canDat.template get<CanRx::MM_DATA>()[0]) ),
-		  old( {0,0} ), ecOld( 0 ),
+		:  old( {0,0} ), ecOld( 0 ),
 		  direction( 0 ), ecDirection( 0 ),
 		  criticalMismatch( false ),
 		  firstTime( true )
 	{ }
+
+	void takeEcData (int16_t pointerToMessage)
+	{
+		typedef const uint8_t Message[8];
+		Message& message = *( (Message *)(pointerToMessage) );
+
+		Bitfield<CardState>& cardState = _cast(Bitfield<CardState>, message[0]);
+		if ( cardState->map && cardState->mapVerify && !cardState->error )
+		{
+			// Получение данных от ЭК
+			Complex<int32_t> ec = {
+				message [3], // Данные в обратном порядке
+				message [4],
+				message [5],
+				(message [5] & (1 << 7) ? 0xFF : 0x00) // корректная работа с отрицательными
+								};
+
+			// Определение направления движения
+			int8_t newEcDirection;
+			if ( ec > ecOld )
+				newEcDirection = ecDirection + 1;
+			else if ( ec < ecOld )
+				newEcDirection = ecDirection - 1;
+			else
+				newEcDirection = ecDirection;
+			if ( abs(newEcDirection) <= 8 )
+				ecDirection = newEcDirection;
+			ecOld = ec;
+
+
+		}
+	}
 
 	void adjust (int32_t& spatium)
 	{
@@ -38,28 +69,15 @@ public:
 //			uint8_t scale = delta < 8 ? 8 : delta; // сильное уменьшение масштаба приведёт к быстрому критическому расхождению
 			uint8_t scale = delta;
 
-			// Получение данных от ЭК
-			Complex<int32_t> ec = {
-				canDat.template get<CanRx::MM_DATA> () [3], // Данные в обратном порядке
-				canDat.template get<CanRx::MM_DATA> () [4],
-				canDat.template get<CanRx::MM_DATA> () [5],
-				(ec[2] & (1 << 7) ? 0xFF : 0x00) // корректная работа с отрицательными
-								};
-			int8_t newEcDirection;
-			if ( ec > ecOld )
-				newEcDirection = ecDirection + 1;
-			else if ( ec < ecOld )
-				newEcDirection = ecDirection - 1;
-			else
-				newEcDirection = ecDirection;
-			if ( abs(newEcDirection) <= 8 )
-				ecDirection = newEcDirection;
-			ecOld = ec;
+
+
 
 			if ( firstTime )
 			{
 				firstTime = false;
 				spatium = ec;
+				old[0] = ec;
+				old[1] = ec;
 			}
 			else
 			{
@@ -78,10 +96,17 @@ public:
 
 				// Корректировка
 				int16_t cor = ( uint16_t (scale) * correction (abs(mismatchScaled)) ) / 256; // масштабирование
-				spatium += (mismatchScaled >= 0 ? cor : -cor); // антисимметричная
+				correction = (mismatchScaled >= 0 ? cor : -cor); // антисимметричная
+				spatium += correction/2;
+				correction = correction - correction/2;
 			}
 
 			cardState->mapVerify = false; // Помечаю, что воспользовался этими данными
+		}
+		else
+		{
+			spatium += correction;
+			correction = 0;
 		}
 		old[1] = old[0];
 		old[0] = spatium;
@@ -113,12 +138,13 @@ private:
 		uint8_t map				:1;
 		uint8_t tks				:1;
 	};
-	Bitfield<CardState>& cardState; // Ссылка на флаг состояния данных от ЭК
+
 
 	int32_t old[2]; // Показания, выданные в прошлый(0) и позапрошлый(1) раз
-	int32_t ecOld; // Показания от ЭК, полученные в прошлый раз
-	bool direction; // Направление по ДПС. Получаем извне.
+	int8_t correction; // Коррекция, не сделанная в прошлый раз.
+	int32_t ecOld; // Показания от ЭК, полученные в прошлый раз. Для определения направления.
 	int8_t ecDirection; // Направления движения по ЭК. + - вперёд, - - назад. 8 - достоверно.
+	bool direction; // Направление по ДПС. Получаем извне.
 	bool criticalMismatch; // Критическое расхождение
 	bool firstTime; // Признак инициализации
 };

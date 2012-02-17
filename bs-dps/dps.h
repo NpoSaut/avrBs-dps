@@ -262,8 +262,8 @@ private:
 		int16_t acceleratioNovusX8 =
 				( int32_t( 8*277778 / int32_t (period) ) * celeritasCommutatio ) / tempusPunctum[can];
 
-		// Для минимизации пульсаций ускорения применяется рекурсивный цифровой элептический НЧ фильтр 3-го порядка
-		// С частойтой среза 0,3 Гц (при дискрете 4Гц) и подавлением 40 дб в полосе непропускания
+		// Для минимизации пульсаций ускорения применяется рекурсивный цифровой эллиптический НЧ фильтр 3-го порядка
+		// С частотой среза 0,3 Гц (при дискрете 4Гц) и подавлением 40 дб в полосе непропускания
 		// Время релаксации порядка 4 сек.
 		// На 512 км/ч при ускорении 0,01 м/c фильтр даёт пульсации +-0,01 м/c
 		// Коэффициенты разностного уравнения: b0 = 1, b1 = 1, a0 = 1, a1 = -3/4, gain = 1/8
@@ -582,17 +582,20 @@ private:
 			// Неисправность != недостоверность
 			// Неисправность - это недостверность при достаточно большой скорости
 			// Потому что при смене направления и дребезге на стоянке возникает недостоверность
-			mappa->validus0 = !(	( causarius[0]->vicis
-										&& dimetior[0]->accipioCeleritas() > 128*4
-										&& !dimetior[1]->sicinCommoratio()
-									)
+			bool firmusCausarius[2] = { ( causarius[0]->vicis
+											&& dimetior[0]->accipioCeleritas() > 128*4
+											&& !dimetior[1]->sicinCommoratio()
+										),
+										( causarius[1]->vicis
+											&& dimetior[1]->accipioCeleritas() > 128*4
+											&& !dimetior[0]->sicinCommoratio()
+										)
+									};
+			mappa->validus0 = !(	firmusCausarius[0]
 								|| causarius[0]->celeritas
 								|| causarius[0]->conjuctio
 								);
-			mappa->validus1 = !(	( causarius[1]->vicis
-										&& dimetior[1]->accipioCeleritas() > 128*4
-										&& !dimetior[0]->sicinCommoratio()
-									)
+			mappa->validus1 = !(	firmusCausarius[1]
 								|| causarius[1]->celeritas
 								|| causarius[1]->conjuctio
 								);
@@ -638,13 +641,19 @@ private:
 				uint8_t ipdState[8] = {
 							(mappa->validus0 == false && mappa->validus1 == false) ? (uint8_t)2 : (uint8_t)0,
 							uint8_t(  (versus() * 128)
+									| ((dimetior[nCapio]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
 									| (!dimetior[nCapio]->sicinCommoratio() << 2)
 									| uint8_t( rotCel[1] & 0x1) ), // направление + наличие импульсов ДПС + старший бит скорости в км/ч
 							uint8_t( rotCel[0] ), // скорость в км/ч
 							uint8_t( spatiumMeters[1] ),
 							uint8_t( spatiumMeters[0] ),
 							uint8_t( spatiumMeters[2] ),
-							uint8_t( ecAdjust.isMismatchCritical() << 5 ),
+							uint8_t(  (ecAdjust.isMismatchCritical() << 5)
+									| (causarius[!nCapio]->celeritas << 4)
+									| (nCapio << 3)
+									| (firmusCausarius[!nCapio] << 2)
+									| (causarius[nCapio]->celeritas << 1)
+									| (firmusCausarius[nCapio] << 0) ),
 							0
 									 };
 
