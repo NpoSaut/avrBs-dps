@@ -11,7 +11,7 @@
 
 #include <avr/pgmspace.h>
 
-#define VerProg_Pr 123
+#define VerProg_Pr 124
 
 struct IdentifyDoc {
 	uint16_t size; // [100] 0-1 - байт размер программы в параграфах
@@ -31,7 +31,7 @@ struct IdentifyDoc {
 //uint16_t ID  __attribute__ ((section (".id"))) = 0xab;
 
 IdentifyDoc ID __attribute__ ((section (".id"))) =
-{ 0, 0, 0, VerProg_Pr, 25, 17, 1, 1, ((25 + 17 + 1 + 1 + VerProg_Pr) << 8), 0xDF, 0xD9, 0xFD };
+{ 0, 0, 0, VerProg_Pr, 25, 0x21, 1, 1, ((25 + 0x21 + 1 + 1 + VerProg_Pr) << 8), 0xDF, 0xD9, 0xFD };
 //IdentifyDoc ID  __attribute__ ((section (".id"))) = {0xaaaa,0xaaaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaaaa,0xaaaa,0xaa,0xaa,0xaa};
 //IdentifyDoc ID  __attribute__ ((section (".id"))) = {0,0,0,0,0,0,0,0,0,0,0,0};
 //IdentiyDoc ID  __attribute__ ((section (".id"))) = {0xffff,0xffff,0xff,0xff,0xff,0xff,0xff,0xffff,0xffff,0xff,0xff,0xff};

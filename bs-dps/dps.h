@@ -90,7 +90,7 @@ public:
 		uint8_t affectusCommutatio = (affectus ^ affectusNovus) & affectusNovus; // 1 - если состояние изменилось с 0 на 1 т.е. фронт
 		affectus = affectusNovus;
 
-		if (affectusCommutatio) // Если случился фронт
+		if (affectusCommutatio) // если случился фронт
 		{
 			// номер канала, по которому произошёл подъём
 			uint8_t canalis = affectusCommutatio / 2;
@@ -305,6 +305,8 @@ public:
 		  spatiumMeters2 (0),
 		  odometer16dmPlusPlus({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
 		  tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
+		  ecAdjust( Delegate<uint16_t ()>::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioCeleritas> (this),
+		  			Delegate<int32_t ()>::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioSpatiumMeters> (this) ),
 		  animadversor( InterruptHandler::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio>(this) ),
 //		  animadversor( InterruptHandler (this, &myType::animadversio) ),
 //		  productor( InterruptHandler (this, &myType::produco) ),
@@ -376,6 +378,11 @@ public:
 		return dimetior[nCapio]->accipioVersus();
 	}
 
+	void takeEcDataForAdjust(uint16_t pointerToData)
+	{
+		ecAdjust.takeEcData(pointerToData);
+	}
+
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters; // пройденный путь в метрах
 	Complex<int32_t> spatiumMeters2;
@@ -383,6 +390,8 @@ public:
 
 	bool tractus; // 0 - торможение, 1...- тяга
 	bool repeto; // флаг перезагрузки в линию связи
+
+
 
 private:
 //	typedef CeleritasSpatiumDimetior< lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat, Scheduler, scheduler > myType;
@@ -406,7 +415,9 @@ private:
 	Alarm<Alarm0, 100> animadversor;
 	typedef Dimetior< lanternaPortus, lanterna0, lanterna1, minTempusPunctum, maxTempusPunctum, maxCeleritas, 100 > DimetiorType;
 	DimetiorType* dimetior[2];
-	EcAdjust<CanType, canDat> ecAdjust;
+
+	typedef EcAdjust < CanType, canDat > EcAdjustType;
+	EcAdjustType ecAdjust;
 
 	uint8_t& spatium;
 	Safe<uint16_t>& celeritasProdo;
@@ -498,8 +509,9 @@ private:
 
 			if ( !dimetior[0]->sicinCausarius() && !dimetior[1]->sicinCausarius() )
 			{
-				if ( abs( dimetior[nMax]->accipioCeleritas() - dimetior[!nMax]->accipioCeleritas() )
-						> dimetior[nMax]->accipioCeleritas()/4 + 1280  ) // Если разброс большой (и больше 10км/ч)
+				if ( dimetior[nMax]->accipioCeleritas() > 1280 &&
+					 abs( dimetior[nMax]->accipioCeleritas() - dimetior[!nMax]->accipioCeleritas() )
+						> dimetior[nMax]->accipioCeleritas()/4  ) // Если разброс большой (и больше 10км/ч)
 				{
 					if (tempusDifferens == maxTempusDifferens) // довольно давно
 						causarius[!nMax]->celeritas = true;
@@ -584,11 +596,11 @@ private:
 			// Потому что при смене направления и дребезге на стоянке возникает недостоверность
 			bool firmusCausarius[2] = { ( causarius[0]->vicis
 											&& dimetior[0]->accipioCeleritas() > 128*4
-											&& !dimetior[1]->sicinCommoratio()
+											&& dimetior[1]->accipioCeleritas() > 128*4
 										),
 										( causarius[1]->vicis
+											&& dimetior[0]->accipioCeleritas() > 128*4
 											&& dimetior[1]->accipioCeleritas() > 128*4
-											&& !dimetior[0]->sicinCommoratio()
 										)
 									};
 			mappa->validus0 = !(	firmusCausarius[0]
@@ -635,7 +647,6 @@ private:
 				rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
 
 				// Подстройка под ЭК
-				ecAdjust.setDpsDirection( versus() );
 				ecAdjust.adjust (spatiumMeters);
 
 				uint8_t ipdState[8] = {
@@ -654,7 +665,7 @@ private:
 									| (firmusCausarius[!nCapio] << 2)
 									| (causarius[nCapio]->celeritas << 1)
 									| (firmusCausarius[nCapio] << 0) ),
-							0
+							uint8_t( dimetior[nCapio]->accipioAcceleratio()*2 )
 									 };
 
 				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
@@ -693,6 +704,17 @@ private:
 		else
 			((CeleritasSpatiumDimetior*)this)->retroRotundatioCeleritas = (cel + 32) / 128;
 		return retroRotundatioCeleritas;
+	}
+
+	// Выдаёт скрость выбранного датчика в км/ч/128
+	uint16_t accipioCeleritas ()
+	{
+		return dimetior[nCapio]->accipioCeleritas();
+	}
+
+	int32_t accipioSpatiumMeters()
+	{
+		return _cast(int32_t, spatiumMeters);
 	}
 };
 

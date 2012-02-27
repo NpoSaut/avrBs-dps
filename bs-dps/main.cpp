@@ -167,7 +167,7 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 INPUT,
 						 DIAGNOSTICS
 						 	 	 ),
-				 LOKI_TYPELIST_20(
+				 LOKI_TYPELIST_21(
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
@@ -179,6 +179,7 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 Int2Type< CanRx::MCO_STATE_A >,
 						 Int2Type< CanRx::MCO_STATE_B >,
 						 Int2Type< CanRx::IPD_DATE >,
+						 Int2Type< CanRx::MM_DATA >,
 						 Int2Type< CanRx::MP_ALS_ON_A >,
 						 Int2Type< CanRx::MP_ALS_OFF_A >,
 						 Int2Type< CanRx::MP_ALS_ON_B >,
@@ -838,6 +839,8 @@ int main ()
 
 	canDat.rxHandler<CanRx::IPD_DATE>() = SoftIntHandler::from_function <&ipdDate>();
 	canDat.rxHandler<CanRx::SYS_KEY>() = SoftIntHandler::from_function <&sysKey>();
+
+	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_method <DpsType, &DpsType::takeEcDataForAdjust> (&dps);
 
 	canDat.rxHandler<CanRx::MP_ALS_ON_A>() = SoftIntHandler::from_function <&kptRiseA>();
 	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_A>() = SoftIntHandler::from_function <&kptRiseTimeA>();
