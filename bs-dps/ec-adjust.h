@@ -12,18 +12,20 @@
 #define EC_ADJUST_H_
 
 #include <cpp/universal.h>
+#include <cpp/delegate/delegate.hpp>
 #include "CanDat.h"
 #include "CanDesriptors.h"
 
-template <typename CanDatType, CanDatType& canDat>
+template < typename CanDatType, CanDatType& canDat >
 class EcAdjust
 {
 public:
-	EcAdjust ()
-		:  old( {0,0} ), ecOld( 0 ),
-		  direction( 0 ), ecDirection( 0 ),
+	EcAdjust ( Delegate<uint16_t ()> getVelocity, Delegate<int32_t ()> getSpatium )
+		: getVelocity( getVelocity ), getSpatium( getSpatium ),
+		  correctionRemainder( 0 ), correctionStep ( 2 ),
 		  criticalMismatch( false ),
-		  firstTime( true )
+		  firstTime( true ),
+		  firstValue( 0 )
 	{ }
 
 	void takeEcData (int16_t pointerToMessage)
@@ -42,89 +44,75 @@ public:
 				(message [5] & (1 << 7) ? 0xFF : 0x00) // корректная работа с отрицательными
 								};
 
-			// Определение направления движения
-			int8_t newEcDirection;
-			if ( ec > ecOld )
-				newEcDirection = ecDirection + 1;
-			else if ( ec < ecOld )
-				newEcDirection = ecDirection - 1;
+			// В первый раз после загрузки взять данные от ЭК
+			if ( firstTime )
+				firstValue = ec;
+
+			// Масштабирование
+			uint8_t scaleY = getVelocity()/256 * 10 / 18; // скорость в м/с
+			uint8_t scaleX;
+			if ( scaleY < 4 )
+				scaleX = 4;
+			else if ( scaleY > 16 )
+				scaleX = 16;
 			else
-				newEcDirection = ecDirection;
-			if ( abs(newEcDirection) <= 8 )
-				ecDirection = newEcDirection;
-			ecOld = ec;
+				scaleX = scaleY;
 
+			// Проверка на критическое расхождение
+			int32_t mismatch = ec - getSpatium();
+			if ( abs(mismatch) >= 256 )
+				criticalMismatch = true;
+			else
+			{
+				uint8_t mismatchRestricted = abs(mismatch);
+				criticalMismatch = ( mismatchRestricted * 16/scaleX >= 256 );
+			}
 
+			// Рассчитываем корректировку
+			correctionRemainder = int16_t (correction( mismatch * 16/scaleX )) * scaleY/64;
+			correctionStep = 0;
 		}
 	}
 
 	void adjust (int32_t& spatium)
 	{
-		if ( cardState->map && cardState->mapVerify && !cardState->error )
+		// В первый раз после загрузки задать значение пройденного пути, полученное от ЭК
+		if ( firstTime )
 		{
-			// Выбор масштаба
-			uint32_t delta = abs(spatium - old[1]); // пройденный путь за "машинный цикл" ЭК - 1 сек (2 моих цикла)
-			if ( delta > 255 )
-				delta = 255;
-//			uint8_t scale = delta < 8 ? 8 : delta; // сильное уменьшение масштаба приведёт к быстрому критическому расхождению
-			uint8_t scale = delta;
-
-
-
-
-			if ( firstTime )
-			{
-				firstTime = false;
-				spatium = ec;
-				old[0] = ec;
-				old[1] = ec;
-			}
-			else
-			{
-				// Расчёт расхождения с ЭК
-				int32_t mismatchOrig = ec - (old[0] + old[1])/2; // не возникнет переполнения, т.к. используются только 3 байта
-				int32_t mismatchScaled = (mismatchOrig * 32) / scale;
-				if ( scale >= 8 )
-					criticalMismatch = ( abs(mismatchScaled) >= 256 );
-				else
-					criticalMismatch = ( abs(mismatchOrig) >= 64 ); // есть постоянная ошибка gps, не зависящая от скорости
-
-				// Анализ направления ЭК
-				if ( abs(ecDirection) == 8 && // достоверно определено по ЭК
-						direction != (ecDirection<0) ) // не совпадает с ДПС
-					criticalMismatch = true;
-
-				// Корректировка
-				int16_t cor = ( uint16_t (scale) * correction (abs(mismatchScaled)) ) / 256; // масштабирование
-				correction = (mismatchScaled >= 0 ? cor : -cor); // антисимметричная
-				spatium += correction/2;
-				correction = correction - correction/2;
-			}
-
-			cardState->mapVerify = false; // Помечаю, что воспользовался этими данными
+			firstTime = false;
+			spatium = firstValue;
 		}
-		else
+
+		// Чтобы сделать коррекцию за 2 посылки
+		if ( correctionStep == 0 ) // После расчёта
 		{
-			spatium += correction;
-			correction = 0;
+			spatium += correctionRemainder/2;
+			correctionRemainder = correctionRemainder - correctionRemainder/2;
+			correctionStep ++;
 		}
-		old[1] = old[0];
-		old[0] = spatium;
+		else if ( correctionStep == 1 ) // Половина коррекции уже добавлена
+		{
+			spatium += correctionRemainder;
+			correctionStep ++;
+		}
 	}
 
-	void setDpsDirection (bool direction) { EcAdjust::direction = direction; }
 	bool isMismatchCritical () const { return criticalMismatch;	}
 
 private:
-	uint8_t correction (uint32_t mismatch)
+	int8_t correction (int32_t mismatch)
 	{
-		if ( mismatch > 1625 ) // Ограничение, чтобы не переполнится при вычислениях
-			mismatch = 1625;
+		uint32_t mismatch1 = abs(mismatch);
+		if ( mismatch1 >= 370 )
+			return 0;
 
-		uint32_t mismatch2 = mismatch*mismatch;
-		uint32_t mismatch3 = mismatch2*mismatch;
+		uint32_t mismatch2 = mismatch1*mismatch1;
+		uint32_t mismatch3 = mismatch2*mismatch1;
 
-		return ( uint32_t(5400) * mismatch2 ) / ( mismatch3 - (70*int32_t(mismatch2) - int32_t(mismatch) - 120000) );
+		int8_t cor = ( uint32_t(4) * (uint32_t(10000)*mismatch2 - uint32_t(27)*mismatch3) ) /
+					 ( uint32_t(1600000) - uint32_t(26000)*mismatch1 + uint32_t(900)*mismatch2 - uint32_t(2)*mismatch3 );
+
+		return mismatch >= 0 ? cor : -cor;
 	}
 
 	struct CardState
@@ -139,14 +127,15 @@ private:
 		uint8_t tks				:1;
 	};
 
+	Delegate<uint16_t ()> getVelocity;
+	Delegate<int32_t ()> getSpatium;
 
-	int32_t old[2]; // Показания, выданные в прошлый(0) и позапрошлый(1) раз
-	int8_t correction; // Коррекция, не сделанная в прошлый раз.
-	int32_t ecOld; // Показания от ЭК, полученные в прошлый раз. Для определения направления.
-	int8_t ecDirection; // Направления движения по ЭК. + - вперёд, - - назад. 8 - достоверно.
-	bool direction; // Направление по ДПС. Получаем извне.
+	int8_t correctionRemainder; // Коррекция, не сделанная в прошедшие разы.
+	uint8_t correctionStep; // Шаг коррекции: 0 - расчитана, 1 - первая половина, 2 - вторая половина.
 	bool criticalMismatch; // Критическое расхождение
+
 	bool firstTime; // Признак инициализации
+	int32_t firstValue; // Первое пришедшее значение пройденного пути
 };
 
 
