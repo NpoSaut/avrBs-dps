@@ -54,7 +54,9 @@
 //		в режиме остановке: исправность каналов ДПСа
 template <	Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1,
 			uint16_t minTempusPunctum, uint16_t maxTempusPunctum, uint16_t maxCeleritas,
-			uint32_t period  >
+			uint32_t period,
+			Port Register::*semiSynthesisPortus, uint8_t semiSynthesisPes,
+			typename CanType, CanType& canDat >
 class Dimetior
 {
 public:
@@ -88,6 +90,20 @@ public:
 		// Получение состояния порта и нахождение фронта по каждому каналу
 		affectusNovus &= 0b11; // Обрезать лишнее
 		uint8_t affectusCommutatio = (affectus ^ affectusNovus) & affectusNovus; // 1 - если состояние изменилось с 0 на 1 т.е. фронт
+
+		if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
+		{
+			uint8_t down = (affectus ^ affectusNovus) & affectus; // спад
+			if (affectusCommutatio & 0b01)
+				canDat.template send<CanTx::MY_KPT_A> ({1});
+			if (down & 0b01)
+				canDat.template send<CanTx::MY_KPT_A> ({0});
+			if (affectusCommutatio & 0b10)
+				canDat.template send<CanTx::MY_KPT_B> ({1});
+			if (down & 0b10)
+				canDat.template send<CanTx::MY_KPT_B> ({0});
+		}
+
 		affectus = affectusNovus;
 
 		if (affectusCommutatio) // если случился фронт
@@ -273,6 +289,17 @@ private:
 
 		celeritas = celeritasNovus;
 
+		if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
+		{
+			uint8_t info[3] = { uint8_t (celeritas/256),
+								uint8_t (celeritas),
+								uint8_t (causarius) };
+			if (can == 0)
+				canDat.template send<CanTx::MY_DEBUG_A> (info);
+			else
+				canDat.template send<CanTx::MY_DEBUG_B> (info);
+		}
+
 	}
 
 };
@@ -413,7 +440,7 @@ private:
 	static constexpr uint8_t maxTempusRestitutioValidus = 63;
 
 	Alarm<Alarm0, 100> animadversor;
-	typedef Dimetior< lanternaPortus, lanterna0, lanterna1, minTempusPunctum, maxTempusPunctum, maxCeleritas, 100 > DimetiorType;
+	typedef Dimetior< lanternaPortus, lanterna0, lanterna1, minTempusPunctum, maxTempusPunctum, maxCeleritas, 100, semiSynthesisPortus, semiSynthesisPes, CanType, canDat> DimetiorType;
 	DimetiorType* dimetior[2];
 
 	typedef EcAdjust < CanType, canDat > EcAdjustType;
@@ -618,13 +645,6 @@ private:
 			uint16_t sigCel = signCeleritas( dimetior[nCapio]->accipioCeleritas() );
 			celeritasProdo <<= sigCel;
 
-			// ОТЛАДКА
-			uint8_t myDebug[3] = {
-					uint8_t( spatiumMeters2[0] ),
-					uint8_t( spatiumMeters2[1] ),
-					uint8_t( spatiumMeters2[2] ),
-								};
-
 			// Вывод данных в CAN
 			if ( clock.getTime() > 1500 ) // Запустит вывод сообщений через 1,5 секунды. За это время я подхвачу пройденный путь от ЭК.
 			{
@@ -672,13 +692,11 @@ private:
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
-					canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
 				}
 				else
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
-					canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
 				}
 			}
 		}

@@ -95,7 +95,7 @@ private:
 							false,
 							status.type
 						};
-			canSend ();
+//			canSend ();
 		}
 		else
 			impulseWatchDog = false;
@@ -191,7 +191,7 @@ public:
 			statusPrevious = statusNew;
 
 			periodTime = 0; // Начало нового периода
-			canSend ();
+//			canSend ();
 		}
 		else // короткий импульс
 			if (++shortImpNumber == 3) // Трёх коротких имульсов подряд быть не может

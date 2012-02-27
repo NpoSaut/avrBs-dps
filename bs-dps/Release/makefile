@@ -64,7 +64,7 @@ all: bs-dps.elf secondary-outputs
 bs-dps.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: AVR C++ Linker'
-	avr-g++ -Wl,-Map,bs-dps.map,--cref -ffunction-sections -Wl,-gc-sections -T "../ld-script.x" -mmcu=at90can64 -o"bs-dps.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	avr-g++ -Wl,-Map,bs-dps.map,--cref -ffunction-sections -Wl,-gc-sections -T "../ld-script.x" -mmcu=at90can128 -o"bs-dps.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build
@@ -89,7 +89,7 @@ bs-dps.eep: bs-dps.elf
 
 sizedummy: bs-dps.elf
 	@echo 'Invoking: Print Size'
-	-avr-size --format=avr --mcu=at90can64 bs-dps.elf
+	-avr-size --format=avr --mcu=at90can128 bs-dps.elf
 	@echo 'Finished building: $@'
 	@echo ' '
 
