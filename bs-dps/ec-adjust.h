@@ -47,30 +47,32 @@ public:
 			// В первый раз после загрузки взять данные от ЭК
 			if ( firstTime )
 				firstValue = ec;
-
-			// Масштабирование
-			uint8_t scaleY = getVelocity()/256 * 10 / 18; // скорость в м/с
-			uint8_t scaleX;
-			if ( scaleY < 4 )
-				scaleX = 4;
-			else if ( scaleY > 16 )
-				scaleX = 16;
-			else
-				scaleX = scaleY;
-
-			// Проверка на критическое расхождение
-			int32_t mismatch = ec - getSpatium();
-			if ( abs(mismatch) >= 256 )
-				criticalMismatch = true;
 			else
 			{
-				uint8_t mismatchRestricted = abs(mismatch);
-				criticalMismatch = ( mismatchRestricted * 16/scaleX >= 256 );
-			}
+				// Масштабирование
+				uint8_t scaleY = getVelocity()/256 * 10 / 18; // скорость в м/с
+				uint8_t scaleX;
+				if ( scaleY < 4 )
+					scaleX = 4;
+				else if ( scaleY > 16 )
+					scaleX = 16;
+				else
+					scaleX = scaleY;
 
-			// Рассчитываем корректировку
-			correctionRemainder = int16_t (correction( mismatch * 16/scaleX )) * scaleY/64;
-			correctionStep = 0;
+				// Проверка на критическое расхождение
+				int32_t mismatch = ec - getSpatium();
+				if ( abs(mismatch) >= 256 )
+					criticalMismatch = true;
+				else
+				{
+					uint8_t mismatchRestricted = abs(mismatch);
+					criticalMismatch = ( mismatchRestricted * 16/scaleX >= 256 );
+				}
+
+				// Рассчитываем корректировку
+				correctionRemainder = int16_t (correction( mismatch * 16/scaleX )) * scaleY/64;
+				correctionStep = 0;
+			}
 		}
 	}
 
@@ -82,18 +84,20 @@ public:
 			firstTime = false;
 			spatium = firstValue;
 		}
-
-		// Чтобы сделать коррекцию за 2 посылки
-		if ( correctionStep == 0 ) // После расчёта
+		else
 		{
-			spatium += correctionRemainder/2;
-			correctionRemainder = correctionRemainder - correctionRemainder/2;
-			correctionStep ++;
-		}
-		else if ( correctionStep == 1 ) // Половина коррекции уже добавлена
-		{
-			spatium += correctionRemainder;
-			correctionStep ++;
+			// Чтобы сделать коррекцию за 2 посылки
+			if ( correctionStep == 0 ) // После расчёта
+			{
+				spatium += correctionRemainder/2;
+				correctionRemainder = correctionRemainder - correctionRemainder/2;
+				correctionStep ++;
+			}
+			else if ( correctionStep == 1 ) // Половина коррекции уже добавлена
+			{
+				spatium += correctionRemainder;
+				correctionStep ++;
+			}
 		}
 	}
 
