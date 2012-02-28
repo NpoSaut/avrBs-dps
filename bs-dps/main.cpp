@@ -259,14 +259,13 @@ void sysDiagnostics (uint16_t a)
 	{
 		if ( request == Request::VERSION  )
 		{
-			uint8_t checkSum = (( pgm_read_byte(&ID.crc) - pgm_read_byte(&ID.ks) ) >> 8) |
-								( pgm_read_byte(&ID.crc) - pgm_read_byte(&ID.ks) );
+			uint16_t checkSum = pgm_read_word(&ID.crc) + 2*(pgm_read_word(&ID.ks)/256);
 			uint8_t packet[5] = {
 					(uint8_t) Answer::VERSION,
 					pgm_read_byte(&ID.version),
 					0,
 					0,
-					checkSum
+					uint8_t (checkSum)
 								};
 			if (unit == Unit::IPD)
 			{
@@ -563,7 +562,10 @@ void mcoState (uint16_t pointer)
 	_cast( Complex<uint16_t>, data.member<ClubOut0>() )[1] = signals;
 
 	// Определение, есть ли тяга
-	dps.tractus = !(message[0] & (1 << 5));
+	if ( message[0] & (1 << 5) )
+		dps.constituoNonTractus ();
+	else
+		dps.constituoTractus ();
 
 	// Контроль перезагрузки ЦО.
 	static uint32_t lastTime = 0;
@@ -857,14 +859,13 @@ int main ()
 
 	// После включения выдавать AUX_RESOURCE с версией
 	{
-		uint8_t checkSum = (( pgm_read_byte(&ID.crc) - pgm_read_byte(&ID.ks) ) >> 8) |
-							( pgm_read_byte(&ID.crc) - pgm_read_byte(&ID.ks) );
+		uint16_t checkSum = pgm_read_word(&ID.crc) + 2*(pgm_read_word(&ID.ks)/256);
 		uint8_t packet[5] = {
 				0,
 				pgm_read_byte(&ID.version),
 				0,
 				0,
-				checkSum
+				uint8_t (checkSum)
 							};
 		if (reg.portB.pin7 == 0)
 		{

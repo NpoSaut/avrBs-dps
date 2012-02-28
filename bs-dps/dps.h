@@ -65,7 +65,7 @@ public:
 			// d: 1600 - 800  => d*65536*Pi помещается в uint32_t
 			// Pi * 65536 = 205887,416172544
 		  longitudoImpulsio ( (uint32_t(diametros) * 205887) / 4200 ),
-		  positio (positio), lanternaOperor (lanternaOperor_),
+		  positio (positio), lanternaOperor (lanternaOperor_), tractus (false),
 		  celeritas (0), acceleratio (0), acceleratioColum (0),
 		  impulsio ({0,0}), impulsioLanterna ({0,0}), tempusPunctum ({0,0}),
 		  affectus (0), versusRotatio ({!positio, !positio}), causarius (false), commoratio (true),
@@ -108,7 +108,8 @@ public:
 				longitudo = longitudoImpulsio;				// при переключении будет небольшая погрешность в большую сторону.
 
 
-			if ( tempusPunctum[canalis] >= minTempusPunctum )  // Прошло достаточно времени для точного определения скорости
+			if ( tempusPunctum[canalis] >= minTempusPunctum &&  // Прошло достаточно времени для точного определения скорости
+					tractus ? true : impulsio[canalis] >= 4 )	// В режиме выбега повышаем порог чувствительности
 			{
 				causarius = ( abs(impulsio[canalis] - impulsio[!canalis]) > 1 ); // Не было нормального чередования
 
@@ -153,6 +154,9 @@ public:
 			return 0;
 		}
 	}
+
+	void constituoTractus () { tractus = true; }
+	void constituoNonTractus () { tractus = false; }
 
 	// Скрость в км/ч/128
 	const uint16_t& accipioCeleritas () const
@@ -203,6 +207,7 @@ public:
 private:
 	enum { maxCeleritasError = maxCeleritas / minTempusPunctum };
 	const bool lanternaOperor;
+	bool tractus; // 0 - выбег или торможение, 1 - тяга
 
 	uint16_t celeritas; // Скорость по показаниям канала
 	int16_t acceleratio; // Ускорение по показаниям канала
@@ -302,7 +307,6 @@ public:
 								uint16_t diametros0, uint16_t diametros1  )
 		: accessusPortus (accessusPortus),
 		  spatiumMeters (0),
-		  spatiumMeters2 (0),
 		  odometer16dmPlusPlus({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
 		  tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
 		  ecAdjust( Delegate<uint16_t ()>::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioCeleritas> (this),
@@ -364,6 +368,26 @@ public:
 		}
 	}
 	bool sicinActivus () const { return activus; }
+
+	void constituoTractus ()
+	{
+		tractus = true;
+		dimetior[0]->constituoTractus();
+		dimetior[1]->constituoTractus();
+
+		tempusTractusCommoratio = 0;
+		spatiumDecimetersRepetoTractus = uint16_t (spatiumDecimeters65536 >> 16);
+
+	}
+	void constituoNonTractus ()
+	{
+		tractus = false;
+		dimetior[0]->constituoNonTractus();
+		dimetior[1]->constituoNonTractus();
+
+		tempusTractusCommoratio = 0;
+	}
+
 	bool sicinCausarius () const { return causarius[0] && causarius[1]; }
 
 	// Скрость в км/ч/256 + старший бит в младшем бите
@@ -385,12 +409,9 @@ public:
 
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters; // пройденный путь в метрах
-	Complex<int32_t> spatiumMeters2;
 	InterruptHandler odometer16dmPlusPlus[2]; // Делагаты функций, делающийх ++ к одометрам
 
-	bool tractus; // 0 - торможение, 1...- тяга
 	bool repeto; // флаг перезагрузки в линию связи
-
 
 
 private:
@@ -419,6 +440,8 @@ private:
 	typedef EcAdjust < CanType, canDat > EcAdjustType;
 	EcAdjustType ecAdjust;
 
+	bool tractus; // 0 - выбег или торможение, 1 - тяга
+
 	uint8_t& spatium;
 	Safe<uint16_t>& celeritasProdo;
 	Safe<uint16_t>& acceleratioEtAffectus;
@@ -426,13 +449,14 @@ private:
 	uint32_t spatiumDecimeters65536; // пройденный путь в дм/65536
 	uint8_t spatiumDecimetersMultiple10; // путь в дециметрах, кратный 10; для перевода в метры
 	uint8_t spatiumDecimetersMulitple16; // путь в 1,6 м. Используется для ++ одометров
+	uint16_t spatiumDecimetersRepetoTractus; // количество дециметров пройденных под тягой. Для контроля обрыва обоих ДПС.
 
 	uint16_t retroRotundatioCeleritas; // прошлое округлённое значение скорости. Для нужд округления с гистерезисом.
 
 	bool nCapio;
 	uint8_t tempusRestitutioValidus; // время после последнего сброса показаний исправности
 	uint8_t tempusDifferens; // время, в течении которого сохраняется разность показаний ДПС более 25%
-	uint8_t tempusTractusCommoratio; // время, в течении которого отсутсвует скорость по обоим ДПС в режиме Тяга
+	uint8_t tempusTractusCommoratio; // время, в течении которого стоят оба ДПС в режиме Тяга
 	uint8_t activus; // 0 - пассивен, 1 - активен
 
 	struct Causarius
@@ -483,15 +507,9 @@ private:
 			{
 				spatiumDecimetersMultiple10 += 10;
 				if ( versus() == 0 )
-				{
 					spatiumMeters ++;
-					spatiumMeters2 ++;
-				}
 				else
-				{
 					spatiumMeters --;
-					spatiumMeters2 --;
-				}
 			}
 		}
 	}
@@ -560,16 +578,20 @@ private:
 			else
 				duplarisTractus = ( canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11 ); // признак двойной тяги
 
-			if ( tractus && dimetior[0]->sicinCommoratio() && dimetior[1]->sicinCommoratio() && !duplarisTractus ) // При тяге стоят оба ДПС
+			if ( tractus && !duplarisTractus ) // При тяге стоят оба ДПС
 			{
-				if (++tempusTractusCommoratio == 146)
+
+				if ( tempusTractusCommoratio >= 70*2 ) // В течении времени 70 сек.
 				{
-					causarius[0]->conjuctio = true;
-					causarius[1]->conjuctio = true;
+					if ( spatiumDecimetersRepetoTractus == uint16_t (spatiumDecimeters65536 >> 16) ) // не сдвинулись с места
+					{
+						causarius[0]->conjuctio = true;
+						causarius[1]->conjuctio = true;
+					}
 				}
+				else
+					tempusTractusCommoratio ++;
 			}
-			else
-				tempusTractusCommoratio = 0;
 
 
 			// Выставление флагов
@@ -618,13 +640,6 @@ private:
 			uint16_t sigCel = signCeleritas( dimetior[nCapio]->accipioCeleritas() );
 			celeritasProdo <<= sigCel;
 
-			// ОТЛАДКА
-			uint8_t myDebug[3] = {
-					uint8_t( spatiumMeters2[0] ),
-					uint8_t( spatiumMeters2[1] ),
-					uint8_t( spatiumMeters2[2] ),
-								};
-
 			// Вывод данных в CAN
 			if ( clock.getTime() > 1500 ) // Запустит вывод сообщений через 1,5 секунды. За это время я подхвачу пройденный путь от ЭК.
 			{
@@ -672,13 +687,11 @@ private:
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
-					canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
 				}
 				else
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
-					canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
 				}
 			}
 		}
