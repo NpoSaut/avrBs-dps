@@ -85,6 +85,11 @@ private:
 	// Посылает в CAN дескрипоторый SYS_DATA_STATE и SYS_DATA_STATE_2
 	void sendState (uint16_t)
 	{
+		bool success =
+		scheduler.runIn(
+				Command {SoftIntHandler::from_method<MPH,&MPH::sendState> (this), 0},
+				500 );
+
 		uint8_t sysDataState[7] = {
 				0, // Результаты выполнения тестов...
 				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.configuration),
@@ -105,15 +110,12 @@ private:
 				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.configuration),					// младший
 				(uint8_t) eeprom_read_byte ((const uint8_t *) ((uint8_t*)&eeprom.club.typeLoco +1)), 	// старший
 				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.typeLoco),					// младший
-				0,
-				0,
+				success,
+				scheduler.fill,
 				0
 								};
 		canDat.template send<CanTx::SYS_DATA_STATE2> (sysDataState2);
 
-		scheduler.runIn(
-				Command {SoftIntHandler::from_method<MPH,&MPH::sendState> (this), 0},
-				500 );
 	}
 };
 

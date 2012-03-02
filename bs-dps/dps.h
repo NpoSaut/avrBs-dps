@@ -107,9 +107,8 @@ public:
 			if ( impulsio[canalis] > impulsio[!canalis] )	// Метры идут только по одному каналу. По большему.
 				longitudo = longitudoImpulsio;				// при переключении будет небольшая погрешность в большую сторону.
 
-
 			if ( tempusPunctum[canalis] >= minTempusPunctum &&  // Прошло достаточно времени для точного определения скорости
-					tractus ? true : impulsio[canalis] >= 4 )	// В режиме выбега повышаем порог чувствительности
+					(tractus || impulsio[canalis] >= 4) )	// В режиме выбега повышаем порог чувствительности
 			{
 				causarius = ( abs(impulsio[canalis] - impulsio[!canalis]) > 1 ); // Не было нормального чередования
 
@@ -118,7 +117,6 @@ public:
 				if ( vr == versusRotatio->retro )				 // Направление "применяется" только после подтверждения
 					versusRotatio->modo = versusRotatio->retro;	//  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
 				versusRotatio->retro = vr;
-
 
 				debugImpulsio[0] = impulsio[0];
 				debugImpulsio[1] = impulsio[1];
@@ -237,11 +235,6 @@ private:
 		acceleratio = 0;
 		acceleratioColum = 0;
 		causarius = false;
-		if (lanternaOperor)
-		{
-			(reg.*lanternaPortus).pin<lanterna0>() = sicinCausarius();
-			(reg.*lanternaPortus).pin<lanterna1>() = sicinCausarius();
-		}
 	}
 
 	void computo (const uint8_t& can) __attribute__ ((noinline))
@@ -374,18 +367,12 @@ public:
 		tractus = true;
 		dimetior[0]->constituoTractus();
 		dimetior[1]->constituoTractus();
-
-		tempusTractusCommoratio = 0;
-		spatiumDecimetersRepetoTractus = uint16_t (spatiumDecimeters65536 >> 16);
-
 	}
 	void constituoNonTractus ()
 	{
 		tractus = false;
 		dimetior[0]->constituoNonTractus();
 		dimetior[1]->constituoNonTractus();
-
-		tempusTractusCommoratio = 0;
 	}
 
 	bool sicinCausarius () const { return causarius[0] && causarius[1]; }
@@ -449,7 +436,6 @@ private:
 	uint32_t spatiumDecimeters65536; // пройденный путь в дм/65536
 	uint8_t spatiumDecimetersMultiple10; // путь в дециметрах, кратный 10; для перевода в метры
 	uint8_t spatiumDecimetersMulitple16; // путь в 1,6 м. Используется для ++ одометров
-	uint16_t spatiumDecimetersRepetoTractus; // количество дециметров пройденных под тягой. Для контроля обрыва обоих ДПС.
 
 	uint16_t retroRotundatioCeleritas; // прошлое округлённое значение скорости. Для нужд округления с гистерезисом.
 
@@ -571,6 +557,7 @@ private:
 				}
 			}
 
+
 			// Контроль обрыва обоих ДПС
 			bool duplarisTractus;
 			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
@@ -578,19 +565,25 @@ private:
 			else
 				duplarisTractus = ( canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11 ); // признак двойной тяги
 
-			if ( tractus && !duplarisTractus ) // При тяге стоят оба ДПС
+			if ( tractus && !duplarisTractus ) // При тяге
 			{
-
-				if ( tempusTractusCommoratio >= 70*2 ) // В течении времени 70 сек.
+				if ( dimetior[nCapio]->sicinCommoratio() ) // стоим
 				{
-					if ( spatiumDecimetersRepetoTractus == uint16_t (spatiumDecimeters65536 >> 16) ) // не сдвинулись с места
+					if ( tempusTractusCommoratio >= 70*2 ) // В течении времени 70 сек.
 					{
 						causarius[0]->conjuctio = true;
 						causarius[1]->conjuctio = true;
 					}
+					else
+						tempusTractusCommoratio ++;
 				}
 				else
-					tempusTractusCommoratio ++;
+					tempusTractusCommoratio = 0;
+			}
+			else
+			{
+				if ( tempusTractusCommoratio > 0 )
+					tempusTractusCommoratio --;
 			}
 
 
@@ -633,6 +626,27 @@ private:
 								|| causarius[1]->celeritas
 								|| causarius[1]->conjuctio
 								);
+
+			// Сохранение неисправности в eeprom
+			if (!mappa->validus0)
+				eeprom_update_byte (&eeprom.dps0Good, 0);
+			if (!mappa->validus1)
+				eeprom_update_byte (&eeprom.dps1Good, 0);
+
+			// Индикация неисправности на стоянке
+			if ( dimetior[nCapio]->sicinCommoratio() )
+			{
+				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
+				{
+					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom_read_byte (&eeprom.dps0Good);
+					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom_read_byte (&eeprom.dps0Good);
+				}
+				else
+				{
+					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom_read_byte (&eeprom.dps1Good);
+					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom_read_byte (&eeprom.dps1Good);
+				}
+			}
 
 			// Вывод данных в линию связи
 			acceleratioEtAffectus <<= (uint16_t(dimetior[nCapio]->accipioAcceleratio()) * 256) | mappa;

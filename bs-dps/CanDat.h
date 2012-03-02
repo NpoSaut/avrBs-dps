@@ -110,6 +110,8 @@
 	{
 		canDat.rxHandler<0x1000>() = SoftIntHandler (f); // Передаём делегат на нашу функцию в CanDat
 		//...
+		for (;;)
+			dispatcher.invoke ();
 	}
  *
  */
@@ -303,7 +305,7 @@ namespace CanDatPrivate
 };
 
 template <	class TxDescriptorGroupList, class RxDescriptorGroupList, class RxDescriptorInterruptList,
-			long baudKbit, long samplePointPercent = 75>
+			long baudKbit, long samplePointPercent = 75 >
 class CanDat
 {
 public:

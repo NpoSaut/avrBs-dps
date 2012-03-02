@@ -125,7 +125,7 @@ private:
 		Complex<uint16_t> get3 = +inPort3;
 
 		neighbour.position = Complex<uint32_t> {get1[1], get1[0], get2[1], 0};
-		memAreaEnd = Complex<uint32_t> {get2[0], get3[1], get3[0], 0};
+		memAreaEnd = Complex<uint32_t> {get2[0], get3[1], get3[0], 0} - 1;
 	}
 };
 

@@ -55,7 +55,7 @@ void Init (void)
 typedef Clock< Alarm< Alarm3A, 1000 >, uint32_t > ClockType;  // Обнуление через 50 суток
 ClockType clock;
 
-typedef Scheduler< ClockType, clock, 10, uint16_t > SchedulerType;
+typedef Scheduler< ClockType, clock, 16, uint16_t > SchedulerType;
 SchedulerType scheduler;
 
 // -------------------------------------------- RS-485 ------------------------------------------►
@@ -259,13 +259,17 @@ void sysDiagnostics (uint16_t a)
 	{
 		if ( request == Request::VERSION  )
 		{
-			uint16_t checkSum = pgm_read_word(&ID.crc) + 2*(pgm_read_word(&ID.ks)/256);
+			uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
+			uint16_t checkSumm = 0;
+			for (uint8_t i = 0; i < idSize; i ++)
+				checkSumm = pgm_read_word (&id + i*2);
+
 			uint8_t packet[5] = {
 					(uint8_t) Answer::VERSION,
-					pgm_read_byte(&ID.version),
+					pgm_read_byte(&id.version),
 					0,
 					0,
-					uint8_t (checkSum)
+					uint8_t (checkSumm)
 								};
 			if (unit == Unit::IPD)
 			{
@@ -640,7 +644,7 @@ public:
 	{
 		uint8_t newVelocity = _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1];
 		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) &&  // Команда на эмуляцию
-				newVelocity >= 2 ) // Меньше 8-битный таймер не позволяет
+				newVelocity > 0 )
 		{
 			enable();
 			if ( newVelocity != currentVelocity )
@@ -741,10 +745,10 @@ void commandParser ()
 
 		if (command->idRead)
 		{
-			data.member<DpsOut0>() = ( (uint16_t) pgm_read_byte(&ID.version) << 8 ) | pgm_read_byte(&ID.year);
-			data.member<DpsOut1>() = ( (uint16_t) pgm_read_byte(&ID.modif)   << 8 ) | pgm_read_byte(&ID.manth);
-			data.member<DpsOut2>() = ( ( pgm_read_word(&ID.number) & 0xFF)   << 8 ) | ( pgm_read_word(&ID.number) /256 );
-			data.member<DpsOut3>() = ( ( pgm_read_word(&ID.ks)	   & 0xFF)   << 8 ) | ( pgm_read_word(&ID.ks)     /256 );
+			data.member<DpsOut0>() = ( (uint16_t) pgm_read_byte(&id.version) << 8 ) | pgm_read_byte(&id.year);
+			data.member<DpsOut1>() = ( (uint16_t) pgm_read_byte(&id.modif)   << 8 ) | pgm_read_byte(&id.manth);
+			data.member<DpsOut2>() = ( ( pgm_read_word(&id.number) & 0xFF)   << 8 ) | ( pgm_read_word(&id.number) /256 );
+			data.member<DpsOut3>() = ( (uint16_t) pgm_read_byte(&id.parametersSummL)  << 8 ) | ( (uint16_t) pgm_read_byte(&id.parametersSummH) );
 		}
 
 		if (command->eepromRead)
@@ -859,13 +863,17 @@ int main ()
 
 	// После включения выдавать AUX_RESOURCE с версией
 	{
-		uint16_t checkSum = pgm_read_word(&ID.crc) + 2*(pgm_read_word(&ID.ks)/256);
+		uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
+		uint16_t checkSumm = 0;
+		for (uint8_t i = 0; i < idSize; i ++)
+			checkSumm = pgm_read_word (&id + i*2);
+
 		uint8_t packet[5] = {
 				0,
-				pgm_read_byte(&ID.version),
+				pgm_read_byte(&id.version),
 				0,
 				0,
-				uint8_t (checkSum)
+				uint8_t (checkSumm)
 							};
 		if (reg.portB.pin7 == 0)
 		{
@@ -889,8 +897,12 @@ int main ()
     {
     	static bool resetButtonWasFree = false;
     	resetButtonWasFree |= reg.portB.pin5;
-    	if ( resetButtonWasFree && !reg.portB.pin5 ) // Нажата кнопка перезагрузки (а до этого была отпущена)
+    	if ( resetButtonWasFree && !reg.portB.pin5 ) // Нажата кнопка сброса (а до этого была отпущена)
+    	{
+    		eeprom_update_byte (&eeprom.dps0Good, 1);
+    		eeprom_update_byte (&eeprom.dps1Good, 1);
     		reboot();
+    	}
 
     	dispatcher.invoke();
     	wdt_reset();

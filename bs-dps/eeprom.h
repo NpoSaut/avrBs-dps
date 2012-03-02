@@ -112,12 +112,16 @@ struct Eeprom
 		uint32_t pkm2OvError;	// 47 - Обрыв ПКМ2 ОВ
 	} club; // [0x20 -- 0xE0] : 192 байта
 
-	struct // отступ в памяти - для совместимости с размещением у Сергея
+	struct // отступ в памяти (резерв)
 	{
-		uint8_t empty[31];
-	} dummy; // [0xE0 -- 0xFF] : 31 байт
+		uint8_t empty[128];
+	} dummy; // [0xE0 -- 0xFF] : 128 байт
 
-	uint8_t	oldStyleClubEeprom; // 0x100...
+	//uint8_t	oldStyleClubEeprom; // 0x100...
+
+	// Исправности датчиков
+	uint8_t dps0Good;
+	uint8_t dps1Good;
 
 } eeprom EEMEM;
 
