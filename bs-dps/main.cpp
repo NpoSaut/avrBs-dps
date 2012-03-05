@@ -262,7 +262,7 @@ void sysDiagnostics (uint16_t a)
 			uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
 			uint16_t checkSumm = 0;
 			for (uint8_t i = 0; i < idSize; i ++)
-				checkSumm = pgm_read_word (&id + i*2);
+				checkSumm += pgm_read_word ((uint16_t *)&id + i);
 
 			uint8_t packet[5] = {
 					(uint8_t) Answer::VERSION,
@@ -866,7 +866,7 @@ int main ()
 		uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
 		uint16_t checkSumm = 0;
 		for (uint8_t i = 0; i < idSize; i ++)
-			checkSumm = pgm_read_word (&id + i*2);
+			checkSumm += pgm_read_word ((uint16_t *)&id + i);
 
 		uint8_t packet[5] = {
 				0,
