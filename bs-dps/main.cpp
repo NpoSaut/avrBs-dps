@@ -747,7 +747,7 @@ void commandParser ()
 		{
 			data.member<DpsOut0>() = ( (uint16_t) pgm_read_byte(&id.version) << 8 ) | pgm_read_byte(&id.year);
 			data.member<DpsOut1>() = ( (uint16_t) pgm_read_byte(&id.modif)   << 8 ) | pgm_read_byte(&id.manth);
-			data.member<DpsOut2>() = ( ( pgm_read_word(&id.number) & 0xFF)   << 8 ) | ( pgm_read_word(&id.number) /256 );
+			data.member<DpsOut2>() = ( (uint16_t) pgm_read_byte(&id.numberL) << 8 ) | ( (uint16_t) pgm_read_byte(&id.numberH) );
 			data.member<DpsOut3>() = ( (uint16_t) pgm_read_byte(&id.parametersSummL)  << 8 ) | ( (uint16_t) pgm_read_byte(&id.parametersSummH) );
 		}
 
