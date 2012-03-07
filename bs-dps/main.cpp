@@ -747,8 +747,8 @@ void commandParser ()
 		{
 			data.member<DpsOut0>() = ( (uint16_t) pgm_read_byte(&id.version) << 8 ) | pgm_read_byte(&id.year);
 			data.member<DpsOut1>() = ( (uint16_t) pgm_read_byte(&id.modif)   << 8 ) | pgm_read_byte(&id.manth);
-			data.member<DpsOut2>() = ( (uint16_t) pgm_read_byte(&id.numberL) << 8 ) | ( (uint16_t) pgm_read_byte(&id.numberH) );
-			data.member<DpsOut3>() = ( (uint16_t) pgm_read_byte(&id.parametersSummL)  << 8 ) | ( (uint16_t) pgm_read_byte(&id.parametersSummH) );
+			data.member<DpsOut2>() = ( (uint16_t) pgm_read_byte(&id.numberH) << 8 ) | ( (uint16_t) pgm_read_byte(&id.numberL) );
+			data.member<DpsOut3>() = ( (uint16_t) pgm_read_byte(&id.parametersSummH)  << 8 ) | ( (uint16_t) pgm_read_byte(&id.parametersSummL) );
 		}
 
 		if (command->eepromRead)
@@ -789,6 +789,20 @@ void unsetResetFlag (uint16_t)
 
 int main ()
 {
+	// Контроль контрольной суммы
+	if ( !(pgm_read_word (&id.size) == 0 && pgm_read_word (&id.controlSumm) == 0) ) // Если значения подставлены при программировании
+	{
+		uint16_t *size = (uint16_t *) (pgm_read_word (&id.size) * 16); // Размер в словах. Максимум 64 кб
+		Complex<uint16_t> sum = 0;
+		for ( uint16_t *i = 0; i < size; i ++ )
+			sum += pgm_read_word (i);
+
+		if (sum != 0) // В id.controlSumm хранится дополнение до 0
+			reboot ();
+	}
+	asm volatile ("nop"); // !!! 126 version hack !!!
+	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
+
 //	data.interruptHandler<DpsCommand> () = InterruptHandler (&commandParser);
 //	data.interruptHandler<Club0> () = InterruptHandler (&kptCommandParse);
 //	data.interruptHandler<Club1> () = InterruptHandler (&clubSendNextPageInterrupt);

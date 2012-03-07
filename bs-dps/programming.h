@@ -125,7 +125,7 @@ private:
 		Complex<uint16_t> get3 = +inPort3;
 
 		neighbour.position = Complex<uint32_t> {get1[1], get1[0], get2[1], 0};
-		memAreaEnd = Complex<uint32_t> {get2[0], get3[1], get3[0], 0} - 1;
+		memAreaEnd = Complex<uint32_t> {get2[0], get3[1], get3[0], 0};
 	}
 };
 
@@ -214,9 +214,13 @@ void Programming::comParser ()
 			break;
 
 		case FlashWrite:
-			neighbour.write<ProgSpi::flash> (swap(+inPort1));
-			neighbour.write<ProgSpi::flash> (swap(+inPort2));
-			neighbour.write<ProgSpi::flash> (swap(+inPort3));
+			if ( neighbour.position < memAreaEnd )
+				neighbour.write<ProgSpi::flash> (swap(+inPort1));
+			if ( neighbour.position < memAreaEnd )
+				neighbour.write<ProgSpi::flash> (swap(+inPort2));
+			if ( neighbour.position < memAreaEnd )
+				neighbour.write<ProgSpi::flash> (swap(+inPort3));
+
 			if ( neighbour.position < memAreaEnd )
 				Return (2);
 			else
@@ -225,9 +229,13 @@ void Programming::comParser ()
 			break;
 
 		case EEPROMWrite:
-			neighbour.write<ProgSpi::eeprom> (swap(+inPort1));
-			neighbour.write<ProgSpi::eeprom> (swap(+inPort2));
-			neighbour.write<ProgSpi::eeprom> (swap(+inPort3));
+			if ( neighbour.position < memAreaEnd )
+				neighbour.write<ProgSpi::eeprom> (swap(+inPort1));
+			if ( neighbour.position < memAreaEnd )
+				neighbour.write<ProgSpi::eeprom> (swap(+inPort2));
+			if ( neighbour.position < memAreaEnd )
+				neighbour.write<ProgSpi::eeprom> (swap(+inPort3));
+
 			if ( neighbour.position < memAreaEnd )
 				Return (2);
 			else
