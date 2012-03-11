@@ -155,6 +155,7 @@ public:
 
 	void constituoTractus () { tractus = true; }
 	void constituoNonTractus () { tractus = false; }
+	void constituoVersusInversio ( bool inversio ) { versusInversio = inversio; }
 
 	// Скрость в км/ч/128
 	const uint16_t& accipioCeleritas () const
@@ -180,7 +181,7 @@ public:
 	// Направление движения. 0 - вперёд
 	bool accipioVersus () const
 	{
-		return !(versusRotatio->modo ^ positio);
+		return (versusInversio ^ !(versusRotatio->modo ^ positio));
 	}
 	// Остановка
 	bool sicinCommoratio () const
@@ -206,6 +207,7 @@ private:
 	enum { maxCeleritasError = maxCeleritas / minTempusPunctum };
 	const bool lanternaOperor;
 	bool tractus; // 0 - выбег или торможение, 1 - тяга
+	bool versusInversio;
 
 	uint16_t celeritas; // Скорость по показаниям канала
 	int16_t acceleratio; // Ускорение по показаниям канала
@@ -374,6 +376,8 @@ public:
 		dimetior[0]->constituoNonTractus();
 		dimetior[1]->constituoNonTractus();
 	}
+
+	void constituoVersusInversio ( bool inversio )	{ dimetior[0]->constituoVersusInversio (inversio); dimetior[1]->constituoVersusInversio (inversio); }
 
 	bool sicinCausarius () const { return causarius[0] && causarius[1]; }
 

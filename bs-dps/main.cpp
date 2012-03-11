@@ -571,6 +571,9 @@ void mcoState (uint16_t pointer)
 	else
 		dps.constituoTractus ();
 
+	// В задней кабине инвертировать направление
+	dps.constituoVersusInversio ( message[3] & (1 << 5) );
+
 	// Контроль перезагрузки ЦО.
 	static uint32_t lastTime = 0;
 	uint32_t time = clock.getTime();
