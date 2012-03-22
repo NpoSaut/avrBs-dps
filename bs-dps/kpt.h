@@ -70,13 +70,19 @@ private:
 		return time;
 	}
 
-	void canSend ()
+	void canSend (uint8_t n)
 	{
-		uint8_t send[1] = { _cast (uint8_t, status) };
+		uint8_t packet[5] = {
+				2, // WARNING
+				1, // KPT
+				n,
+				0,
+				0
+							};
 		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<MY_KPT_A> (send);
+			canDat.template send<AUX_RESOURCE_IPD_A> (packet);
 		else
-			canDat.template send<MY_KPT_B> (send);
+			canDat.template send<AUX_RESOURCE_IPD_B> (packet);
 	}
 
 	void watchDog (uint16_t)
@@ -85,13 +91,13 @@ private:
 		{
 			if (status.color == Status::Color::RedYellow)
 				status = { 	Status::Color::Red,
-							0,
+							status.kptImp,
 							false,
 							(Status::Type) ~((uint8_t) status.type)
 						};
 			else if (status.color != Status::Color::Red)
 				status = { 	Status::Color::White,
-							0,
+							status.kptImp,
 							false,
 							status.type
 						};
@@ -127,8 +133,15 @@ public:
 	{
 		// Начало отрицательного импульса
 		impulseWatchDog = true;
-		status.kptImp = 0;
-		periodTime += upTime;
+		if ( status.kptImp == 1 )
+		{
+			status.kptImp = 0;
+			periodTime += upTime;
+		}
+		else
+		{
+			canSend (0);
+		}
 
 	}
 
@@ -141,61 +154,69 @@ public:
 	{
 		// Конец отрицательного импульса
 		impulseWatchDog = true;
-		status.kptImp = 1;
-		periodTime += downTime;
 
-
-		if ( downTime > 35) // длинный импульс -- конец периода
+		if ( status.kptImp == 0 )
 		{
-			if (shortImpNumber == 0) // При отсутствии коротких импульсов (КЖ)
-				periodTime *= 2; // реальный период в 2 раза меньше
+			status.kptImp = 1;
+			periodTime += downTime;
 
-			Status statusNew = {Status::Color::White, 1, true, status.type};
 
-			// Цвет светофора
-			statusNew.color = Status::Color (1 << (2-shortImpNumber));
-			if (shortImpNumber >= 3) // Если были ошибки определения цвета
-				statusNew.correct = false;
-			shortImpNumber = 0;
-
-			// Тип КПТ
-			if ( 147 < periodTime && periodTime < 173 ) // 1.6 +- 0.13  -- КПТ-5
-				statusNew.type = Status::Type::Kpt5;
-			else if ( 173 <= periodTime && periodTime < 199 ) // 1.86 +- 0.13  -- КПТ-7
-				statusNew.type = Status::Type::Kpt7;
-			else
-				statusNew.correct = false;
-
-			// Необходимо 2 одинаковых корректно расшифрованных периода
-			if ( _cast(uint8_t, statusNew) == _cast(uint8_t, statusPrevious) )
+			if ( downTime > 35) // длинный импульс -- конец периода
 			{
-				if ( statusNew.correct )
+				if (shortImpNumber == 0) // При отсутствии коротких импульсов (КЖ)
+					periodTime *= 2; // реальный период в 2 раза меньше
+
+				Status statusNew = {Status::Color::White, 1, true, status.type};
+
+				// Цвет светофора
+				statusNew.color = Status::Color (1 << (2-shortImpNumber));
+				if (shortImpNumber >= 3) // Если были ошибки определения цвета
+					statusNew.correct = false;
+				shortImpNumber = 0;
+
+				// Тип КПТ
+				if ( 147 < periodTime && periodTime < 173 ) // 1.6 +- 0.13  -- КПТ-5
+					statusNew.type = Status::Type::Kpt5;
+				else if ( 173 <= periodTime && periodTime < 199 ) // 1.86 +- 0.13  -- КПТ-7
+					statusNew.type = Status::Type::Kpt7;
+				else
+					statusNew.correct = false;
+
+				// Необходимо 2 одинаковых корректно расшифрованных периода
+				if ( _cast(uint8_t, statusNew) == _cast(uint8_t, statusPrevious) )
 				{
-					if ( statusNew.type != status.type ) // Проехали изостык
+					if ( statusNew.correct )
 					{
+						if ( statusNew.type != status.type ) // Проехали изостык
+						{
+							if ( lisZeroingPermission )
+								lisZeroingPermission = false;
+							else
+								lis = correctKptDistance;
+						}
+
+						correctKptDistance = 0;
 						if ( lisZeroingPermission )
-							lisZeroingPermission = false;
-						else
-							lis = correctKptDistance;
+							lis = 0;
+
+						status = statusNew;
 					}
-
-					correctKptDistance = 0;
-					if ( lisZeroingPermission )
-						lis = 0;
-
-					status = statusNew;
 				}
-			}
-			else
-				status.correct = false;
-			statusPrevious = statusNew;
+				else
+					status.correct = false;
+				statusPrevious = statusNew;
 
-			periodTime = 0; // Начало нового периода
-//			canSend ();
+				periodTime = 0; // Начало нового периода
+	//			canSend ();
+			}
+			else // короткий импульс
+				if (++shortImpNumber == 3) // Трёх коротких имульсов подряд быть не может
+					status.correct = false;
 		}
-		else // короткий импульс
-			if (++shortImpNumber == 3) // Трёх коротких имульсов подряд быть не может
-				status.correct = false;
+		else
+		{
+			canSend(1);
+		}
 	}
 
 	void lisPlusPlus ()

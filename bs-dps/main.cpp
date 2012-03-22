@@ -58,78 +58,6 @@ ClockType clock;
 typedef Scheduler< ClockType, clock, 16, uint16_t > SchedulerType;
 SchedulerType scheduler;
 
-// -------------------------------------------- RS-485 ------------------------------------------►
-
-using namespace Saut;
-
-enum {		   					// adr, intput, port
-	// Входящие
-	DpsCommand 			= SautPacketHead (1, true, 0),
-	Dps0 				= SautPacketHead (1, true, 0),
-	DpsBandMeasLenght 	= SautPacketHead (1, true, 1),
-	Dps1 				= SautPacketHead (1, true, 1),
-	Dps2 				= SautPacketHead (1, true, 2),
-	Dps3 				= SautPacketHead (1, true, 3),
-	Club0				= SautPacketHead (10, true, 0),
-	Club1				= SautPacketHead (10, true, 1),
-	BprQuery			= SautPacketHead (13, false, 0),
-	BprVelocity			= SautPacketHead (13, false, 3),
-	// Исходящие
-	DpsOut0 			= SautPacketHead (1, false, 0),
-	DpsOut1 			= SautPacketHead (1, false, 1),
-	DpsOut2 			= SautPacketHead (1, false, 2),
-	DpsOut3 			= SautPacketHead (1, false, 3),
-	ClubOut0			= SautPacketHead (10, false, 0),
-	ClubOut1			= SautPacketHead (10, false, 1),
-	ClubOut2			= SautPacketHead (10, false, 2),
-	ClubOut3			= SautPacketHead (10, false, 3)
-};
-
-typedef Dat <	INT_TYPELIST_8 (	// Данные для приёма
-						Dps0, Dps1, Dps2, Dps3, Club0, Club1, BprQuery, BprVelocity
-								),
-				INT_TYPELIST_8 (	// Данные для передачи
-						DpsOut0, DpsOut1, DpsOut2, DpsOut3, ClubOut0, ClubOut1, ClubOut2, ClubOut3
-								),
-				INT_TYPELIST_4 (	// Данные, по приходу которых вызываются прерывания
-						Dps0, Club0, Club1, BprVelocity
-								)
-			> DatType;
-DatType	data;
-
-Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
-		&Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
-		1,
-		DatType, data >
-	com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
-
-
-// ---------------------------------------- Страницы БС-КЛУБ ------------------------------------►
-
-uint8_t clubPage[5][3];
-
-void clubSendNextPage (uint16_t none)
-{
-	static uint8_t pageNumber;
-	ATOMIC
-	{
-		Complex<uint16_t> out3 { clubPage[pageNumber][2], clubPage[pageNumber][1] };
-		Complex<uint16_t> out2 { clubPage[pageNumber][0],
-								 ( uint8_t(data.member<ClubOut2>()/256) & 0xF ) | uint8_t(pageNumber * 16)
-								};
-		data.member<ClubOut2>() = out2;
-		data.member<ClubOut3>() = out3;
-	}
-	if (++pageNumber == 5) { pageNumber = 0; } // Страницы 0-4
-}
-
-// Ставит в очередь dispatcher'а clubSendNextPage () - чтобы не загрузить частично заполненную страницу
-void clubSendNextPageInterrupt ()
-{
-	dispatcher.add( SoftIntHandler::from_function<&clubSendNextPage>(), 0 );
-//	dispatcher.add( SoftIntHandler (&clubSendNextPage), 0 );
-}
-
 // ---------------------------------------------- CAN -------------------------------------------►
 
 typedef INT_TYPELIST_2 (CanTx::IPD_STATE_A,	CanTx::IPD_STATE_B) IPD_STATE;
@@ -193,6 +121,80 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
 	CanDatType;
 CanDatType canDat;
+
+// -------------------------------------------- RS-485 ------------------------------------------►
+
+using namespace Saut;
+
+enum {		   					// adr, intput, port
+	// Входящие
+	DpsCommand 			= SautPacketHead (1, true, 0),
+	Dps0 				= SautPacketHead (1, true, 0),
+	DpsBandMeasLenght 	= SautPacketHead (1, true, 1),
+	Dps1 				= SautPacketHead (1, true, 1),
+	Dps2 				= SautPacketHead (1, true, 2),
+	Dps3 				= SautPacketHead (1, true, 3),
+	Club0				= SautPacketHead (10, true, 0),
+	Club1				= SautPacketHead (10, true, 1),
+	BprQuery			= SautPacketHead (13, false, 0),
+	BprVelocity			= SautPacketHead (13, false, 3),
+	// Исходящие
+	DpsOut0 			= SautPacketHead (1, false, 0),
+	DpsOut1 			= SautPacketHead (1, false, 1),
+	DpsOut2 			= SautPacketHead (1, false, 2),
+	DpsOut3 			= SautPacketHead (1, false, 3),
+	ClubOut0			= SautPacketHead (10, false, 0),
+	ClubOut1			= SautPacketHead (10, false, 1),
+	ClubOut2			= SautPacketHead (10, false, 2),
+	ClubOut3			= SautPacketHead (10, false, 3)
+};
+
+typedef Dat <	INT_TYPELIST_8 (	// Данные для приёма
+						Dps0, Dps1, Dps2, Dps3, Club0, Club1, BprQuery, BprVelocity
+								),
+				INT_TYPELIST_8 (	// Данные для передачи
+						DpsOut0, DpsOut1, DpsOut2, DpsOut3, ClubOut0, ClubOut1, ClubOut2, ClubOut3
+								),
+				INT_TYPELIST_4 (	// Данные, по приходу которых вызываются прерывания
+						Dps0, Club0, Club1, BprVelocity
+								)
+			> DatType;
+DatType	data;
+
+typedef Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
+				 &Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
+				 1,
+				 DatType, data
+			  > ComType;
+ComType com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
+
+
+// ---------------------------------------- Страницы БС-КЛУБ ------------------------------------►
+
+uint8_t clubPage[5][3];
+
+void clubSendNextPage (uint16_t none)
+{
+	static uint8_t pageNumber;
+	ATOMIC
+	{
+		Complex<uint16_t> out3 { clubPage[pageNumber][2], clubPage[pageNumber][1] };
+		Complex<uint16_t> out2 { clubPage[pageNumber][0],
+								 ( uint8_t(data.member<ClubOut2>()/256) & 0xF ) | uint8_t(pageNumber * 16)
+								};
+		data.member<ClubOut2>() = out2;
+		data.member<ClubOut3>() = out3;
+	}
+	if (++pageNumber == 5) { pageNumber = 0; } // Страницы 0-4
+}
+
+// Ставит в очередь dispatcher'а clubSendNextPage () - чтобы не загрузить частично заполненную страницу
+void clubSendNextPageInterrupt ()
+{
+	dispatcher.add( SoftIntHandler::from_function<&clubSendNextPage>(), 0 );
+//	dispatcher.add( SoftIntHandler (&clubSendNextPage), 0 );
+}
+
 
 
 // ---------------------------------- SYS_DIAGNOSTICS / AUX_RESOURCE ----------------------------►
@@ -324,10 +326,10 @@ void sysDiagnostics (uint16_t a)
 		{
 			uint8_t packet[5] = {
 					(uint8_t) Answer::DATA,
-					(uint8_t) ( (uint8_t(com.ioSwitch())*128) | com.step ),
-					_cast (Complex<uint32_t>, reg.usart1Control)[0],
-					_cast (Complex<uint32_t>, reg.usart1Control)[1],
-					_cast (Complex<uint32_t>, reg.usart1Control)[2]
+					0,
+					0,
+					0,
+					0
 								};
 			if (reg.portB.pin7 == 0)
 				canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
@@ -776,13 +778,6 @@ void commandParser ()
 	}
 }
 
-void dispatcherSizeReset (uint16_t)
-{
-	dispatcher.maxSize = 0;
-	scheduler.runIn( Command {SoftIntHandler::from_function<&dispatcherSizeReset>(), 0},	10000 );
-//	scheduler.runIn( Command {&dispatcherSizeReset, 0},	10000 );
-}
-
 void unsetResetFlag (uint16_t)
 {
 	dps.repeto = false;
@@ -805,6 +800,7 @@ int main ()
 	}
 	asm volatile ("nop"); // !!! 126 version hack !!!
 	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
+	asm volatile ("nop");
 
 //	data.interruptHandler<DpsCommand> () = InterruptHandler (&commandParser);
 //	data.interruptHandler<Club0> () = InterruptHandler (&kptCommandParse);
@@ -843,7 +839,7 @@ int main ()
 	// ------------------------------ Хранение постоянных характеристик -----------------------------►
 	if (reg.portB.pin7 == 0) // первый полукомплект
 	{
-		typedef MPH <CanDatType, canDat, SchedulerType, scheduler> MPHType;
+		typedef MPH <CanDatType, canDat, SchedulerType, scheduler, ComType, com> MPHType;
 		MPHType mph;
 
 		canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
@@ -906,8 +902,6 @@ int main ()
 		}
 	}
 
-	scheduler.runIn( Command {SoftIntHandler::from_function<&dispatcherSizeReset>(), 0},	10000 );
-//	scheduler.runIn( Command {&dispatcherSizeReset, 0},	10000 );
 	scheduler.runIn( Command {SoftIntHandler::from_function<&unsetResetFlag>(), 0}, 7000 );
 
     for (;;)
