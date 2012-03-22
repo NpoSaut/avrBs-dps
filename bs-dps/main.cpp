@@ -96,11 +96,13 @@ typedef Dat <	INT_TYPELIST_8 (	// Данные для приёма
 			> DatType;
 DatType	data;
 
-Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
-		&Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
-		1,
-		DatType, data >
-	com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
+typedef Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
+			 	&Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
+			 	1,
+			 	DatType, data
+			 >
+		ComType;
+ComType	com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
 
 
 // ---------------------------------------- Страницы БС-КЛУБ ------------------------------------►
@@ -579,7 +581,8 @@ uint16_t bandDiam (const uint8_t* avarage, const uint8_t* correction)
 
 typedef
 CeleritasSpatiumDimetior  < &Register::portC, 4, 5, &Register::portB, 7,
-							CanDatType, canDat >
+							CanDatType, canDat,
+							ComType, com >
 DpsType;
 
 DpsType	dps ( 	&Register::portC,
@@ -720,85 +723,85 @@ void mcoStateB (uint16_t pointer)
 
 // --------------------------------------- Эмуляция движения ------------------------------------►
 
-class Emulation
-{
-public:
-	Emulation ()
-		: engine ( 0x5555, InterruptHandler(this, &Emulation::makeAStep) )
-	{
-		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
-	}
-
-	void getVelocity ()
-	{
-		uint8_t newVelocity = _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1];
-		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) &&  // Команда на эмуляцию
-				newVelocity >= 2 ) // Меньше 8-битный таймер не позволяет
-		{
-			enable();
-			if ( newVelocity != currentVelocity )
-			{
-				currentVelocity = newVelocity;
-
-				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
-				if (period > 150) // Чтобы не повесить систему слишком частым заходом
-					engine.setPeriod ( period );
-			}
-		}
-		else
-			disable ();
-
-		getMessage = true;
-	}
-
-private:
-	void watchDog (uint16_t)
-	{
-		if ( !( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) ) ||
-				getMessage == false )
-			disable ();
-
-		getMessage = false;
-		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
-	}
-	void makeAStep ()
-	{
-		if (parity)
-		{
-			toggle (1);
-			toggle (2);
-		}
-		else
-		{
-			toggle (0);
-			toggle (3);
-		}
-		parity = !parity;
-	}
-	void enable ()
-	{
-		dps.accessusPortus = (Port Register::*) (&Register::general0);
-		engine.enable();
-	}
-	void disable ()
-	{
-		dps.accessusPortus = &Register::portC;
-		engine.disable();
-	}
-	void toggle (const uint8_t& n)
-	{
-		if ( reg.general0 & (1<<n) )
-			reg.general0 &= ~(1<<n);
-		else
-			reg.general0 |= (1<<n);
-	}
-
-	AlarmAdjust<Alarm2> engine;
-	uint8_t currentVelocity;
-	bool getMessage;
-	bool parity;
-};
-Emulation emulation;
+//class Emulation
+//{
+//public:
+//	Emulation ()
+//		: engine ( 0x5555, InterruptHandler(this, &Emulation::makeAStep) )
+//	{
+//		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
+//	}
+//
+//	void getVelocity ()
+//	{
+//		uint8_t newVelocity = _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1];
+//		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) &&  // Команда на эмуляцию
+//				newVelocity >= 2 ) // Меньше 8-битный таймер не позволяет
+//		{
+//			enable();
+//			if ( newVelocity != currentVelocity )
+//			{
+//				currentVelocity = newVelocity;
+//
+//				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
+//				if (period > 150) // Чтобы не повесить систему слишком частым заходом
+//					engine.setPeriod ( period );
+//			}
+//		}
+//		else
+//			disable ();
+//
+//		getMessage = true;
+//	}
+//
+//private:
+//	void watchDog (uint16_t)
+//	{
+//		if ( !( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) ) ||
+//				getMessage == false )
+//			disable ();
+//
+//		getMessage = false;
+//		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
+//	}
+//	void makeAStep ()
+//	{
+//		if (parity)
+//		{
+//			toggle (1);
+//			toggle (2);
+//		}
+//		else
+//		{
+//			toggle (0);
+//			toggle (3);
+//		}
+//		parity = !parity;
+//	}
+//	void enable ()
+//	{
+//		dps.accessusPortus = (Port Register::*) (&Register::general0);
+//		engine.enable();
+//	}
+//	void disable ()
+//	{
+//		dps.accessusPortus = &Register::portC;
+//		engine.disable();
+//	}
+//	void toggle (const uint8_t& n)
+//	{
+//		if ( reg.general0 & (1<<n) )
+//			reg.general0 &= ~(1<<n);
+//		else
+//			reg.general0 |= (1<<n);
+//	}
+//
+//	AlarmAdjust<Alarm2> engine;
+//	uint8_t currentVelocity;
+//	bool getMessage;
+//	bool parity;
+//};
+//Emulation emulation;
 
 // ---------------------------------- Парсер команд по линии связи ------------------------------►
 
@@ -868,7 +871,7 @@ int main ()
 	data.interruptHandler<DpsCommand> () = InterruptHandler (&commandParser);
 	data.interruptHandler<Club0> () = InterruptHandler (&kptCommandParse);
 	data.interruptHandler<Club1> () = InterruptHandler (&clubSendNextPageInterrupt);
-	data.interruptHandler<BprVelocity> () = InterruptHandler (&emulation, &Emulation::getVelocity);
+//	data.interruptHandler<BprVelocity> () = InterruptHandler (&emulation, &Emulation::getVelocity);
 
 	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler (&canDataGet);
 	canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler (&canDataGet);

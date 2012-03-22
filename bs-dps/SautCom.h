@@ -115,6 +115,14 @@ public:
 		block3Byte = 1;
 
 		reset ();
+
+		// DEBUG
+			reg.timer2Compare = 255;
+			reg.timer2Control->clockType_ = TimerControl8_2::ClockType::Prescale8; // 0,66667 мкс
+			reg.timer2Control->waveform_ = TimerControl8_2::Waveform::Normal;
+			reg.timer2Control->outputMode_ = TimerControl8_2::OutputMode::OutPinDisconnect;
+			reg.timer2InterruptMask->CompInterrupt_ = false;
+			reg.timer2InterruptMask->OverflowInterrupt_ = false;
 	}
 
 	uint16_t dataOut;
@@ -123,6 +131,8 @@ public:
 	// Если приходит запрет на отправку, то перестаю отправлять
 	volatile uint8_t block3Byte;
 //	Safe<uint8_t> block3Byte;
+	volatile uint8_t termTime;
+	volatile bool flag;
 
 	// Пройдено метров. Для передачи в 3-ем байте.
 	uint8_t decimeters;
@@ -322,6 +332,11 @@ start:
 						cli ();									// Дождаться выхода из этого обработчика
 						(reg.*usartControl)->dataRegEmptyInterrupt = true;	// Оттуда отправка данных
 					}
+					else
+					{
+						flag = true;
+						reg.timer2Counter = 0;
+					}
 				}
 			}
 			else
@@ -423,18 +438,29 @@ template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<Usart
 void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, ioSwitchPort, ioSwitchPin, scPort, scPin, myAdr, DatType, dat>::txHandler()
 {
 	inMode ();
-	if (step == End)											// Закончили отправку данных
-	{
+	uint8_t time = reg.timer2Counter;
+
+	if ( step == End )											// Закончили отправку данных
 		reset ();
-//		if ( completeIntEnable & (1 << (intAddr&0b0011)) )
+	else if (flag)
+	{
+		flag = false;
+//		if ( reg.timer2InterruptFlag->OverflowOccur )
 //		{
-//			enable = false;
-//			sei();
-//			completeOutInt (intAddr&0b0011);
-//			enable = true;
+//			reg.timer2InterruptFlag->OverflowOccur = 1;
+//			time = 0xFF;
 //		}
-//		else
-//			complete |= 1 << (intAddr&0b0011);
+
+		if ( time  > 144 ) // очень странно, если нет
+		{
+			time -= 144;
+			time = (time * 2) / 3; // время задержки в мкс
+
+			if (time > termTime)
+				termTime = time;
+		}
+		else
+			termTime = 0xFE;
 	}
 }
 

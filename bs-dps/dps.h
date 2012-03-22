@@ -258,7 +258,8 @@ private:
 // -----------
 
 template <	Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, Port Register::*semiSynthesisPortus, uint8_t semiSynthesisPes,
-			typename CanType, CanType& canDat  >
+			typename CanType, CanType& canDat,
+			typename SautCom, SautCom& sautCom >
 class CeleritasSpatiumDimetior
 {
 public:
@@ -358,7 +359,7 @@ public:
 	BlockStatus blockStatus;
 
 private:
-	typedef CeleritasSpatiumDimetior< lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat > myType;
+	typedef CeleritasSpatiumDimetior< lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat, SautCom, sautCom > myType;
 	// После прошествия этого времени по первому спаду произойдёт подсчёт
 	// 1/minTempusPunctum - относительная погрешность определения скорости.
 	// Время обновления показания на больших скоростях: minTempusPunctum * animadversor.period
@@ -648,9 +649,10 @@ private:
 					(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.typeLoco),					// младший
 					0,
 					0,
-					0
+					sautCom.termTime
 									};
 			canDat.template send<CanTx::SYS_DATA_STATE2> (sysDataState2);
+			sautCom.termTime = 0;
 		}
 	}
 
