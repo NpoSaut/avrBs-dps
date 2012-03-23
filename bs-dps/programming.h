@@ -143,8 +143,8 @@ void Programming::comParser ()
 	case FUSEErase:
 	case EEPROMErase:
 	case FlashErase:
-		Return (3);
 		neighbour.erase ();
+		Return (3);
 		Return (0);
 		break;
 
@@ -224,8 +224,10 @@ void Programming::comParser ()
 			if ( neighbour.position < memAreaEnd )
 				Return (2);
 			else
+			{
 				neighbour.flush<ProgSpi::flash> ();
 				Return (0);
+			}
 			break;
 
 		case EEPROMWrite:
@@ -239,8 +241,10 @@ void Programming::comParser ()
 			if ( neighbour.position < memAreaEnd )
 				Return (2);
 			else
+			{
 				neighbour.flush<ProgSpi::eeprom> ();
 				Return (0);
+			}
 			break;
 
 		case FlashRead:

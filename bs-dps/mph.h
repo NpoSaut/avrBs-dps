@@ -17,7 +17,8 @@
 #include "eeprom.h"
 
 template < typename CanDatType, CanDatType& canDat,
-		   typename Scheduler, Scheduler& scheduler >
+		   typename Scheduler, Scheduler& scheduler,
+		   typename SautCom, SautCom& sautCom >
 class MPH
 {
 public:
@@ -112,9 +113,10 @@ private:
 				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.typeLoco),					// младший
 				success,
 				scheduler.fill,
-				0
+				sautCom.termTime
 								};
 		canDat.template send<CanTx::SYS_DATA_STATE2> (sysDataState2);
+		sautCom.termTime = 0;
 
 	}
 };

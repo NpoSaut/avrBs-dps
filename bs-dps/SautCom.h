@@ -52,7 +52,7 @@
 
 #include "hw_defines.h"
 
-
+#include "CanDesriptors.h"
 
 
 namespace Saut
@@ -120,6 +120,14 @@ public:
 		block3Byte = 1;
 
 		reset ();
+
+		// DEBUG
+		reg.timer2Compare = 255;
+		reg.timer2Control->clockType_ = TimerControl8_2::ClockType::Prescale8; // 0,66667 мкс
+		reg.timer2Control->waveform_ = TimerControl8_2::Waveform::Normal;
+		reg.timer2Control->outputMode_ = TimerControl8_2::OutputMode::OutPinDisconnect;
+		reg.timer2InterruptMask->CompInterrupt_ = false;
+		reg.timer2InterruptMask->OverflowInterrupt_ = false;
 	}
 
 	uint16_t dataOut;
@@ -132,7 +140,7 @@ public:
 	// Пройдено метров. Для передачи в 3-ем байте.
 	uint8_t decimeters;
 //	Safe<uint8_t> decimeters;
-
+	volatile uint8_t termTime;
 
 	void rxHandler ();
 	void txHandler ();
@@ -141,8 +149,7 @@ public:
 //	INTERRUPT_HANDLER(txHandler);
 //	INTERRUPT_HANDLER(udreHandler);
 
-//private:
-	uint16_t start;
+private:
 	bool flag;
 
 	//Коды Хэмминга
@@ -250,11 +257,9 @@ const uint8_t Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort,
 template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
 			Port Register::* rxPort, uint8_t rxPin, Port Register::* txPort, uint8_t txPin, Port Register::* ioSwitchPort, uint8_t ioSwitchPin, Port Register::* scPort, uint8_t scPin,
 			uint8_t myAdr,
-			typename DatType, DatType& dat  >
+			typename DatType, DatType& dat >
 void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, ioSwitchPort, ioSwitchPin, scPort, scPin, myAdr, DatType, dat>::rxHandler ()
 {
-//	tcnt0 = 0;
-//	lam <0, 10000> ();
 	bool usartErrors = (reg.*usartControl)->dataOverRunError_ || (reg.*usartControl)->frameError_ ;
 
 	struct
@@ -284,7 +289,6 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 start:
 		if (step == Address)
 		{
-//			lam <1, 1000> ();
 			if (get.type == Adr)
 			{
 				packet.head->adr = get.data;
@@ -324,7 +328,6 @@ start:
 //					start = reg.timer3Counter;
 //					flag = true;
 
-//					_(udr) = ham[Data][tcnt0>>4]; 				// Отправляем
 					step = Get3Byte;							// ещё +1 на выходе. Реально step = Data0  - Перепрыгиваем через получение 3-го байта
 
 					if (dat.send(packet))
@@ -332,6 +335,11 @@ start:
 						dataOut = (uint16_t) packet.data;
 						cli ();									// Дождаться выхода из этого обработчика
 						(reg.*usartControl)->dataRegEmptyInterrupt = true;	// Оттуда отправка данных
+					}
+					else
+					{
+						flag = true;
+						reg.timer2Counter = 0;
 					}
 				}
 			}
@@ -433,31 +441,35 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
 			Port Register::* rxPort, uint8_t rxPin, Port Register::* txPort, uint8_t txPin, Port Register::* ioSwitchPort, uint8_t ioSwitchPin, Port Register::* scPort, uint8_t scPin,
 			uint8_t myAdr,
-			typename DatType, DatType& dat >
+			typename DatType, DatType& dat  >
 void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, ioSwitchPort, ioSwitchPin, scPort, scPin, myAdr, DatType, dat>::txHandler()
 {
 	inMode ();
+	uint8_t time = reg.timer2Counter;
+
 	if ( step == End )											// Закончили отправку данных
 		reset ();
-//	else
-//	{
-////		if (flag)
-////		{
-////			flag = false;
-//				uint16_t delay;
-//				if ( reg.timer3Counter >= start )
-//					delay = reg.timer3Counter - start;
-//				else
-//					delay = 12000 - start + reg.timer3Counter;
-//				delay = (delay / 12 - 96)/4; // В мкс и минус время передачи
-//
-//				if (delay >= 16)
-//					delay = 15;
-//
-//				decimeters = delay;
-////		}
-//
-//	}
+	else if (flag)
+	{
+		flag = false;
+//		if ( reg.timer2InterruptFlag->OverflowOccur )
+//		{
+//			reg.timer2InterruptFlag->OverflowOccur = 1;
+//			time = 0xFF;
+//		}
+
+		if ( time  > 144 ) // очень странно, если нет
+		{
+			time -= 144;
+			time = (time * 2) / 3; // время задержки в мкс
+
+			if (time > termTime)
+				termTime = time;
+		}
+		else
+			termTime = 0xFE;
+	}
+
 }
 
 } // namespace Saut
