@@ -14,7 +14,7 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/scheduler.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/timers.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/interrupt-dynamic.h \
- ../hw_defines.h ../SautCom.h ../SautDat.h \
+ ../hw_defines.h ../SautCom.h ../CanDesriptors.h ../SautDat.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/map-static.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/int-typelist.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/Typelist.h \
@@ -22,8 +22,8 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypeManip.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypelistMacros.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h ../id.h \
- ../programming.h ../ProgSpi.h ../dps.h ../CanDat.h ../CanDesriptors.h \
- ../eeprom.h ../ec-adjust.h ../kpt.h ../mph.h
+ ../programming.h ../ProgSpi.h ../dps.h ../CanDat.h ../eeprom.h \
+ ../ec-adjust.h ../kpt.h ../mph.h
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h:
 
@@ -61,6 +61,8 @@ D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/interrupt-dynamic.h:
 
 ../SautCom.h:
 
+../CanDesriptors.h:
+
 ../SautDat.h:
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/map-static.h:
@@ -86,8 +88,6 @@ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h:
 ../dps.h:
 
 ../CanDat.h:
-
-../CanDesriptors.h:
 
 ../eeprom.h:
 

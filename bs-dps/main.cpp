@@ -97,11 +97,12 @@ typedef Dat <	INT_TYPELIST_8 (	// Данные для приёма
 			> DatType;
 DatType	data;
 
-Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
+typedef Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
 		&Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
 		1,
 		DatType, data >
-	com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
+		ComType;
+ComType	com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
 
 
 // ---------------------------------------- Страницы БС-КЛУБ ------------------------------------►
@@ -320,10 +321,10 @@ void sysDiagnostics (uint16_t a)
 		{
 			uint8_t packet[5] = {
 					(uint8_t) Answer::DATA,
-					(uint8_t) ( (uint8_t(com.ioSwitch())*128) | com.step ),
-					_cast (Complex<uint32_t>, reg.usart1Control)[0],
-					_cast (Complex<uint32_t>, reg.usart1Control)[1],
-					_cast (Complex<uint32_t>, reg.usart1Control)[2]
+					0,
+					0,
+					0,
+					0
 								};
 			if (reg.portB.pin7 == 0)
 				canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
@@ -819,7 +820,7 @@ int main ()
 	// ------------------------------ Хранение постоянных характеристик -----------------------------►
 	if (reg.portB.pin7 == 0) // первый полукомплект
 	{
-		typedef MPH <CanDatType, canDat, SchedulerType, scheduler> MPHType;
+		typedef MPH <CanDatType, canDat, SchedulerType, scheduler, ComType, com> MPHType;
 		MPHType mph;
 
 		canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
