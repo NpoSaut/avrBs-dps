@@ -10,6 +10,7 @@ enum CanTx : uint16_t
 {
 	 IPD_STATE_A =			(0xC4	<< 5) + 8, // 1888
 	 IPD_STATE_B =			(0xD4	<< 5) + 8, // 1A88
+	 IPD_PARAM	 =			(0xC6	<< 5) + 8, // 18C8
 	 SAUT_INFO_A =          (0x233	<< 5) + 8, // 4668
 	 SAUT_INFO_B =          (0x234	<< 5) + 8, // 4688
 	 SYS_DATA =				(0x313	<< 5) + 5, // 6265

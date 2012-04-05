@@ -62,11 +62,11 @@ SchedulerType scheduler;
 
 typedef INT_TYPELIST_2 (CanTx::IPD_STATE_A,	CanTx::IPD_STATE_B) IPD_STATE;
 typedef INT_TYPELIST_2 (CanTx::SAUT_INFO_A,	CanTx::SAUT_INFO_B) SAUT_INFO;
-typedef INT_TYPELIST_9 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
+typedef INT_TYPELIST_10 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 						CanTx::AUX_RESOURCE_IPD_A,	CanTx::AUX_RESOURCE_IPD_B,
 						CanTx::SYS_DATA,
 						CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
-						CanTx::MY_KPT_A, CanTx::MY_KPT_B ) AUX_RESOURCE_SYS_DATA;
+						CanTx::MY_KPT_A, CanTx::MY_KPT_B, CanTx::IPD_PARAM ) AUX_RESOURCE_SYS_DATA;
 
 typedef INT_TYPELIST_2 (CanRx::MCO_STATE_A, CanRx::MCO_LIMITS_A) MCO_STATE_LIMITS_A;
 typedef INT_TYPELIST_2 (CanRx::MCO_STATE_B, CanRx::MCO_LIMITS_B) MCO_STATE_LIMITS_B;
@@ -800,6 +800,7 @@ int main ()
 	}
 	asm volatile ("nop"); // !!! 126 version hack !!!
 	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
+	asm volatile ("nop");
 	asm volatile ("nop");
 
 //	data.interruptHandler<DpsCommand> () = InterruptHandler (&commandParser);
