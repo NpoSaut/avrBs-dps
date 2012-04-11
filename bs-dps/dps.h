@@ -705,6 +705,46 @@ private:
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+
+					// IPD_DPS_FAULT ---
+					enum class DpsFault : uint8_t
+					{
+						AllValidus,
+						DuplarisCausarius,
+						DuplarisConjuctio,
+						Causarius0,
+						Causarius1,
+						Conjuctio0,
+						Conjuctio1,
+						Celeritas0,
+						Celeritas1
+					};
+					DpsFault dpsFault = DpsFault::AllValidus;
+					if ( causarius[0]->vicis )
+						dpsFault = DpsFault::Causarius0;
+					if ( causarius[1]->vicis )
+						dpsFault = DpsFault::Causarius1;
+					if ( causarius[0]->vicis && causarius[1]->vicis )
+						dpsFault = DpsFault::DuplarisCausarius;
+					if ( causarius[0]->conjuctio && causarius[1]->conjuctio )
+						dpsFault = DpsFault::DuplarisConjuctio;
+
+					scheduler.runIn(
+							Command { SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::dpsFaultProduco>(this), (uint16_t) dpsFault },
+							100
+							); // Вывести через 0,1 сек, чтобы успели освободиться страницы отправки CAN
+
+//					uint8_t sysDataState2[8] = {
+//							0, // Результаты выполнения тестов...
+//							(uint8_t) eeprom_read_byte ((const uint8_t *) ((uint8_t*)&eeprom.club.configuration +1)), 	// старший
+//							(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.configuration),					// младший
+//							(uint8_t) eeprom_read_byte ((const uint8_t *) ((uint8_t*)&eeprom.club.typeLoco +1)), 	// старший
+//							(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.typeLoco),					// младший
+//							2,
+//							0,
+//							0
+//											};
+//					canDat.template send<CanTx::SYS_DATA_STATE2> (sysDataState2);
 				}
 				else
 				{
@@ -715,9 +755,15 @@ private:
 		}
 
 		scheduler.runIn(
-				Command { SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0},
+				Command { SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0 },
 				500
 						); // Выводить сообщения раз в 0,5 сек.
+	}
+
+	void dpsFaultProduco (uint16_t dpsFault)
+	{
+		uint8_t data[2] = { (uint8_t) dpsFault, 0 };
+		canDat.template send<CanTx::IPD_DPS_FAULT> (data);
 	}
 
 	// Выдаёт скорость в требуемом формате

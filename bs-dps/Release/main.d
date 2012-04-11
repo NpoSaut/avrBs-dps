@@ -23,7 +23,7 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypelistMacros.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h ../id.h \
  ../programming.h ../ProgSpi.h ../dps.h ../CanDat.h ../eeprom.h \
- ../ec-adjust.h ../kpt.h ../mph.h
+ ../ec-adjust.h ../kpt.h ../mph.h ../neutral-insertion.h
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h:
 
@@ -96,3 +96,5 @@ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h:
 ../kpt.h:
 
 ../mph.h:
+
+../neutral-insertion.h:

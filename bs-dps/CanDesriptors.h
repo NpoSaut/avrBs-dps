@@ -10,7 +10,9 @@ enum CanTx : uint16_t
 {
 	 IPD_STATE_A =			(0xC4	<< 5) + 8, // 1888
 	 IPD_STATE_B =			(0xD4	<< 5) + 8, // 1A88
+	 IPD_DPS_FAULT =		(0xD6	<< 5) + 2, // 1AC2
 	 IPD_PARAM	 =			(0xC6	<< 5) + 8, // 18C8
+	 IPD_NEUTRAL =			(0xC8	<< 5) + 3, // 1903
 	 SAUT_INFO_A =          (0x233	<< 5) + 8, // 4668
 	 SAUT_INFO_B =          (0x234	<< 5) + 8, // 4688
 	 SYS_DATA =				(0x313	<< 5) + 5, // 6265
@@ -20,7 +22,7 @@ enum CanTx : uint16_t
 	 AUX_RESOURCE_IPD_B = 	((uint16_t)0x4D0	<< 5) + 5, // 9A05
 	 AUX_RESOURCE_BS_A = 	((uint16_t)0x633	<< 5) + 5, // C665
 	 AUX_RESOURCE_BS_B = 	((uint16_t)0x634	<< 5) + 5, // C685
-	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 3, // 9983
+	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 1, // 9983
 	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 3, // 99A3
 	 MY_KPT_A = 			((uint16_t)0x4CE	<< 5) + 1, // 99C1
 	 MY_KPT_B = 			((uint16_t)0x4CF	<< 5) + 1  // 99E1
@@ -45,6 +47,7 @@ enum CanRx : uint16_t
 	 MP_ALS_OFF_TIME_B =	(0x85	<< 5) + 1, // 10A1
 	 IPD_DATE =				(0xC7	<< 5) + 7, // 18E7
 	 MM_DATA =				(0x211	<< 5) + 8, // 4228
+	 MM_NEUTRAL =			(0x215	<< 5) + 8, // 42A8
 	 BKSI_DATA =			(0x252	<< 5) + 5, // 4A45
 	 INPUT_DATA =			(0x310	<< 5) + 5, // 6205
 	 SYS_DIAGNOSTICS = 		((uint16_t)0x468	<< 5) + 7, // 8D07

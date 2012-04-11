@@ -30,6 +30,7 @@
 #include "CanDesriptors.h"
 #include "kpt.h"
 #include "mph.h"
+#include "neutral-insertion.h"
 
 
 
@@ -60,26 +61,28 @@ SchedulerType scheduler;
 
 // ---------------------------------------------- CAN -------------------------------------------►
 
-typedef INT_TYPELIST_2 (CanTx::IPD_STATE_A,	CanTx::IPD_STATE_B) IPD_STATE;
+typedef INT_TYPELIST_3 (CanTx::IPD_STATE_A,	CanTx::IPD_STATE_B, CanTx::IPD_DPS_FAULT) IPD_STATE;
 typedef INT_TYPELIST_2 (CanTx::SAUT_INFO_A,	CanTx::SAUT_INFO_B) SAUT_INFO;
 typedef INT_TYPELIST_10 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 						CanTx::AUX_RESOURCE_IPD_A,	CanTx::AUX_RESOURCE_IPD_B,
 						CanTx::SYS_DATA,
 						CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
 						CanTx::MY_KPT_A, CanTx::MY_KPT_B, CanTx::IPD_PARAM ) AUX_RESOURCE_SYS_DATA;
+typedef INT_TYPELIST_2 (CanTx::SYS_DATA_STATE, CanTx::IPD_NEUTRAL) SYS_DATA_STATE_IPD_NEUTRAL;
 
 typedef INT_TYPELIST_2 (CanRx::MCO_STATE_A, CanRx::MCO_LIMITS_A) MCO_STATE_LIMITS_A;
 typedef INT_TYPELIST_2 (CanRx::MCO_STATE_B, CanRx::MCO_LIMITS_B) MCO_STATE_LIMITS_B;
 typedef INT_TYPELIST_2 (CanRx::SYS_DATA_QUERY, CanRx::SYS_KEY) SYS;
 typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_ON_TIME_A, CanRx::MP_ALS_OFF_TIME_A) MP_ALS_A;
 typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_B, CanRx::MP_ALS_OFF_B, CanRx::MP_ALS_ON_TIME_B, CanRx::MP_ALS_OFF_TIME_B) MP_ALS_B;
+typedef INT_TYPELIST_2 (CanRx::MM_DATA, CanRx::MM_NEUTRAL) MM;
 typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA) INPUT;
 typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
 
 typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов для отправки
 						IPD_STATE,
 						SAUT_INFO,
-						Int2Type< CanTx::SYS_DATA_STATE >,
+						SYS_DATA_STATE_IPD_NEUTRAL,
 						Int2Type< CanTx::SYS_DATA_STATE2 >,
 						AUX_RESOURCE_SYS_DATA
 								),
@@ -90,12 +93,13 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 SYS,
 						 MP_ALS_A,
 						 MP_ALS_B,
-						 Int2Type< CanRx::IPD_DATE >,
-						 Int2Type< CanRx::MM_DATA >,
+//						 Int2Type< CanRx::IPD_DATE >,
+						 Int2Type< CanTx::MY_DEBUG_A >,
+						 MM,
 						 INPUT,
 						 DIAGNOSTICS
 						 	 	 ),
-				 LOKI_TYPELIST_21(
+				 LOKI_TYPELIST_22(
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
@@ -106,7 +110,7 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 Int2Type< CanRx::AUX_RESOURCE_MCO_B >,
 						 Int2Type< CanRx::MCO_STATE_A >,
 						 Int2Type< CanRx::MCO_STATE_B >,
-						 Int2Type< CanRx::IPD_DATE >,
+//						 Int2Type< CanRx::IPD_DATE >,
 						 Int2Type< CanRx::MM_DATA >,
 						 Int2Type< CanRx::MP_ALS_ON_A >,
 						 Int2Type< CanRx::MP_ALS_OFF_A >,
@@ -116,7 +120,9 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 Int2Type< CanRx::MP_ALS_OFF_TIME_A >,
 						 Int2Type< CanRx::MP_ALS_ON_TIME_B >,
 						 Int2Type< CanRx::MP_ALS_OFF_TIME_B >,
-						 Int2Type< CanRx::SYS_KEY >
+						 Int2Type< CanRx::SYS_KEY >,
+						 Int2Type< CanRx::MM_NEUTRAL >,
+						 Int2Type< CanTx::MY_DEBUG_A>
 								),
 				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
 	CanDatType;
@@ -419,12 +425,12 @@ void sysKey (uint16_t a)
 
 void ipdDate (uint16_t none)
 {
-	clubPage[2][0] = canDat.get<CanRx::IPD_DATE>()[4];
-	clubPage[2][1] = canDat.get<CanRx::IPD_DATE>()[5];
-	clubPage[2][2] = canDat.get<CanRx::IPD_DATE>()[6];
-	clubPage[4][0] = canDat.get<CanRx::IPD_DATE>()[1];
-	clubPage[4][1] = canDat.get<CanRx::IPD_DATE>()[2];
-	clubPage[4][2] = canDat.get<CanRx::IPD_DATE>()[3];
+//	clubPage[2][0] = canDat.get<CanRx::IPD_DATE>()[4];
+//	clubPage[2][1] = canDat.get<CanRx::IPD_DATE>()[5];
+//	clubPage[2][2] = canDat.get<CanRx::IPD_DATE>()[6];
+//	clubPage[4][0] = canDat.get<CanRx::IPD_DATE>()[1];
+//	clubPage[4][1] = canDat.get<CanRx::IPD_DATE>()[2];
+//	clubPage[4][2] = canDat.get<CanRx::IPD_DATE>()[3];
 }
 
 // ---------------------------------------------- КПТ -------------------------------------------►
@@ -666,12 +672,32 @@ public:
 
 		getMessage = true;
 	}
+	void getCanVelocity (uint16_t)
+	{
+		uint8_t newVelocity = canDat.get<CanTx::MY_DEBUG_A>()[0];
+
+		if ( newVelocity > 0 )
+		{
+			enable();
+			if ( newVelocity != currentVelocity )
+			{
+				currentVelocity = newVelocity;
+
+				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
+				if (period > 150) // Чтобы не повесить систему слишком частым заходом
+					engine.setPeriod ( period );
+			}
+		}
+		else
+			disable ();
+
+		getMessage = true;
+	}
 
 private:
 	void watchDog (uint16_t)
 	{
-		if ( !( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) ) ||
-				getMessage == false )
+		if ( getMessage == false )
 			disable ();
 
 		getMessage = false;
@@ -712,7 +738,7 @@ private:
 
 	AlarmAdjust<Alarm1A> engine;
 	uint8_t currentVelocity;
-	bool getMessage;
+	volatile bool getMessage;
 	bool parity;
 };
 Emulation emulation;
@@ -774,7 +800,6 @@ void commandParser ()
 				data.member<Dps0>(),	data.member<Dps1>(),	data.member<Dps2>(),	data.member<Dps3>(),
 				data.member<DpsOut0>(),	data.member<DpsOut1>(),	data.member<DpsOut2>(),	data.member<DpsOut3>() );
 		data.interruptHandler<Dps0> () = InterruptHandler::from_method <Programming, &Programming::comParser> (P1);
-//		data.interruptHandler<Dps0> () = InterruptHandler( P1, &Programming::comParser);
 	}
 }
 
@@ -800,54 +825,29 @@ int main ()
 	}
 	asm volatile ("nop"); // !!! 126 version hack !!!
 	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
-	asm volatile ("nop");
-	asm volatile ("nop");
-
-//	data.interruptHandler<DpsCommand> () = InterruptHandler (&commandParser);
-//	data.interruptHandler<Club0> () = InterruptHandler (&kptCommandParse);
-//	data.interruptHandler<Club1> () = InterruptHandler (&clubSendNextPageInterrupt);
-//	data.interruptHandler<BprVelocity> () = InterruptHandler (&emulation, &Emulation::getVelocity);
-//
-//	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler (&canDataGet);
-//	canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler (&canDataGet);
-//	canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler (&canDataGet);
-//	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler (&canDataSend);
-//
-//	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler (&eCardParser);
-//
-//	canDat.rxHandler<CanRx::SYS_DIAGNOSTICS>() = SoftIntHandler (&sysDiagnostics);
-//
-//	canDat.rxHandler<CanRx::MCO_STATE_A>() = SoftIntHandler (&mcoStateA);
-//	canDat.rxHandler<CanRx::MCO_STATE_B>() = SoftIntHandler (&mcoStateB);
-//
-//	canDat.rxHandler<CanRx::IPD_DATE>() = SoftIntHandler (&ipdDate);
-//	canDat.rxHandler<CanRx::SYS_KEY>() = SoftIntHandler (&sysKey);
-//
-//	canDat.rxHandler<CanRx::MP_ALS_ON_A>() = SoftIntHandler (&kptRiseA);
-//	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_A>() = SoftIntHandler (&kptRiseTimeA);
-//	canDat.rxHandler<CanRx::MP_ALS_OFF_A>() = SoftIntHandler (&kptFallA);
-//	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_A>() = SoftIntHandler (&kptFallTimeA);
-//	canDat.rxHandler<CanRx::MP_ALS_ON_B>() = SoftIntHandler (&kptRiseB);
-//	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_B>() = SoftIntHandler (&kptRiseTimeB);
-//	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler (&kptFallB);
-//	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler (&kptFallTimeB);
+//	asm volatile ("nop");
+//	asm volatile ("nop");
 
 	data.interruptHandler<DpsCommand> () = InterruptHandler::from_function<&commandParser>();
 	data.interruptHandler<Club0> () = InterruptHandler::from_function<&kptCommandParse>();
 	data.interruptHandler<Club1> () = InterruptHandler::from_function<&clubSendNextPageInterrupt>();
 	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getVelocity> (&emulation);
+	canDat.rxHandler<CanTx::MY_DEBUG_A>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
 
 	// ------------------------------ Хранение постоянных характеристик -----------------------------►
 	if (reg.portB.pin7 == 0) // первый полукомплект
 	{
 		typedef MPH <CanDatType, canDat, SchedulerType, scheduler, ComType, com> MPHType;
-		MPHType mph;
+		MPHType* mph = new MPHType;
 
-		canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
-		canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
-		canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
-		canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::write> (&mph); // Если кто-то ещё ответит, то обновить мои данные
-		canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::read> (&mph);
+		canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (mph);
+		canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (mph);
+		canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (mph);
+		canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::write> (mph); // Если кто-то ещё ответит, то обновить мои данные
+		canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::read> (mph);
+
+		typedef NeutralInsertion<CanDatType, canDat, SchedulerType, scheduler, DpsType, dps> NeutralInsertionType;
+		NeutralInsertionType* neutralInsertion = new NeutralInsertionType;
 	}
 
 	canDat.rxHandler<CanRx::SYS_DIAGNOSTICS>() = SoftIntHandler::from_function <&sysDiagnostics>();
@@ -857,7 +857,7 @@ int main ()
 	canDat.rxHandler<CanRx::AUX_RESOURCE_MCO_A>() = SoftIntHandler::from_function <&mcoAuxResA>();
 	canDat.rxHandler<CanRx::AUX_RESOURCE_MCO_B>() = SoftIntHandler::from_function <&mcoAuxResB>();
 
-	canDat.rxHandler<CanRx::IPD_DATE>() = SoftIntHandler::from_function <&ipdDate>();
+//	canDat.rxHandler<CanRx::IPD_DATE>() = SoftIntHandler::from_function <&ipdDate>();
 	canDat.rxHandler<CanRx::SYS_KEY>() = SoftIntHandler::from_function <&sysKey>();
 
 	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_method <DpsType, &DpsType::takeEcDataForAdjust> (&dps);
@@ -920,8 +920,6 @@ int main ()
     	wdt_reset();
     	scheduler.invoke();
     	wdt_reset();
-
-//    	asm volatile ("nop");
     }
 }
 
