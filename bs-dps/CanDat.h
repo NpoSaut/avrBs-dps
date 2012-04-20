@@ -304,7 +304,7 @@ namespace CanDatPrivate
 
 };
 
-template <	class TxDescriptorGroupList, class RxDescriptorGroupList, class RxDescriptorInterruptList,
+template <	class TxDescriptorGroupList, class RxDescriptorGroupList, class RxDescriptorInterruptList, class TxDescriptorInterruptList,
 			long baudKbit, long samplePointPercent = 75 >
 class CanDat
 {
@@ -345,15 +345,15 @@ public:
 			reg.canMobControl->type = CanMobControl::Disable;
 		}
 
-		// Прерывания для входящих
-		uint16_t interruptFlags = 0;
-		for (uint8_t i = txNumber; i < txNumber + rxGroupNumber; i++)
-			interruptFlags |= (1 << i);
+		// Прерывания
+		uint16_t interruptFlags = GroupBusy <TxDescriptorInterruptList, TxDescriptorGroupList>::value;
+		interruptFlags |= (GroupBusy <RxDescriptorInterruptList, RxDescriptorGroupList>::value << txNumber);
 		reg.canMobInterruptEnable = interruptFlags;
 
 		reg.canGeneralInterruptEnable->receive_ = true;
+		reg.canGeneralInterruptEnable->transmit_ = true;
 		reg.canGeneralInterruptEnable->general_ = true;
-		CANIT_handler = InterruptHandler::from_method <CanDat, &CanDat::rxInterruptHandler>(this);
+		CANIT_handler = InterruptHandler::from_method <CanDat, &CanDat::interruptHandler>(this);
 //		CANIT_handler = InterruptHandler (this, &CanDat::rxInterruptHandler);
 
 		reg.canGeneralConfig->enable = true;
@@ -461,7 +461,15 @@ public:
 	{
 		enum { index = IndexOf< RxDescriptorInterruptList, Int2Type<descriptor> >::value };
 		LOKI_STATIC_CHECK (index >= 0, Required_descriptor_cant_be_find_in_RxInterruptList);
-		return handler[index];
+		return handlerRx[index];
+	}
+
+	template <uint16_t descriptor>
+	SoftIntHandler& txHandler()
+	{
+		enum { index = IndexOf< TxDescriptorInterruptList, Int2Type<descriptor> >::value };
+		LOKI_STATIC_CHECK (index >= 0, Required_descriptor_cant_be_find_in_TxInterruptList);
+		return handlerTx[index];
 	}
 
 
@@ -469,7 +477,7 @@ private:
 	enum { txNumber = Length<TxDescriptorGroupList>::value };
 	enum { rxGroupNumber = Length<RxDescriptorGroupList>::value };
 
-	void rxInterruptHandler ()
+	void interruptHandler ()
 	{
 		uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
 
@@ -477,31 +485,46 @@ private:
 		reg.canPage->dataBufferIndex_ = 0;
 		reg.canPage->autoIncrementDisable_ = false;
 
-		reg.canMobStatus->receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
-		sei (); // После этого можно разрешить прерывания глобально
-
-		uint8_t len = reg.canMobControl->dataLength_;
-		uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
-		uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
-//		sei (); // После этого можно разрешить прерывания глобально
-
-//		lam<0, 1> ();
-//		if (reg.canMobStatus->acknowledgmentError_ || reg.canMobStatus->formError_ || reg.canMobStatus->crcError_ || reg.canMobStatus->stuffError_ || reg.canMobStatus->bitError_ || reg.canMobStatus->dataLengthWarning_ )
-//			reg.portC.pin5.toggle ();
-
-		if (n != 255) // Пришедший Descriptor есть в наших списках
+		if ( reg.canMobStatus->receiveFinish )
 		{
-			for (uint8_t i = 0; i < len; ++i)
-				data[n][i] = reg.canMobData;
+			reg.canMobStatus->receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
+			sei (); // После этого можно разрешить прерывания глобально
 
-			// Добавляем в очередь пользовательский обработчик
-			uint8_t ni = IndexFinder<RxDescriptorInterruptList>::index(descript);
-			if (ni != 255)
-				dispatcher.add (handler[ni], uint16_t(&data[n]));
+			uint8_t len = reg.canMobControl->dataLength_;
+			uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
+			uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
+	//		sei (); // После этого можно разрешить прерывания глобально
+
+	//		lam<0, 1> ();
+	//		if (reg.canMobStatus->acknowledgmentError_ || reg.canMobStatus->formError_ || reg.canMobStatus->crcError_ || reg.canMobStatus->stuffError_ || reg.canMobStatus->bitError_ || reg.canMobStatus->dataLengthWarning_ )
+	//			reg.portC.pin5.toggle ();
+
+			if (n != 255) // Пришедший Descriptor есть в наших списках
+			{
+				for (uint8_t i = 0; i < len; ++i)
+					data[n][i] = reg.canMobData;
+
+				// Добавляем в очередь пользовательский обработчик
+				uint8_t ni = IndexFinder<RxDescriptorInterruptList>::index(descript);
+				if (ni != 255)
+					dispatcher.add (handlerRx[ni], uint16_t(&data[n]));
+			}
+
+	//		cli ();
+			reg.canMobControl->type = CanMobControl::Receive; // реинициализация
 		}
+		else // окончание передачи
+		{
+			reg.canMobStatus->transmitFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
+			sei (); // После этого можно разрешить прерывания глобально
 
-//		cli ();
-		reg.canMobControl->type = CanMobControl::Receive; // реинициализация
+			uint8_t len = reg.canMobControl->dataLength_;
+			uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
+
+			uint8_t ni = IndexFinder<TxDescriptorInterruptList>::index(descript);
+			if (ni != 255)
+				dispatcher.add (handlerTx[ni], 0);
+		}
 		reg.canPage = canPageSave;
 	}
 
@@ -696,7 +719,9 @@ private:
 	uint8_t data[Length<RxDescriptorList>::value][8];
 
 	// Делегаты функций, вызываемые по приёму данных
-	SoftIntHandler handler[Length<RxDescriptorInterruptList>::value];
+	SoftIntHandler handlerRx[Length<RxDescriptorInterruptList>::value];
+	// Делегаты функций, вызываемые по окончанию отправки данных
+	SoftIntHandler handlerTx[Length<RxDescriptorInterruptList>::value];
 
 	// Генерация кода нахождения номера по декскриптору ->
 	// функция index возвращает номер, если дескриптор найден в списке
@@ -763,6 +788,24 @@ private:
 			enum { value = -1 };
 		};
 	// <- конец: Нахождения номера группы элемента
+
+	// Для всех дескрипторов из DescriptorList находит номера их групп в GroupList
+	// и составляет маску используемых групп ->
+	template<class DescriptorList, class GroupList> struct GroupBusy;
+
+		template<class Head, class Tail, class GroupList>
+		struct GroupBusy< Typelist<Head, Tail>, GroupList >
+		{
+		public:
+			enum { value = (1 << GroupOf <GroupList, Head>::value) | GroupBusy <Tail, GroupList>::value };
+		};
+
+		template<class GroupList>
+		struct GroupBusy< NullType, GroupList >
+		{
+		public:
+			enum { value = 0 };
+		};
 
 	// Является ли класс Typelist'ом с хотябы 2 элементами ->
 	template<class T> struct IsGroup;

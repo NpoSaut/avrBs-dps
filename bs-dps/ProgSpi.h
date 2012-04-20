@@ -79,7 +79,7 @@
 #define T_WD_ERASE	9.0		// отчистка Flash и EEPROM
 #define T_ST_PROG	20.0	// от включения до инструкции программирования
 // Размыры страниц памяти
-#define FLASH_PAGE_SIZE	 128
+#define FLASH_PAGE_SIZE	 256
 #define EEPROM_PAGE_SIZE 8
 // ---------------------------------
 
