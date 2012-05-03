@@ -824,7 +824,7 @@ int main ()
 			reboot ();
 	}
 	asm volatile ("nop"); // !!! 126 version hack !!!
-	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
+//	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 //	asm volatile ("nop");
 //	asm volatile ("nop");
 
