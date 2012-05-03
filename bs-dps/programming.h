@@ -147,7 +147,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::sendData
 		{
 			counter = 0;
 			active = Active::none;
-			activateSystem ();
+//			activateSystem ();
 			while ( !canDat.template send<controlDescriptor> ({(uint8_t) Answer::OK, crc[0], crc[1], 0, 0, 0, 0, 0}) );
 		}
 		else
@@ -177,7 +177,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getData 
 			if ( --counter == 0 ) // Конец сеанса
 			{
 				active = Active::none;
-				activateSystem ();
+//				activateSystem ();
 				if (wantedCrc == crc)
 				{
 					if ( memType == ProgSpi::MemType::flash )
@@ -185,10 +185,10 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getData 
 					else
 						controller->flush<ProgSpi::MemType::eeprom>();
 
-					canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+					while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
 				}
 				else
-					canDat.template send<controlDescriptor> ({ (uint8_t) Answer::CRC_ERROR, crc[0], crc[1] ,0 ,0 ,0 ,0 ,0 });
+					while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::CRC_ERROR, crc[0], crc[1] ,0 ,0 ,0 ,0 ,0 }) );
 				break;
 			}
 		}
@@ -231,7 +231,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 	if ( command.init )
 	{
 		active = Active::none; // Прерываем текущий сеанс
-		activateSystem ();
+//		activateSystem ();
 		switch (command.action)
 		{
 			case Command::Action::read:
@@ -288,6 +288,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 						if ( !controller->good() )
 						{
 							delete controller;
+							controller = 0;
 							canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_ERROR, 0, 0 ,0 ,0 ,0 ,0 ,0 });
 							break;
 						}
@@ -299,7 +300,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 					crc = 0;
 					wantedCrc = getCrc;
 
-					disactivateSystem ();
+//					disactivateSystem ();
 
 					if ( command.action == Command::Action::read )
 					{

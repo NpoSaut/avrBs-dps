@@ -125,6 +125,7 @@ typedef CanDat < LOKI_TYPELIST_6(					// Список дескрипторов �
 						 Int2Type< CanRx::PROGRAM_IPD_DATA_A>,
 						 Int2Type< CanRx::PROGRAM_IPD_DATA_B>
 								),
+					128,
 					LOKI_TYPELIST_2(
 						 Int2Type< CanRx::PROGRAM_IPD_DATA_A>,
 						 Int2Type< CanRx::PROGRAM_IPD_DATA_B>
@@ -649,11 +650,11 @@ void commandParser ()
 		data.member<DpsOut2>() = dps.diametros(0); // выводим диаметры бандажа
 		data.member<DpsOut3>() = dps.diametros(1);
 
-		dps.constituoActivus ();
+//		dps.constituoActivus ();
 	}
 	else
 	{
-		dps.constituoPassivus ();
+//		dps.constituoPassivus ();
 
 		if (command->idRead)
 		{
@@ -748,13 +749,14 @@ int main ()
 	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler::from_function <&kptFallB>();
 	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallTimeB>();
 
+	uint16_t size = 0;
 	// Программирование по CAN
 	if (reg.portB.pin7 == 0) // первый полукомплект
 	{
-		typedef ProgrammingCan <CanDatType, canDat, CanRx::PROGRAM_IPD_CONTROL_A, CanRx::PROGRAM_IPD_DATA_A> ProgrammingCanType;
-		ProgrammingCanType* programming = new ProgrammingCanType(   Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
-																	Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps)
-																);
+//		typedef ProgrammingCan <CanDatType, canDat, CanRx::PROGRAM_IPD_CONTROL_A, CanRx::PROGRAM_IPD_DATA_A> ProgrammingCanType;
+//		ProgrammingCanType* programming = new ProgrammingCanType(   Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
+//																	Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps)
+//																);
 	}
 	else
 	{
@@ -763,8 +765,8 @@ int main ()
 																	Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps)
 																);
 	}
-
-	dps.constituoActivus();
+	size = sizeof (canDat);
+//	dps.constituoActivus();
 
 	sei();
 
@@ -778,8 +780,8 @@ int main ()
 		uint8_t packet[5] = {
 				0,
 				pgm_read_byte(&id.version),
-				0,
-				0,
+				uint8_t(size/256),
+				uint8_t(size),
 				uint8_t (checkSumm)
 							};
 		if (reg.portB.pin7 == 0)

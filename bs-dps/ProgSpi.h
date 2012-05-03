@@ -240,7 +240,8 @@ private:
 	{
 		(reg.*control)->enable_ = true;
 		(reg.*control)->master_ = true;
-		(reg.*control)->prescale_ = SpiStatusControl::Prescale::F16;
+		(reg.*control)->prescale_ = SpiStatusControl::Prescale::F4;
+//		(reg.*control)->prescale_ = SpiStatusControl::Prescale::F16;
 	}
 	inline void rebootInProg ()												// Перевод программируемой микросхемы  в режим программирования
 	{

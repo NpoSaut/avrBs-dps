@@ -304,229 +304,36 @@ namespace CanDatPrivate
 
 };
 
-template <	class TxDescriptorGroupList, class RxDescriptorGroupList, class RxDescriptorInterruptList, class TxDescriptorInterruptList,
+template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
+			class RxDescriptorInterruptList, uint8_t dataBufferSize,
+			class TxDescriptorInterruptList,
 			long baudKbit, long samplePointPercent = 75 >
 class CanDat
 {
 public:
-	CanDat ()
-	{
-		// Настройка CAN
-		enum { clock = F_CPU/1000 }; // Частота ЦПУ в КГц
-		enum { brp = CanDatPrivate::Brp<clock, baudKbit, samplePointPercent>::brp };
-		enum { success = CanDatPrivate::Brp<clock, baudKbit, samplePointPercent>::success };
-		// Удалось ли подобрать целочисленные brp и тайминги, чтобы удовлетворить желаемым условиям.
-		// Если нет, измените условия.
-		// Выдать ошибку компиляции:
-		LOKI_STATIC_CHECK (success, For_necessary_parameters_cant_be_find_correct_BRP_and_timings___Try_to_change_some_of_them);
-
-		typedef typename CanDatPrivate::Tbit<clock, baudKbit, brp, samplePointPercent> Tbits;
-
-		reg.canGeneralConfig->softwareReset = true;
-
-		reg.canTiming->baudRatePrescaler_ = brp;
-		reg.canTiming->propagationTime_ = Tbits::tPrs - 1;
-		reg.canTiming->phaseSegment1Time_ = Tbits::tPhs1 - 1;
-		reg.canTiming->phaseSegment2Time_ = Tbits::tPhs2 - 1;
-		if (brp != 0)
-			reg.canTiming->threePointSampling_ = true;
-		else
-			reg.canTiming->threePointSampling_ = false;
-
-		// Настройка MOb'ов
-		LOKI_STATIC_CHECK (txNumber + rxGroupNumber <= 15, Maximum_number_of_TxDescriptors_plus_RxDescriptorGroups_must_be_less_then_15__Try_to_group_RxDescriptros_to_lesser_number_of_group);
-
-		InitTxList<TxDescriptorGroupList>::init();
-		InitRxGroupList<RxDescriptorGroupList>::init();
-
-		for (uint8_t i = txNumber + rxGroupNumber; i < 15; i ++) // Отключить остальных
-		{
-			reg.canPage->mobNumber = i;
-			reg.canMobControl->type = CanMobControl::Disable;
-		}
-
-		// Прерывания
-		uint16_t interruptFlags = GroupBusy <TxDescriptorInterruptList, TxDescriptorGroupList>::value;
-		interruptFlags |= (GroupBusy <RxDescriptorInterruptList, RxDescriptorGroupList>::value << txNumber);
-		reg.canMobInterruptEnable = interruptFlags;
-
-		reg.canGeneralInterruptEnable->receive_ = true;
-		reg.canGeneralInterruptEnable->transmit_ = true;
-		reg.canGeneralInterruptEnable->general_ = true;
-		CANIT_handler = InterruptHandler::from_method <CanDat, &CanDat::interruptHandler>(this);
-//		CANIT_handler = InterruptHandler (this, &CanDat::rxInterruptHandler);
-
-		reg.canGeneralConfig->enable = true;
-		while (!reg.canGeneralStatus->enable);
-	}
+	CanDat ();
 
 	template<uint16_t descriptor>
-	bool send (const uint8_t (&data)[descriptor & 0xF])
-	{
-		enum { mobN = GroupOf< TxDescriptorGroupList, Int2Type<descriptor> >::value };
-		enum { size = descriptor & 0xF };
-
-		LOKI_STATIC_CHECK (mobN >= 0, Required_descriptor_cant_be_find_in_TxDescriptorGroupList);
-
-		if ( reg.canMobEnable & (1 << mobN) )
-			return false;
-		else
-		{
-			uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
-
-			CanPage page;
-			page.mobNumber_ = mobN;
-			page.dataBufferIndex_ = 0;
-			page.autoIncrementDisable_ = false;
-			reg.canPage = page;
-
-			if (IsGroup< typename TypeAt<TxDescriptorGroupList, mobN>::Result >::value) // если этот моб для нескольких id
-			{
-				CanMobId id;
-				id.rb0_ = 0;
-				id.remoteTransmissionRequest_ = 0;
-				id.idA_ = descriptor / 0x20;
-				reg.canMobId = id;
-			}
-
-			for (uint8_t i = 0; i < size; ++i)
-			{
-				reg.canMobData = data[i];
-			}
-
-			CanMobControl control;
-			control.type_ = CanMobControl::Transmit; // Включаются, когда в них заносятся данные
-			control.dataLength_ = size;
-			control.idExtension_ = false;
-			control.automaticReply_ = false;
-			reg.canMobControl = control;
-
-			reg.canPage = canPageSave; // возвращаем на место
-			return true;
-		}
-	}
+	bool send (const uint8_t (&data)[descriptor & 0xF]);
 
 	template<uint16_t descriptor>
-	bool send ()
-	{
-		enum { mobN = GroupOf< TxDescriptorGroupList, Int2Type<descriptor> >::value };
-		enum { size = descriptor & 0xF };
-
-		LOKI_STATIC_CHECK (mobN >= 0, Required_descriptor_cant_be_find_in_TxDescriptorGroupList);
-		LOKI_STATIC_CHECK (size == 0, Required_descriptor_hase_nonzero_size_Try_to_use_send_method_with_array_arg);
-
-		if ( reg.canMobEnable & (1 << mobN) )
-			return false;
-		else
-		{
-			uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
-
-			CanPage page;
-			page.mobNumber_ = mobN;
-			page.dataBufferIndex_ = 0;
-			page.autoIncrementDisable_ = false;
-			reg.canPage = page;
-
-			if (IsGroup< typename TypeAt<TxDescriptorGroupList, mobN>::Result >::value) // если этот моб для нескольких id
-			{
-				CanMobId id;
-				id.rb0_ = 0;
-				id.remoteTransmissionRequest_ = 0;
-				id.idA_ = descriptor / 0x20;
-				reg.canMobId = id;
-			}
-
-			CanMobControl control;
-			control.type_ = CanMobControl::Transmit; // Включаются, когда в них заносятся данные
-			control.dataLength_ = size;
-			control.idExtension_ = false;
-			control.automaticReply_ = false;
-			reg.canMobControl = control;
-
-			reg.canPage = canPageSave; // возвращаем на место
-			return true;
-		}
-	}
+	bool send ();
 
 	template <uint16_t descriptor>
-	const uint8_t (&get())[descriptor & 0xF]
-	{
-		enum { index = IndexOf< RxDescriptorList, Int2Type<descriptor> >::value };
-		LOKI_STATIC_CHECK (index >= 0, Required_descriptor_cant_be_find_in_RxDescriptorGroupList);
-		return (uint8_t (&)[descriptor & 0xF])data[index];
-	}
+	const uint8_t (&get())[descriptor & 0xF];
 
 	template <uint16_t descriptor>
-	SoftIntHandler& rxHandler()
-	{
-		enum { index = IndexOf< RxDescriptorInterruptList, Int2Type<descriptor> >::value };
-		LOKI_STATIC_CHECK (index >= 0, Required_descriptor_cant_be_find_in_RxInterruptList);
-		return handlerRx[index];
-	}
+	SoftIntHandler& rxHandler();
 
 	template <uint16_t descriptor>
-	SoftIntHandler& txHandler()
-	{
-		enum { index = IndexOf< TxDescriptorInterruptList, Int2Type<descriptor> >::value };
-		LOKI_STATIC_CHECK (index >= 0, Required_descriptor_cant_be_find_in_TxInterruptList);
-		return handlerTx[index];
-	}
+	SoftIntHandler& txHandler();
 
 
 private:
 	enum { txNumber = Length<TxDescriptorGroupList>::value };
 	enum { rxGroupNumber = Length<RxDescriptorGroupList>::value };
 
-	void interruptHandler ()
-	{
-		uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
-
-		reg.canPage->mobNumber_ = reg.canHighestPriorityMob->highestPriorityMob;
-		reg.canPage->dataBufferIndex_ = 0;
-		reg.canPage->autoIncrementDisable_ = false;
-
-		if ( reg.canMobStatus->receiveFinish )
-		{
-			reg.canMobStatus->receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
-			sei (); // После этого можно разрешить прерывания глобально
-
-			uint8_t len = reg.canMobControl->dataLength_;
-			uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
-			uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
-	//		sei (); // После этого можно разрешить прерывания глобально
-
-	//		lam<0, 1> ();
-	//		if (reg.canMobStatus->acknowledgmentError_ || reg.canMobStatus->formError_ || reg.canMobStatus->crcError_ || reg.canMobStatus->stuffError_ || reg.canMobStatus->bitError_ || reg.canMobStatus->dataLengthWarning_ )
-	//			reg.portC.pin5.toggle ();
-
-			if (n != 255) // Пришедший Descriptor есть в наших списках
-			{
-				for (uint8_t i = 0; i < len; ++i)
-					data[n][i] = reg.canMobData;
-
-				// Добавляем в очередь пользовательский обработчик
-				uint8_t ni = IndexFinder<RxDescriptorInterruptList>::index(descript);
-				if (ni != 255)
-					dispatcher.add (handlerRx[ni], uint16_t(&data[n]));
-			}
-
-	//		cli ();
-			reg.canMobControl->type = CanMobControl::Receive; // реинициализация
-		}
-		else // окончание передачи
-		{
-			reg.canMobStatus->transmitFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
-			sei (); // После этого можно разрешить прерывания глобально
-
-			uint8_t len = reg.canMobControl->dataLength_;
-			uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
-
-			uint8_t ni = IndexFinder<TxDescriptorInterruptList>::index(descript);
-			if (ni != 255)
-				dispatcher.add (handlerTx[ni], 0);
-		}
-		reg.canPage = canPageSave;
-	}
+	void interruptHandler ();
 
 	// Инициализация Tx MOb'ов ->
 	template<class TList, uint8_t num = 0> struct InitTxList;
@@ -715,13 +522,18 @@ private:
 
 
 	typedef typename CanDatPrivate::LinerList<RxDescriptorGroupList>::Result RxDescriptorList;
-	// Буффер принемаемых данных
+	// Буфер принемаемых данных. Для каждого дескриптора хранятся последние принятые данные
 	uint8_t data[Length<RxDescriptorList>::value][8];
 
 	// Делегаты функций, вызываемые по приёму данных
 	SoftIntHandler handlerRx[Length<RxDescriptorInterruptList>::value];
 	// Делегаты функций, вызываемые по окончанию отправки данных
 	SoftIntHandler handlerTx[Length<RxDescriptorInterruptList>::value];
+
+	// Принятые данные для обработчиков. Данные записываются последовательно.
+	// Обработчику передаётся указатель на начало.
+	uint8_t dataInterrupt[dataBufferSize];
+	uint8_t dataInterruptPointer;
 
 	// Генерация кода нахождения номера по декскриптору ->
 	// функция index возвращает номер, если дескриптор найден в списке
@@ -830,5 +642,264 @@ private:
 	// <- конеы: Является ли класс Typelist'ом с хотябы 2 элементами
 };
 
+template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
+			class RxDescriptorInterruptList, uint8_t dataBufferSize,
+			class TxDescriptorInterruptList,
+			long baudKbit, long samplePointPercent>
+CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, dataBufferSize, TxDescriptorInterruptList, baudKbit, samplePointPercent>
+		::CanDat()
+{
+	// Настройка CAN
+	enum { clock = F_CPU/1000 }; // Частота ЦПУ в КГц
+	enum { brp = CanDatPrivate::Brp<clock, baudKbit, samplePointPercent>::brp };
+	enum { success = CanDatPrivate::Brp<clock, baudKbit, samplePointPercent>::success };
+	// Удалось ли подобрать целочисленные brp и тайминги, чтобы удовлетворить желаемым условиям.
+	// Если нет, измените условия.
+	// Выдать ошибку компиляции:
+	LOKI_STATIC_CHECK (success, For_necessary_parameters_cant_be_find_correct_BRP_and_timings___Try_to_change_some_of_them);
+
+	typedef typename CanDatPrivate::Tbit<clock, baudKbit, brp, samplePointPercent> Tbits;
+
+	reg.canGeneralConfig->softwareReset = true;
+
+	reg.canTiming->baudRatePrescaler_ = brp;
+	reg.canTiming->propagationTime_ = Tbits::tPrs - 1;
+	reg.canTiming->phaseSegment1Time_ = Tbits::tPhs1 - 1;
+	reg.canTiming->phaseSegment2Time_ = Tbits::tPhs2 - 1;
+	if (brp != 0)
+		reg.canTiming->threePointSampling_ = true;
+	else
+		reg.canTiming->threePointSampling_ = false;
+
+	// Настройка MOb'ов
+	LOKI_STATIC_CHECK (txNumber + rxGroupNumber <= 15, Maximum_number_of_TxDescriptors_plus_RxDescriptorGroups_must_be_less_then_15__Try_to_group_RxDescriptros_to_lesser_number_of_group);
+
+	InitTxList<TxDescriptorGroupList>::init();
+	InitRxGroupList<RxDescriptorGroupList>::init();
+
+	for (uint8_t i = txNumber + rxGroupNumber; i < 15; i ++) // Отключить остальных
+	{
+		reg.canPage->mobNumber = i;
+		reg.canMobControl->type = CanMobControl::Disable;
+	}
+
+	// Прерывания
+	uint16_t interruptFlags = GroupBusy <TxDescriptorInterruptList, TxDescriptorGroupList>::value;
+	interruptFlags |= (GroupBusy <RxDescriptorInterruptList, RxDescriptorGroupList>::value << txNumber);
+	reg.canMobInterruptEnable = interruptFlags;
+
+	reg.canGeneralInterruptEnable->receive_ = true;
+	reg.canGeneralInterruptEnable->transmit_ = true;
+	reg.canGeneralInterruptEnable->general_ = true;
+	CANIT_handler = InterruptHandler::from_method <CanDat, &CanDat::interruptHandler>(this);
+//	CANIT_handler = InterruptHandler (this, &CanDat::rxInterruptHandler);
+
+	reg.canGeneralConfig->enable = true;
+	while (!reg.canGeneralStatus->enable);
+}
+
+template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
+			class RxDescriptorInterruptList, uint8_t dataBufferSize,
+			class TxDescriptorInterruptList,
+			long baudKbit, long samplePointPercent>
+template<uint16_t descriptor>
+bool CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, dataBufferSize, TxDescriptorInterruptList, baudKbit, samplePointPercent>
+		::send (const uint8_t (&data)[descriptor & 0xF])
+{
+	enum { mobN = GroupOf< TxDescriptorGroupList, Int2Type<descriptor> >::value };
+	enum { size = descriptor & 0xF };
+
+	LOKI_STATIC_CHECK (mobN >= 0, Required_descriptor_cant_be_find_in_TxDescriptorGroupList);
+
+	if ( reg.canMobEnable & (1 << mobN) )
+		return false;
+	else
+	{
+		uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
+
+		CanPage page;
+		page.mobNumber_ = mobN;
+		page.dataBufferIndex_ = 0;
+		page.autoIncrementDisable_ = false;
+		reg.canPage = page;
+
+		if (IsGroup< typename TypeAt<TxDescriptorGroupList, mobN>::Result >::value) // если этот моб для нескольких id
+		{
+			CanMobId id;
+			id.rb0_ = 0;
+			id.remoteTransmissionRequest_ = 0;
+			id.idA_ = descriptor / 0x20;
+			reg.canMobId = id;
+		}
+
+		for (uint8_t i = 0; i < size; ++i)
+		{
+			reg.canMobData = data[i];
+		}
+
+		CanMobControl control;
+		control.type_ = CanMobControl::Transmit; // Включаются, когда в них заносятся данные
+		control.dataLength_ = size;
+		control.idExtension_ = false;
+		control.automaticReply_ = false;
+		reg.canMobControl = control;
+
+		reg.canPage = canPageSave; // возвращаем на место
+		return true;
+	}
+}
+
+template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
+			class RxDescriptorInterruptList, uint8_t dataBufferSize,
+			class TxDescriptorInterruptList,
+			long baudKbit, long samplePointPercent>
+template<uint16_t descriptor>
+bool CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, dataBufferSize, TxDescriptorInterruptList, baudKbit, samplePointPercent>
+		::send ()
+{
+	enum { mobN = GroupOf< TxDescriptorGroupList, Int2Type<descriptor> >::value };
+	enum { size = descriptor & 0xF };
+
+	LOKI_STATIC_CHECK (mobN >= 0, Required_descriptor_cant_be_find_in_TxDescriptorGroupList);
+	LOKI_STATIC_CHECK (size == 0, Required_descriptor_hase_nonzero_size_Try_to_use_send_method_with_array_arg);
+
+	if ( reg.canMobEnable & (1 << mobN) )
+		return false;
+	else
+	{
+		uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
+
+		CanPage page;
+		page.mobNumber_ = mobN;
+		page.dataBufferIndex_ = 0;
+		page.autoIncrementDisable_ = false;
+		reg.canPage = page;
+
+		if (IsGroup< typename TypeAt<TxDescriptorGroupList, mobN>::Result >::value) // если этот моб для нескольких id
+		{
+			CanMobId id;
+			id.rb0_ = 0;
+			id.remoteTransmissionRequest_ = 0;
+			id.idA_ = descriptor / 0x20;
+			reg.canMobId = id;
+		}
+
+		CanMobControl control;
+		control.type_ = CanMobControl::Transmit; // Включаются, когда в них заносятся данные
+		control.dataLength_ = size;
+		control.idExtension_ = false;
+		control.automaticReply_ = false;
+		reg.canMobControl = control;
+
+		reg.canPage = canPageSave; // возвращаем на место
+		return true;
+	}
+}
+
+template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
+			class RxDescriptorInterruptList, uint8_t dataBufferSize,
+			class TxDescriptorInterruptList,
+			long baudKbit, long samplePointPercent>
+template<uint16_t descriptor>
+const uint8_t (&CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, dataBufferSize, TxDescriptorInterruptList, baudKbit, samplePointPercent>
+				::get())[descriptor & 0xF]
+{
+	enum { index = IndexOf< RxDescriptorList, Int2Type<descriptor> >::value };
+	LOKI_STATIC_CHECK (index >= 0, Required_descriptor_cant_be_find_in_RxDescriptorGroupList);
+	return (uint8_t (&)[descriptor & 0xF])data[index];
+}
+
+template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
+			class RxDescriptorInterruptList, uint8_t dataBufferSize,
+			class TxDescriptorInterruptList,
+			long baudKbit, long samplePointPercent>
+template<uint16_t descriptor>
+SoftIntHandler& CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, dataBufferSize, TxDescriptorInterruptList, baudKbit, samplePointPercent>
+				::rxHandler()
+{
+	enum { index = IndexOf< RxDescriptorInterruptList, Int2Type<descriptor> >::value };
+	LOKI_STATIC_CHECK (index >= 0, Required_descriptor_cant_be_find_in_RxInterruptList);
+	return handlerRx[index];
+}
+
+template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
+			class RxDescriptorInterruptList, uint8_t dataBufferSize,
+			class TxDescriptorInterruptList,
+			long baudKbit, long samplePointPercent>
+template<uint16_t descriptor>
+SoftIntHandler& CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, dataBufferSize, TxDescriptorInterruptList, baudKbit, samplePointPercent>
+				::txHandler()
+{
+	enum { index = IndexOf< TxDescriptorInterruptList, Int2Type<descriptor> >::value };
+	LOKI_STATIC_CHECK (index >= 0, Required_descriptor_cant_be_find_in_TxInterruptList);
+	return handlerTx[index];
+}
+
+template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
+			class RxDescriptorInterruptList, uint8_t dataBufferSize,
+			class TxDescriptorInterruptList,
+			long baudKbit, long samplePointPercent>
+void CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, dataBufferSize, TxDescriptorInterruptList, baudKbit, samplePointPercent>
+		::interruptHandler ()
+{
+	uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
+
+	reg.canPage->mobNumber_ = reg.canHighestPriorityMob->highestPriorityMob;
+	reg.canPage->dataBufferIndex_ = 0;
+	reg.canPage->autoIncrementDisable_ = false;
+
+	if ( reg.canMobStatus->receiveFinish )
+	{
+		reg.canMobStatus->receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
+		sei (); // После этого можно разрешить прерывания глобально
+
+		uint8_t len = reg.canMobControl->dataLength_;
+		uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
+		uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
+//		sei (); // После этого можно разрешить прерывания глобально
+
+//		lam<0, 1> ();
+//		if (reg.canMobStatus->acknowledgmentError_ || reg.canMobStatus->formError_ || reg.canMobStatus->crcError_ || reg.canMobStatus->stuffError_ || reg.canMobStatus->bitError_ || reg.canMobStatus->dataLengthWarning_ )
+//			reg.portC.pin5.toggle ();
+
+		if (n != 255) // Пришедший Descriptor есть в наших списках
+		{
+			for (uint8_t i = 0; i < len; ++i)
+				data[n][i] = reg.canMobData;
+
+			// Добавляем в очередь пользовательский обработчик
+			uint8_t ni = IndexFinder<RxDescriptorInterruptList>::index(descript);
+			if (ni != 255) // Есть прерывание для этого дескриптора
+			{
+				// Копирование данных
+				if (dataInterruptPointer >= 256-len)
+					dataInterruptPointer = 0;
+
+				uint8_t startPointer = dataInterruptPointer;
+				reg.canPage->dataBufferIndex = 0;
+				for (uint8_t end = startPointer + len; dataInterruptPointer < end; dataInterruptPointer ++)
+					dataInterrupt[dataInterruptPointer] = reg.canMobData;
+
+				dispatcher.add( handlerRx[ni], uint16_t(&dataInterrupt[startPointer]) );
+			}
+		}
+
+//		cli ();
+		reg.canMobControl->type = CanMobControl::Receive; // реинициализация
+	}
+	else // окончание передачи
+	{
+		reg.canMobStatus->transmitFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
+		sei (); // После этого можно разрешить прерывания глобально
+
+		uint8_t len = reg.canMobControl->dataLength_;
+		uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
+
+		uint8_t ni = IndexFinder<TxDescriptorInterruptList>::index(descript);
+		if (ni != 255)
+			dispatcher.add (handlerTx[ni], 0);
+	}
+	reg.canPage = canPageSave;
+}
 
 #endif /* CANDAT_H_ */
