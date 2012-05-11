@@ -72,9 +72,6 @@ public:
 
 	void sendData (uint16_t);
 
-	void readDataToBuffer (uint8_t (&data) [8]);
-
-
 private:
 	typedef const uint8_t Data[8];
 	typedef ProgSpi::
@@ -103,6 +100,9 @@ private:
 	static constexpr uint8_t  eepromPageSize = 8;
 	static constexpr uint16_t eepromSize = (uint16_t)512 * eepromPageSize;
 
+	void readDataToBuffer (uint8_t (&data) [8]);
+	bool controllerCreate ();
+
 	uint16_t counter; // обратный отсчёт байт до конца сеанса
 	uint8_t txData[8]; // отправляемые данные
 	Complex<uint16_t> crc;
@@ -117,84 +117,14 @@ private:
 	Delegate<void ()> activateSystem, disactivateSystem;
 };
 
-
 template <  typename CanDat, CanDat& canDat,
 			uint16_t controlDescriptor, uint16_t dataDescriptor >
-void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::readDataToBuffer(uint8_t (&data) [8])
+ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::ProgrammingCan (Delegate<void ()> activateSystem, Delegate<void ()> disactivateSystem)
+	: counter (0), crc (0), wantedCrc (0), active (Active::none), activateSystem (activateSystem), disactivateSystem (disactivateSystem)
 {
-	for (uint8_t i = 0; i < 8; i++)
-	{
-		if ( counter > i )
-		{
-			data[i] = ( memType == ProgSpi::MemType::flash ) ?
-						controller->read<ProgSpi::MemType::flash>() :
-						controller->read<ProgSpi::MemType::eeprom>();
-			crc = _crc_ccitt_update(crc, data[i]);
-		}
-		else
-			data[i] = 0;
-	}
-}
-
-template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
-void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::sendData(uint16_t)
-{
-	if ( active == Active::read )
-	{
-		while ( !canDat.template send<dataDescriptor> (txData) );
-		if ( counter <= 8 ) // Последняя посылка
-		{
-			counter = 0;
-			active = Active::none;
-//			activateSystem ();
-			while ( !canDat.template send<controlDescriptor> ({(uint8_t) Answer::OK, crc[0], crc[1], 0, 0, 0, 0, 0}) );
-		}
-		else
-		{
-			counter -= 8;
-		}
-		readDataToBuffer (txData);
-	}
-}
-
-template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
-void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getData (uint16_t dataArrayPointer)
-{
-	if ( active == Active::write )
-	{
-		Data& data = *( (Data *)(dataArrayPointer) );
-		for (const uint8_t& d : data)
-		{
-			if ( memType == ProgSpi::MemType::flash )
-				controller->write<ProgSpi::MemType::flash>(d);
-			else
-				controller->write<ProgSpi::MemType::eeprom>(d);
-
-			crc = _crc_ccitt_update(crc, d);
-
-			if ( --counter == 0 ) // Конец сеанса
-			{
-				active = Active::none;
-//				activateSystem ();
-				if (wantedCrc == crc)
-				{
-					if ( memType == ProgSpi::MemType::flash )
-						controller->flush<ProgSpi::MemType::flash>();
-					else
-						controller->flush<ProgSpi::MemType::eeprom>();
-
-					while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
-				}
-				else
-					while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::CRC_ERROR, crc[0], crc[1] ,0 ,0 ,0 ,0 ,0 }) );
-				break;
-			}
-		}
-	}
-	else
-		canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNRECOGNIZED_DATA, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+	canDat.template rxHandler<controlDescriptor>() = SoftIntHandler::from_method <ProgrammingCan, &ProgrammingCan::getCommand> (this);
+	canDat.template rxHandler<dataDescriptor>() = SoftIntHandler::from_method <ProgrammingCan, &ProgrammingCan::getData> (this);
+	canDat.template txHandler<dataDescriptor>() = SoftIntHandler::from_method <ProgrammingCan, &ProgrammingCan::sendData> (this);
 }
 
 template <  typename CanDat, CanDat& canDat,
@@ -231,7 +161,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 	if ( command.init )
 	{
 		active = Active::none; // Прерываем текущий сеанс
-//		activateSystem ();
+		activateSystem ();
 		switch (command.action)
 		{
 			case Command::Action::read:
@@ -248,7 +178,8 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 						memType = ProgSpi::MemType::eeprom;
 					else
 					{
-						canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_MEMORY, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+//						canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_MEMORY, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+						while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_MEMORY, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
 						break;
 					}
 
@@ -259,7 +190,8 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 					// Проверки
 					if ( size > 256 )
 					{
-						canDat.template send<controlDescriptor> ({ (uint8_t) Answer::SIZE_LIMIT, 0, 1 ,0 ,0 ,0 ,0 ,0 });
+//						canDat.template send<controlDescriptor> ({ (uint8_t) Answer::SIZE_LIMIT, 0, 1 ,0 ,0 ,0 ,0 ,0 });
+						while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::SIZE_LIMIT, 0, 1 ,0 ,0 ,0 ,0 ,0 }) );
 						break;
 					}
 
@@ -267,8 +199,10 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 					{
 						if ( startAdr + (uint32_t)size > flashSize )
 						{
-							canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OUT_OF_RANGE,
-								uint8_t(flashSize), uint8_t(flashSize/256), uint8_t(flashSize/256/256), uint8_t(flashSize/256/256/256), 0, 0, 0 });
+//							canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OUT_OF_RANGE,
+//										uint8_t(flashSize), uint8_t(flashSize/256), uint8_t(flashSize/256/256), uint8_t(flashSize/256/256/256), 0, 0, 0 });
+							while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OUT_OF_RANGE,
+										uint8_t(flashSize), uint8_t(flashSize/256), uint8_t(flashSize/256/256), uint8_t(flashSize/256/256/256), 0, 0, 0 }) );
 							break;
 						}
 					}
@@ -276,63 +210,66 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 					{
 						if ( startAdr + (uint32_t)size > eepromSize )
 						{
-							canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OUT_OF_RANGE,
-								uint8_t(eepromSize), uint8_t(eepromSize/256), 0, 0, 0, 0, 0 });
+//							canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OUT_OF_RANGE,
+//										uint8_t(eepromSize), uint8_t(eepromSize/256), 0, 0, 0, 0, 0 });
+							while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OUT_OF_RANGE,
+										uint8_t(eepromSize), uint8_t(eepromSize/256), 0, 0, 0, 0, 0 }) );
 							break;
 						}
 					}
 
-					if ( !controller )
+					if ( controllerCreate() )
 					{
-						controller = new Controller;
-						if ( !controller->good() )
+						controller->position = startAdr;
+						counter = size;
+						crc = 0;
+						wantedCrc = getCrc;
+
+						disactivateSystem ();
+
+						if ( command.action == Command::Action::read )
 						{
-							delete controller;
-							controller = 0;
-							canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_ERROR, 0, 0 ,0 ,0 ,0 ,0 ,0 });
-							break;
+							active = Active::read;
+							readDataToBuffer (txData);
+							sendData (0);
 						}
+						else
+							active = Active::write;
 					}
-
-
-					controller->position = startAdr;
-					counter = size;
-					crc = 0;
-					wantedCrc = getCrc;
-
-//					disactivateSystem ();
-
-					if ( command.action == Command::Action::read )
-					{
-						active = Active::read;
-						readDataToBuffer (txData);
-						sendData (0);
-					}
-					else
-						active = Active::write;
 				}
 				break;
 
 			case Command::Action::erease:
-				if ( !controller )
-					controller = new Controller;
-
-				controller->erase();
-				canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+				if ( controllerCreate() )
+				{
+					controller->erase();
+//					canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+					while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
+				}
 				break;
 
 			case Command::Action::reboot:
-				delete controller;
-				controller = 0;
-				canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+				if ( controller )
+				{
+					delete controller;
+					controller = 0;
+
+	//				canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+					while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
+				}
+				else
+					while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_ERROR, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
+
 				break;
 
 			case Command::Action::none:
-				canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, (bool)controller, 0 ,0 ,0 ,0 ,0 ,0 });
+//				canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, (bool)controller, 0 ,0 ,0 ,0 ,0 ,0 });
+				while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, (bool)controller, 0 ,0 ,0 ,0 ,0 ,0 }) );
 				break;
 
 			default:
-				canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_COMMAND, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+//				canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_COMMAND, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+				while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_COMMAND, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
 				break;
 		}
 	}
@@ -340,12 +277,103 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 
 template <  typename CanDat, CanDat& canDat,
 			uint16_t controlDescriptor, uint16_t dataDescriptor >
-ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::ProgrammingCan (Delegate<void ()> activateSystem, Delegate<void ()> disactivateSystem)
-	: counter (0), crc (0), wantedCrc (0), active (Active::none), activateSystem (activateSystem), disactivateSystem (disactivateSystem)
+void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getData (uint16_t dataArrayPointer)
 {
-	canDat.template rxHandler<controlDescriptor>() = SoftIntHandler::from_method <ProgrammingCan, &ProgrammingCan::getCommand> (this);
-	canDat.template rxHandler<dataDescriptor>() = SoftIntHandler::from_method <ProgrammingCan, &ProgrammingCan::getData> (this);
-	canDat.template txHandler<dataDescriptor>() = SoftIntHandler::from_method <ProgrammingCan, &ProgrammingCan::sendData> (this);
+	Data& data = *( (Data *)(dataArrayPointer) );
+//	while (!canDat.template send<0x63C8> (data));
+
+	if ( active == Active::write )
+	{
+		for (const uint8_t& d : data)
+		{
+			if ( memType == ProgSpi::MemType::flash )
+				controller->write<ProgSpi::MemType::flash>(d);
+			else
+				controller->write<ProgSpi::MemType::eeprom>(d);
+
+			crc = _crc_ccitt_update(crc, d);
+
+			if ( --counter == 0 ) // Конец сеанса
+			{
+				active = Active::none;
+				activateSystem ();
+				if (wantedCrc == crc)
+				{
+					if ( memType == ProgSpi::MemType::flash )
+						controller->flush<ProgSpi::MemType::flash>();
+					else
+						controller->flush<ProgSpi::MemType::eeprom>();
+					while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::OK, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
+				}
+				else
+					while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::CRC_ERROR, crc[0], crc[1] ,0 ,0 ,0 ,0 ,0 }) );
+				break;
+			}
+		}
+	}
+	else
+		while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNRECOGNIZED_DATA, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
+}
+
+template <  typename CanDat, CanDat& canDat,
+			uint16_t controlDescriptor, uint16_t dataDescriptor >
+void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::sendData(uint16_t)
+{
+	if ( active == Active::read )
+	{
+//		canDat.template send<dataDescriptor> (txData);
+		while ( !canDat.template send<dataDescriptor> (txData) );
+		if ( counter <= 8 ) // Последняя посылка
+		{
+			counter = 0;
+			active = Active::none;
+			activateSystem ();
+//			canDat.template send<controlDescriptor> ({(uint8_t) Answer::OK, crc[0], crc[1], 0, 0, 0, 0, 0});
+			while ( !canDat.template send<controlDescriptor> ({(uint8_t) Answer::OK, crc[0], crc[1], 0, 0, 0, 0, 0}) );
+		}
+		else
+		{
+			counter -= 8;
+			readDataToBuffer (txData);
+		}
+	}
+}
+
+template <  typename CanDat, CanDat& canDat,
+			uint16_t controlDescriptor, uint16_t dataDescriptor >
+void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::readDataToBuffer(uint8_t (&data) [8])
+{
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		if ( counter > i )
+		{
+			data[i] = ( memType == ProgSpi::MemType::flash ) ?
+						controller->read<ProgSpi::MemType::flash>() :
+						controller->read<ProgSpi::MemType::eeprom>();
+			crc = _crc_ccitt_update(crc, data[i]);
+		}
+		else
+			data[i] = 0;
+	}
+}
+
+template <  typename CanDat, CanDat& canDat,
+			uint16_t controlDescriptor, uint16_t dataDescriptor >
+bool ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::controllerCreate ()
+{
+	if ( !controller )
+	{
+		controller = new Controller;
+		if ( !controller->good() )
+		{
+			delete controller;
+			controller = 0;
+//			canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_ERROR, 0, 0 ,0 ,0 ,0 ,0 ,0 });
+			while ( !canDat.template send<controlDescriptor> ({ (uint8_t) Answer::UNKNOWN_ERROR, 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
+			return false;
+		}
+	}
+	return true;
 }
 
 

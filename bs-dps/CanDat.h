@@ -872,13 +872,12 @@ void CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptL
 			if (ni != 255) // Есть прерывание для этого дескриптора
 			{
 				// Копирование данных
-				if (dataInterruptPointer >= 256-len)
+				if (dataInterruptPointer > dataBufferSize-len)
 					dataInterruptPointer = 0;
 
 				uint8_t startPointer = dataInterruptPointer;
-				reg.canPage->dataBufferIndex = 0;
-				for (uint8_t end = startPointer + len; dataInterruptPointer < end; dataInterruptPointer ++)
-					dataInterrupt[dataInterruptPointer] = reg.canMobData;
+				for (uint8_t i = 0; i < len; i ++)
+					dataInterrupt[dataInterruptPointer++] = data[n][i];
 
 				dispatcher.add( handlerRx[ni], uint16_t(&dataInterrupt[startPointer]) );
 			}
