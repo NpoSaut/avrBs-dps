@@ -16,6 +16,7 @@ enum CanTx : uint16_t
 	 SAUT_INFO_A =          (0x233	<< 5) + 8, // 4668
 	 SAUT_INFO_B =          (0x234	<< 5) + 8, // 4688
 	 SYS_DATA =				(0x313	<< 5) + 5, // 6265
+	 MPH_STATE_A =			(0x31C	<< 5) + 4, // 6384
 	 SYS_DATA_STATE =		(0x31F	<< 5) + 7, // 63E7
 	 SYS_DATA_STATE2 =		(0x31E	<< 5) + 8, // 63C8
 	 AUX_RESOURCE_IPD_A = 	((uint16_t)0x4C0	<< 5) + 5, // 9805

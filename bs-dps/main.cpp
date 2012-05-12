@@ -79,14 +79,15 @@ typedef INT_TYPELIST_2 (CanRx::MM_DATA, CanRx::MM_NEUTRAL) MM;
 typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA) INPUT;
 typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
 
-typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов для отправки
+typedef CanDat < LOKI_TYPELIST_6(					// Список дескрипторов для отправки
 						IPD_STATE,
 						SAUT_INFO,
 						SYS_DATA_STATE_IPD_NEUTRAL,
 						Int2Type< CanTx::SYS_DATA_STATE2 >,
-						AUX_RESOURCE_SYS_DATA
+						AUX_RESOURCE_SYS_DATA,
+						Int2Type< CanTx::MPH_STATE_A>
 								),
-				 LOKI_TYPELIST_10(
+				 LOKI_TYPELIST_9(
 						 Int2Type< CanRx::MCO_DATA >,
 						 MCO_STATE_LIMITS_A,
 						 MCO_STATE_LIMITS_B,
@@ -94,12 +95,12 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 MP_ALS_A,
 						 MP_ALS_B,
 //						 Int2Type< CanRx::IPD_DATE >,
-						 Int2Type< CanTx::MY_DEBUG_A >,
+//						 Int2Type< CanTx::MY_DEBUG_A >,
 						 MM,
 						 INPUT,
 						 DIAGNOSTICS
 						 	 	 ),
-				 LOKI_TYPELIST_22(
+				 LOKI_TYPELIST_21(
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
@@ -121,8 +122,8 @@ typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов �
 						 Int2Type< CanRx::MP_ALS_ON_TIME_B >,
 						 Int2Type< CanRx::MP_ALS_OFF_TIME_B >,
 						 Int2Type< CanRx::SYS_KEY >,
-						 Int2Type< CanRx::MM_NEUTRAL >,
-						 Int2Type< CanTx::MY_DEBUG_A>
+						 Int2Type< CanRx::MM_NEUTRAL >
+//						 Int2Type< CanTx::MY_DEBUG_A>
 								),
 				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
 	CanDatType;
@@ -672,27 +673,27 @@ public:
 
 		getMessage = true;
 	}
-	void getCanVelocity (uint16_t)
-	{
-		uint8_t newVelocity = canDat.get<CanTx::MY_DEBUG_A>()[0];
-
-		if ( newVelocity > 0 )
-		{
-			enable();
-			if ( newVelocity != currentVelocity )
-			{
-				currentVelocity = newVelocity;
-
-				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
-				if (period > 150) // Чтобы не повесить систему слишком частым заходом
-					engine.setPeriod ( period );
-			}
-		}
-		else
-			disable ();
-
-		getMessage = true;
-	}
+//	void getCanVelocity (uint16_t)
+//	{
+//		uint8_t newVelocity = canDat.get<CanTx::MY_DEBUG_A>()[0];
+//
+//		if ( newVelocity > 0 )
+//		{
+//			enable();
+//			if ( newVelocity != currentVelocity )
+//			{
+//				currentVelocity = newVelocity;
+//
+//				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
+//				if (period > 150) // Чтобы не повесить систему слишком частым заходом
+//					engine.setPeriod ( period );
+//			}
+//		}
+//		else
+//			disable ();
+//
+//		getMessage = true;
+//	}
 
 private:
 	void watchDog (uint16_t)
@@ -832,7 +833,7 @@ int main ()
 	data.interruptHandler<Club0> () = InterruptHandler::from_function<&kptCommandParse>();
 	data.interruptHandler<Club1> () = InterruptHandler::from_function<&clubSendNextPageInterrupt>();
 	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getVelocity> (&emulation);
-	canDat.rxHandler<CanTx::MY_DEBUG_A>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
+//	canDat.rxHandler<CanTx::MY_DEBUG_A>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
 
 	// ------------------------------ Хранение постоянных характеристик -----------------------------►
 	if (reg.portB.pin7 == 0) // первый полукомплект

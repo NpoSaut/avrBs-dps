@@ -118,7 +118,7 @@ private:
 		canDat.template send<CanTx::SYS_DATA_STATE2> (sysDataState2);
 		sautCom.termTime = 0;
 
-		Complex<uint16_t> trainNumber = eeprom_read_word ((const uint16_t *) &eeprom.club.train);
+		Complex<uint32_t> trainNumber = eeprom_read_dword ((const uint32_t *) &eeprom.club.train);
 		uint8_t ipdParam[8] = {
 				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.trackMPH),
 				trainNumber[0],
@@ -130,6 +130,14 @@ private:
 				0
 							};
 		canDat.template send<CanTx::IPD_PARAM> (ipdParam);
+
+		uint8_t mphState[4] = {
+				trainNumber[2],
+				trainNumber[1],
+				trainNumber[0],
+				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.category),
+							};
+		canDat.template send<CanTx::MPH_STATE_A> (mphState);
 	}
 };
 
