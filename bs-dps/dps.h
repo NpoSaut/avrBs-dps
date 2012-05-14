@@ -29,7 +29,6 @@
 #include "CanDat.h"
 #include "CanDesriptors.h"
 #include "eeprom.h"
-#include "ec-adjust.h"
 
 
 // Датчик пути и скорости
@@ -304,8 +303,6 @@ public:
 		  spatiumMeters (0),
 		  odometer16dmPlusPlus({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
 		  tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
-		  ecAdjust( Delegate<uint16_t ()>::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioCeleritas> (this),
-		  			Delegate<int32_t ()>::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioSpatiumMeters> (this) ),
 		  animadversor( InterruptHandler::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio>(this) ),
 //		  animadversor( InterruptHandler (this, &myType::animadversio) ),
 //		  productor( InterruptHandler (this, &myType::produco) ),
@@ -393,11 +390,6 @@ public:
 		return dimetior[nCapio]->accipioVersus();
 	}
 
-	void takeEcDataForAdjust(uint16_t pointerToData)
-	{
-		ecAdjust.takeEcData(pointerToData);
-	}
-
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters; // пройденный путь в метрах
 	InterruptHandler odometer16dmPlusPlus[2]; // Делагаты функций, делающийх ++ к одометрам
@@ -427,9 +419,6 @@ private:
 	Alarm<Alarm0, 100> animadversor;
 	typedef Dimetior< lanternaPortus, lanterna0, lanterna1, minTempusPunctum, maxTempusPunctum, maxCeleritas, 100 > DimetiorType;
 	DimetiorType* dimetior[2];
-
-	typedef EcAdjust < CanType, canDat > EcAdjustType;
-	EcAdjustType ecAdjust;
 
 	bool tractus; // 0 - выбег или торможение, 1 - тяга
 
@@ -657,61 +646,6 @@ private:
 
 			uint16_t sigCel = signCeleritas( dimetior[nCapio]->accipioCeleritas() );
 			celeritasProdo <<= sigCel;
-
-			// Вывод данных в CAN
-			if ( clock.getTime() > 1500 ) // Запустит вывод сообщений через 1,5 секунды. За это время я подхвачу пройденный путь от ЭК.
-			{
-				// SAUT_INFO ---
-				uint8_t sautInfo[8] = {
-							uint8_t(sigCel >> 8),
-							uint8_t(sigCel),
-							dimetior[nCapio]->accipioAcceleratio(),
-							uint8_t(dimetior[0]->diametros >> 8),
-							uint8_t(dimetior[0]->diametros),
-							uint8_t(dimetior[1]->diametros >> 8),
-							uint8_t(dimetior[1]->diametros),
-							mappa
-									 };
-
-				// IPD_STATE ---
-
-				// Округление скорости с гистерезисом
-				Complex<uint16_t> rotCel;
-				rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
-
-				// Подстройка под ЭК
-				ecAdjust.adjust (spatiumMeters);
-
-				uint8_t ipdState[8] = {
-							(mappa->validus0 == false && mappa->validus1 == false) ? (uint8_t)2 : (uint8_t)0,
-							uint8_t(  (versus() * 128)
-									| ((dimetior[nCapio]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
-									| (!dimetior[nCapio]->sicinCommoratio() << 2)
-									| uint8_t( rotCel[1] & 0x1) ), // направление + наличие импульсов ДПС + старший бит скорости в км/ч
-							uint8_t( rotCel[0] ), // скорость в км/ч
-							uint8_t( spatiumMeters[1] ),
-							uint8_t( spatiumMeters[0] ),
-							uint8_t( spatiumMeters[2] ),
-							uint8_t(  (ecAdjust.isMismatchCritical() << 5)
-									| (causarius[!nCapio]->celeritas << 4)
-									| (nCapio << 3)
-									| (firmusCausarius[!nCapio] << 2)
-									| (causarius[nCapio]->celeritas << 1)
-									| (firmusCausarius[nCapio] << 0) ),
-							uint8_t( dimetior[nCapio]->accipioAcceleratio()*2 )
-									 };
-
-				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
-				{
-					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
-					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
-				}
-				else
-				{
-					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
-					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
-				}
-			}
 		}
 
 		scheduler.runIn(

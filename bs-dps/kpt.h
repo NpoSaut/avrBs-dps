@@ -70,21 +70,6 @@ private:
 		return time;
 	}
 
-	void canSend (uint8_t n)
-	{
-		uint8_t packet[5] = {
-				2, // WARNING
-				1, // KPT
-				n,
-				0,
-				0
-							};
-		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<AUX_RESOURCE_IPD_A> (packet);
-		else
-			canDat.template send<AUX_RESOURCE_IPD_B> (packet);
-	}
-
 	void watchDog (uint16_t)
 	{
 		if ( impulseWatchDog == false ) // не было изменений
@@ -101,13 +86,11 @@ private:
 							false,
 							status.type
 						};
-//			canSend ();
 		}
 		else
 			impulseWatchDog = false;
 
 		scheduler.runIn( Command{ SoftIntHandler::from_method <Kpt, &Kpt::watchDog>(this), 0 }, 2000000/Scheduler::discreetMks );
-//		scheduler.runIn( Command{SoftIntHandler (this, &Kpt::watchDog), 0}, 2000000/Scheduler::discreetMks );
 	}
 
 
@@ -138,11 +121,6 @@ public:
 			status.kptImp = 0;
 			periodTime += upTime;
 		}
-		else
-		{
-			canSend (0);
-		}
-
 	}
 
 	void rise ()
@@ -207,15 +185,10 @@ public:
 				statusPrevious = statusNew;
 
 				periodTime = 0; // Начало нового периода
-	//			canSend ();
 			}
 			else // короткий импульс
 				if (++shortImpNumber == 3) // Трёх коротких имульсов подряд быть не может
 					status.correct = false;
-		}
-		else
-		{
-			canSend(1);
 		}
 	}
 

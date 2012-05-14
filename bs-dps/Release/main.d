@@ -22,8 +22,7 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypeManip.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypelistMacros.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h ../id.h \
- ../programming.h ../ProgSpi.h ../dps.h ../CanDat.h ../eeprom.h \
- ../ec-adjust.h ../kpt.h ../mph.h
+ ../programming.h ../ProgSpi.h ../dps.h ../CanDat.h ../eeprom.h ../kpt.h
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h:
 
@@ -91,8 +90,4 @@ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h:
 
 ../eeprom.h:
 
-../ec-adjust.h:
-
 ../kpt.h:
-
-../mph.h:
