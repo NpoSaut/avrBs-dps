@@ -858,7 +858,6 @@ void CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptL
 		uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
 //		sei (); // После этого можно разрешить прерывания глобально
 
-//		lam<0, 1> ();
 //		if (reg.canMobStatus->acknowledgmentError_ || reg.canMobStatus->formError_ || reg.canMobStatus->crcError_ || reg.canMobStatus->stuffError_ || reg.canMobStatus->bitError_ || reg.canMobStatus->dataLengthWarning_ )
 //			reg.portC.pin5.toggle ();
 

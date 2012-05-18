@@ -1,8 +1,8 @@
-#Fri May 11 10:20:01 YEKST 2012
+#Tue May 15 10:14:37 YEKST 2012
 avrtarget/ClockFrequency=12000000
 avrtarget/ExtRAMSize=0
 avrtarget/ExtendedRAM=false
-avrtarget/MCUType=at90can64
+avrtarget/MCUType=at90can128
 avrtarget/UseEEPROM=false
 avrtarget/UseExtendedRAMforHeap=true
 avrtarget/avrdude/BitBangDelay=

@@ -22,11 +22,12 @@ template < typename CanDatType, CanDatType& canDat,
 class MPH
 {
 public:
-	MPH ()
+	MPH (bool active)
 	{
-		scheduler.runIn(
-				Command {SoftIntHandler::from_method<MPH,&MPH::sendState> (this), 0},
-				500 );
+		if (active)
+			scheduler.runIn(
+					Command {SoftIntHandler::from_method<MPH,&MPH::sendState> (this), 0},
+					500 );
 	}
 
 	void writeConfirm (uint16_t packetAdr)

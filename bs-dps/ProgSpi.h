@@ -104,146 +104,66 @@ template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Regi
 class ProgSpiSimple
 {
 public:
-	ProgSpiSimple ()
-	{
-		pinConfig ();
-		spiConfig ();
+	ProgSpiSimple ();
 
-		_good = false;
-		for (register uint8_t i = 0; i < 3; ++ i)							// Заводим с трёх попыток
-		{
-			rebootInProg ();
-			if ( enableProg() )
-			{
-				_good = true;
-				break;
-			}
-		}
-	}
-	~ProgSpiSimple ()
-	{
-//		flush<flash> ();
-//		flush<eeprom> ();
-		rebootInWork ();
-	}
+	bool rebootInProg ();			// Перевод программируемой микросхемы  в режим программирования
+	void rebootInWork ();			// Перевод программируемой микросхемы  в режим нормальной работы
+	bool isInProgState () const {return progMode;}
 
-	inline bool good () { return _good; }									// Удачен ли переход в режим программирования (осуществляется в конструкторе)
-
-	inline void erase ()													// Отчистиь flash и eeprom
-	{
-		instruction (0xAC,0x80,0,0);
-		_delay_ms (T_WD_ERASE);
-	}
+	void erase ();					// Отчистиь flash и eeprom
 
 	template <MemType type>
-	uint8_t read ()
-	{
-		static_assert (type == flash || type == eeprom, "Unknown memory type");
-		uint8_t data;
-		if (type == flash)
-			data = instruction ( 0x20 | ((position & 0b1) << 3), position >> 9, position >> 1, 0 );
-		if (type == eeprom)
-			data = instruction ( 0xA0, (position >> 8) & 0x7, position, 0 );
-		position ++;
-		return data;
-	}
+	uint8_t read ();
+	template <MemType type>
+	Complex<uint16_t> readWord ();
 
 	template <MemType type>
-	void write (uint8_t data)
-	{
-		static_assert (type == flash || type == eeprom, "Unknown memory type");
-		if (type == flash)
-		{
-			if (position % FLASH_PAGE_SIZE == 0)							// Если началась новая страница
-				flush<flash> ();
-			instruction ( 0x40 | ((position & 0b1) << 3), 0, position >> 1, data );
-		}
-		if (type == eeprom)
-		{
-			if (position % EEPROM_PAGE_SIZE == 0)							// Если началась новая страница
-				flush<eeprom> ();
-			instruction ( 0xC1, 0, position & 0x7, data );
-		}
-		position ++;
-	}
+	void write (uint8_t data);
+	template <MemType type>
+	void write (uint16_t data);
 
 	template<MemType type>
-	void flush ()															// Дождаться завершения операций
-	{
-		if (type == flash)
-		{
-			instruction ( 0x4C, (position-1) >> 9, ((position-1) >> 1) & 0x80, 0 );
-			_delay_ms (T_WD_FLASH);
-		}
-		if (type == eeprom)
-		{
-			instruction( 0xC2, ((position-1) >> 8) & 0xf, (position-1) & 0xf8, 0 );
-			_delay_ms (T_WD_EEPROM);
-		}
-	}
+	void flush ();					// Дождаться завершения операций
 
-	template <MemType type>
-	Complex<uint16_t> readWord ()
-	{
-		return Complex<uint16_t>{ read<type>(), read<type>() };
-	}
-
-	template <MemType type>
-	void write (uint16_t data)
-	{
-		write<type> ((uint8_t)data);
-		write<type> ((uint8_t)(data>>8));
-	}
-
-
-	inline void fuseWriteLow (uint8_t bits)
-	{
-		instruction ( 0xAC, 0xA0, 0, bits );
-		_delay_ms (T_WD_FUSE);
-	}
-	inline void fuseWriteHigh (uint8_t bits)
-	{
-		instruction ( 0xAC, 0xA8, 0, bits );
-		_delay_ms (T_WD_FUSE);
-	}
-	inline void fuseWriteExt (uint8_t bits)
-	{
-		instruction ( 0xAC, 0xA4, 0, bits );
-		_delay_ms (T_WD_FUSE);
-	}
-	inline uint8_t fuseReadLow ()
-	{
-		return instruction ( 0x50, 0x00, 0, 0 );
-	}
-	inline uint8_t fuseReadHigh ()
-	{
-		return instruction ( 0x58, 0x08, 0, 0 );
-	}
-	inline uint8_t fuseReadExt ()
-	{
-		return instruction ( 0x50, 0x08, 0, 0 );
-	}
+	void fuseWriteLow (uint8_t bits);
+	void fuseWriteHigh (uint8_t bits);
+	void fuseWriteExt (uint8_t bits);
+	uint8_t fuseReadLow ();
+	uint8_t fuseReadHigh ();
+	uint8_t fuseReadExt ();
 
 	uint32_t position;
 
 private:
-	bool _good;
+	void pinConfig ();				// Настройка пинов
+	void pinRelease ();				// Освобождение управления пинами
+	void spiConfig ();				// Конфигурация SPI передатчика
+	void spiRelease ();				// Деконфигурация передатчика
+	bool enableProg ();				// Послать инструкцию перехода в режим программирования
+	uint8_t instruction (uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4); // Выполняет инструкцию, возвращает ответ
 
-	inline void pinConfig ()												// Настройка пинов
-	{
-		(reg.*port).pin<misoPin>().inPulled ();
-		(reg.*port).pin<mosiPin>().out ();
-		(reg.*port).pin<sckPin>().out ();
-		(reg.*port).pin<ssPin>().out ();									// SS пин конфигурируется на выход, чтобы при 0 на нём (вдруг - это вдруг случилось) не сбрасывался мастер-режим
-	}
-	inline void spiConfig ()												// Конфигурация SPI передатчика
-	{
-		(reg.*control)->enable_ = true;
-		(reg.*control)->master_ = true;
-		(reg.*control)->prescale_ = SpiStatusControl::Prescale::F4;
-//		(reg.*control)->prescale_ = SpiStatusControl::Prescale::F16;
-	}
-	inline void rebootInProg ()												// Перевод программируемой микросхемы  в режим программирования
+	bool progMode;
+};
+
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::ProgSpiSimple()
+	: position (0)
+{
+	rebootInWork();
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+bool ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::rebootInProg()
+{
+	pinConfig ();
+	spiConfig ();
+
+	for (uint8_t i = 0; i < 3; ++i)							// Заводим с трёх попыток
 	{
 		(reg.*resetPort).pin<resetPin>().out ();
 		(reg.*resetPort).pin<resetPin>() = 0;
@@ -252,40 +172,242 @@ private:
 		_delay_loop_1 (2);
 		(reg.*resetPort).pin<resetPin>() = 0;
 		_delay_ms (T_ST_PROG);
+
+		if ( enableProg() )
+		{
+			progMode = true;
+			return true;
+		}
 	}
-	inline void rebootInWork ()												// Перевод программируемой микросхемы  в режим нормальной работы
+	return false;
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::rebootInWork()
+{
+	spiRelease();
+	pinRelease();
+	progMode = false;
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::erase()
+{
+	instruction (0xAC,0x80,0,0);
+	_delay_ms (T_WD_ERASE);
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+template <	MemType type	>
+uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::read ()
+{
+	static_assert (type == flash || type == eeprom, "Unknown memory type");
+	uint8_t data;
+	if (type == flash)
+		data = instruction ( 0x20 | ((position & 0b1) << 3), position >> 9, position >> 1, 0 );
+	if (type == eeprom)
+		data = instruction ( 0xA0, (position >> 8) & 0x7, position, 0 );
+	position ++;
+	return data;
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+template <	MemType type	>
+Complex<uint16_t> ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::readWord ()
+{
+	return Complex<uint16_t>{ read<type>(), read<type>() };
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+template <	MemType type	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::write (uint8_t data)
+{
+	static_assert (type == flash || type == eeprom, "Unknown memory type");
+	if (type == flash)
 	{
-		(reg.*resetPort).pin<resetPin>().inPulled ();
+		if (position % FLASH_PAGE_SIZE == 0)							// Если началась новая страница
+			flush<flash> ();
+		instruction ( 0x40 | ((position & 0b1) << 3), 0, position >> 1, data );
 	}
-	inline bool enableProg ()												// Послать инструкцию перехода в режим программирования
+	if (type == eeprom)
 	{
-		// Реализация повторяет вызов instruction (). Однако "ответ" приходит не в последнем байте, а в предпоследнем.
-		(reg.*dataReg) = 0xAC;
-		while(! (reg.*control)->transferComplete );
-		(reg.*dataReg) = 0x53;
-		while(! (reg.*control)->transferComplete );
-		(reg.*dataReg) = 0;
-		while(! (reg.*control)->transferComplete );
-		register bool result = ( (reg.*dataReg) == 0x53 );
-		(reg.*dataReg) = 0;
-		while(! (reg.*control)->transferComplete );
-		return result;
+		if (position % EEPROM_PAGE_SIZE == 0)							// Если началась новая страница
+			flush<eeprom> ();
+		instruction ( 0xC1, 0, position & 0x7, data );
 	}
-	inline uint8_t instruction (uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4) __attribute__ ((noinline))	// Выполняет инструкцию inst, возвращает ответ
+	position ++;
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+template <	MemType type	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::write (uint16_t data)
+{
+	write<type> ((uint8_t)data);
+	write<type> ((uint8_t)(data>>8));
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+template <	MemType type	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::flush ()
+{
+	if (type == flash)
 	{
-		(reg.*dataReg) = b1;
-		while(! (reg.*control)->transferComplete );							// Дожидаемся конца передачи
-		(reg.*dataReg) = b2;
-		while(! (reg.*control)->transferComplete );
-		(reg.*dataReg) = b3;
-		while(! (reg.*control)->transferComplete );;
-		(reg.*dataReg) = b4;
-		while(! (reg.*control)->transferComplete );
-		return (reg.*dataReg);
+		instruction ( 0x4C, (position-1) >> 9, ((position-1) >> 1) & 0x80, 0 );
+		_delay_ms (T_WD_FLASH);
 	}
-};
+	if (type == eeprom)
+	{
+		instruction( 0xC2, ((position-1) >> 8) & 0xf, (position-1) & 0xf8, 0 );
+		_delay_ms (T_WD_EEPROM);
+	}
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseWriteLow (uint8_t bits)
+{
+	instruction ( 0xAC, 0xA0, 0, bits );
+	_delay_ms (T_WD_FUSE);
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseWriteHigh (uint8_t bits)
+{
+	instruction ( 0xAC, 0xA8, 0, bits );
+	_delay_ms (T_WD_FUSE);
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseWriteExt (uint8_t bits)
+{
+	instruction ( 0xAC, 0xA4, 0, bits );
+	_delay_ms (T_WD_FUSE);
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseReadLow ()
+{
+	return instruction ( 0x50, 0x00, 0, 0 );
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseReadHigh ()
+{
+	return instruction ( 0x58, 0x08, 0, 0 );
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseReadExt ()
+{
+	return instruction ( 0x50, 0x08, 0, 0 );
+}
+
+// private:
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::pinConfig ()
+{
+	(reg.*port).pin<misoPin>().inPulled ();
+	(reg.*port).pin<mosiPin>().out ();
+	(reg.*port).pin<sckPin>().out ();
+	(reg.*port).pin<ssPin>().out ();									// SS пин конфигурируется на выход, чтобы при 0 на нём (вдруг - это вдруг случилось) не сбрасывался мастер-режим
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::pinRelease ()
+{
+	(reg.*resetPort).pin<resetPin>().inPulled ();
+	(reg.*port).pin<misoPin>().in ();
+	(reg.*port).pin<mosiPin>().in ();
+	(reg.*port).pin<sckPin>().in ();
+	(reg.*port).pin<ssPin>().in ();
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::spiConfig ()
+{
+	(reg.*control)->enable_ = true;
+	(reg.*control)->master_ = true;
+	(reg.*control)->prescale_ = SpiStatusControl::Prescale::F4;
+//	(reg.*control)->prescale_ = SpiStatusControl::Prescale::F16;
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::spiRelease ()
+{
+	(reg.*control)->enable_ = false;
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+bool ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::enableProg ()
+{
+	// Реализация повторяет вызов instruction (). Однако "ответ" приходит не в последнем байте, а в предпоследнем.
+	(reg.*dataReg) = 0xAC;
+	while(! (reg.*control)->transferComplete );
+	(reg.*dataReg) = 0x53;
+	while(! (reg.*control)->transferComplete );
+	(reg.*dataReg) = 0;
+	while(! (reg.*control)->transferComplete );
+	register bool result = ( (reg.*dataReg) == 0x53 );
+	(reg.*dataReg) = 0;
+	while(! (reg.*control)->transferComplete );
+	return result;
+}
+
+template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
+			Port Register::* resetPort, uint8_t resetPin	>
+uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::instruction (uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4)
+{
+	(reg.*dataReg) = b1;
+	while(! (reg.*control)->transferComplete );							// Дожидаемся конца передачи
+	(reg.*dataReg) = b2;
+	while(! (reg.*control)->transferComplete );
+	(reg.*dataReg) = b3;
+	while(! (reg.*control)->transferComplete );;
+	(reg.*dataReg) = b4;
+	while(! (reg.*control)->transferComplete );
+	return (reg.*dataReg);
+}
 
 } // namespace close
+
+
 
 
 //namespace ProgSpi

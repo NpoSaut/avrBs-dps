@@ -520,6 +520,17 @@ void mcoAuxResB (uint16_t pointer)
 		mcoAuxResControl (pointer);
 }
 
+// --------------------------------- Модуль постоянных характеристик ----------------------------►
+
+typedef MPH <CanDatType, canDat, SchedulerType, scheduler, ComType, com> MPHType;
+MPHType mph (reg.portB.pin7 == 0);
+
+
+// ------------------------------------- Нейтральная вставка -------------------------------------►
+
+typedef NeutralInsertion<CanDatType, canDat, SchedulerType, scheduler, DpsType, dps> NeutralInsertionType;
+NeutralInsertionType neutralInsertion (reg.portB.pin7 == 0);
+
 // --------------------------------------- Эмуляция движения ------------------------------------►
 
 class Emulation
@@ -625,6 +636,22 @@ private:
 };
 Emulation emulation;
 
+// ---------------------------------------- Программирование ------------------------------------►
+
+Programming programming (
+	data.member<Dps0>(),	data.member<Dps1>(),	data.member<Dps2>(),	data.member<Dps3>(),
+	data.member<DpsOut0>(),	data.member<DpsOut1>(),	data.member<DpsOut2>(),	data.member<DpsOut3>() );
+
+typedef ProgrammingCan <CanDatType, canDat, CanRx::PROGRAM_IPD_CONTROL_A, CanRx::PROGRAM_IPD_DATA_A> ProgrammingCanTypeA;
+ProgrammingCanTypeA programmingCanA (	Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
+										Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps)
+									);
+typedef ProgrammingCan <CanDatType, canDat, CanRx::PROGRAM_IPD_CONTROL_B, CanRx::PROGRAM_IPD_DATA_B> ProgrammingCanTypeB;
+ProgrammingCanTypeB programmingCanB (	Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
+										Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps)
+								 	);
+
+
 // ---------------------------------- Парсер команд по линии связи ------------------------------►
 
 void commandParser ()
@@ -678,10 +705,8 @@ void commandParser ()
 	{
 		dps.constituoPassivus ();
 
-		Programming* P1 = new Programming (
-				data.member<Dps0>(),	data.member<Dps1>(),	data.member<Dps2>(),	data.member<Dps3>(),
-				data.member<DpsOut0>(),	data.member<DpsOut1>(),	data.member<DpsOut2>(),	data.member<DpsOut3>() );
-		data.interruptHandler<Dps0> () = InterruptHandler::from_method <Programming, &Programming::comParser> (P1);
+		programming.enterProgramMode();
+		data.interruptHandler<Dps0> () = InterruptHandler::from_method <Programming, &Programming::comParser> (&programming);
 	}
 }
 
@@ -715,20 +740,15 @@ int main ()
 	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getVelocity> (&emulation);
 	canDat.rxHandler<CanRx::IPD_EMULATION>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
 
-	// ------------------------------ Хранение постоянных характеристик -----------------------------►
 	if (reg.portB.pin7 == 0) // первый полукомплект
 	{
-		typedef MPH <CanDatType, canDat, SchedulerType, scheduler, ComType, com> MPHType;
-		MPHType* mph = new MPHType;
+		canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
+		canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
+		canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
+		canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::write> (&mph); // Если кто-то ещё ответит, то обновить мои данные
+		canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::read> (&mph);
 
-		canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (mph);
-		canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (mph);
-		canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (mph);
-		canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::write> (mph); // Если кто-то ещё ответит, то обновить мои данные
-		canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::read> (mph);
-
-		typedef NeutralInsertion<CanDatType, canDat, SchedulerType, scheduler, DpsType, dps> NeutralInsertionType;
-		NeutralInsertionType* neutralInsertion = new NeutralInsertionType;
+		canDat.rxHandler<CanRx::MM_NEUTRAL>() = SoftIntHandler::from_method <NeutralInsertionType, &NeutralInsertionType::getEcData> (&neutralInsertion);
 	}
 
 	canDat.rxHandler<CanRx::SYS_DIAGNOSTICS>() = SoftIntHandler::from_function <&sysDiagnostics>();
@@ -752,17 +772,15 @@ int main ()
 	// Программирование по CAN
 	if (reg.portB.pin7 == 0) // первый полукомплект
 	{
-		typedef ProgrammingCan <CanDatType, canDat, CanRx::PROGRAM_IPD_CONTROL_A, CanRx::PROGRAM_IPD_DATA_A> ProgrammingCanType;
-		ProgrammingCanType* programming = new ProgrammingCanType(   Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
-																	Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps)
-																);
+		canDat.rxHandler<CanRx::PROGRAM_IPD_CONTROL_A>() = SoftIntHandler::from_method <ProgrammingCanTypeA, &ProgrammingCanTypeA::getCommand> (&programmingCanA);
+		canDat.rxHandler<CanRx::PROGRAM_IPD_DATA_A>() = SoftIntHandler::from_method <ProgrammingCanTypeA, &ProgrammingCanTypeA::getData> (&programmingCanA);
+		canDat.txHandler<CanRx::PROGRAM_IPD_DATA_A>() = SoftIntHandler::from_method <ProgrammingCanTypeA, &ProgrammingCanTypeA::sendData> (&programmingCanA);
 	}
 	else
 	{
-		typedef ProgrammingCan <CanDatType, canDat, CanRx::PROGRAM_IPD_CONTROL_B, CanRx::PROGRAM_IPD_DATA_B> ProgrammingCanType;
-		ProgrammingCanType* programming = new ProgrammingCanType(   Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
-																	Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps)
-																);
+		canDat.rxHandler<CanRx::PROGRAM_IPD_CONTROL_B>() = SoftIntHandler::from_method <ProgrammingCanTypeB, &ProgrammingCanTypeB::getCommand> (&programmingCanB);
+		canDat.rxHandler<CanRx::PROGRAM_IPD_DATA_B>() = SoftIntHandler::from_method <ProgrammingCanTypeB, &ProgrammingCanTypeB::getData> (&programmingCanB);
+		canDat.txHandler<CanRx::PROGRAM_IPD_DATA_B>() = SoftIntHandler::from_method <ProgrammingCanTypeB, &ProgrammingCanTypeB::sendData> (&programmingCanB);
 	}
 	dps.constituoActivus();
 
@@ -808,6 +826,8 @@ int main ()
     		eeprom_update_byte (&eeprom.dps1Good, 1);
     		reboot();
     	}
+
+    	lam<0, 1000> ();
 
     	dispatcher.invoke();
     	wdt_reset();

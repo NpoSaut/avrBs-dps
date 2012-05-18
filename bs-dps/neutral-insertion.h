@@ -24,16 +24,16 @@ template <  typename CanDatType, CanDatType& canDat,
 class NeutralInsertion
 {
 public:
-	NeutralInsertion ()
+	NeutralInsertion (bool active)
 		: type (Type::NoTarget), coord (0), numberFaultSendTrys (0)
 	{
 		length = trainLengthCalc();
-		canDat.template rxHandler<CanRx::MM_NEUTRAL>() = SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::getEcData> (this);
-		scheduler.runIn(
-				Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
-				500	);
+		if (active)
+			scheduler.runIn(
+					Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
+					500	);
 	}
-private:
+
 	void getEcData (uint16_t)
 	{
 		const uint8_t (&data) [8] = canDat.template get <CanRx::MM_NEUTRAL> ();
@@ -49,6 +49,7 @@ private:
 		length = trainLengthCalc() + data[5] + uint16_t(data[4] & 0x1F) * 256; // длина поезда + длина вставки
 		coord = uint16_t (data[3]) + uint16_t (data[2]) * 256;
 	}
+private:
 	void sendData (uint16_t)
 	{
 		Complex<uint16_t> outDistance = 0;
