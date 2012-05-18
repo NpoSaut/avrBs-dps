@@ -639,6 +639,11 @@ void mcoAuxResB (uint16_t pointer)
 		mcoAuxResControl (pointer);
 }
 
+// --------------------------------------- Нейтральная вставка -----------------------------------►
+
+typedef NeutralInsertion<CanDatType, canDat, SchedulerType, scheduler, DpsType, dps> NeutralInsertionType;
+NeutralInsertionType neutralInsertion (reg.portB.pin7 == 0);
+
 // --------------------------------------- Эмуляция движения ------------------------------------►
 
 class Emulation
@@ -825,7 +830,7 @@ int main ()
 			reboot ();
 	}
 	asm volatile ("nop"); // !!! 126 version hack !!!
-//	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
+	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 //	asm volatile ("nop");
 //	asm volatile ("nop");
 
@@ -847,8 +852,7 @@ int main ()
 		canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::write> (mph); // Если кто-то ещё ответит, то обновить мои данные
 		canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::read> (mph);
 
-		typedef NeutralInsertion<CanDatType, canDat, SchedulerType, scheduler, DpsType, dps> NeutralInsertionType;
-		NeutralInsertionType* neutralInsertion = new NeutralInsertionType;
+		canDat.rxHandler<CanRx::MM_NEUTRAL>() = SoftIntHandler::from_method <NeutralInsertionType, &NeutralInsertionType::getEcData> (&neutralInsertion);
 	}
 
 	canDat.rxHandler<CanRx::SYS_DIAGNOSTICS>() = SoftIntHandler::from_function <&sysDiagnostics>();

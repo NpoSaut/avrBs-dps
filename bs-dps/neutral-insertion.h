@@ -24,29 +24,38 @@ template <  typename CanDatType, CanDatType& canDat,
 class NeutralInsertion
 {
 public:
-	NeutralInsertion ()
+	NeutralInsertion (bool active)
 		: type (Type::NoTarget), coord (0), numberFaultSendTrys (0)
 	{
 		length = trainLengthCalc();
-		canDat.template rxHandler<CanRx::MM_NEUTRAL>() = SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::getEcData> (this);
-		scheduler.runIn(
-				Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
-				500	);
+		if (active)
+			scheduler.runIn(
+					Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
+					500	);
 	}
-private:
+
 	void getEcData (uint16_t)
 	{
 		const uint8_t (&data) [8] = canDat.template get <CanRx::MM_NEUTRAL> ();
-		type = Type((data[1] & 1) + 1);
+
+		uint8_t inputType = data[1] & 0b11;
+		if ( inputType == 0 )
+			type = Type::NeutralInsertion;
+		else if ( inputType == 1 )
+			type = Type::SystemChange;
+		else
+			return;
+
 		length = trainLengthCalc() + data[5] + uint16_t(data[4] & 0x1F) * 256; // длина поезда + длина вставки
 		coord = uint16_t (data[3]) + uint16_t (data[2]) * 256;
 	}
+private:
 	void sendData (uint16_t)
 	{
 		Complex<uint16_t> outDistance = 0;
 		if ( type != Type::NoTarget )
 		{
-			int32_t distance = (int32_t)(coord) - dps.spatiumMeters;
+			int16_t distance = coord - uint16_t(dps.spatiumMeters);
 			if ( distance + length <= 0 )
 				type = Type::NoTarget;
 
