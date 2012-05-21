@@ -733,18 +733,6 @@ private:
 							Command { SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::dpsFaultProduco>(this), (uint16_t) dpsFault },
 							100
 							); // Вывести через 0,1 сек, чтобы успели освободиться страницы отправки CAN
-
-//					uint8_t sysDataState2[8] = {
-//							0, // Результаты выполнения тестов...
-//							(uint8_t) eeprom_read_byte ((const uint8_t *) ((uint8_t*)&eeprom.club.configuration +1)), 	// старший
-//							(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.configuration),					// младший
-//							(uint8_t) eeprom_read_byte ((const uint8_t *) ((uint8_t*)&eeprom.club.typeLoco +1)), 	// старший
-//							(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.typeLoco),					// младший
-//							2,
-//							0,
-//							0
-//											};
-//					canDat.template send<CanTx::SYS_DATA_STATE2> (sysDataState2);
 				}
 				else
 				{
