@@ -357,10 +357,10 @@ template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Regi
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::spiConfig ()
 {
-	(reg.*control)->enable_ = true;
-	(reg.*control)->master_ = true;
-	(reg.*control)->prescale_ = SpiStatusControl::Prescale::F4;
-//	(reg.*control)->prescale_ = SpiStatusControl::Prescale::F16;
+	(reg.*control).enable_ = true;
+	(reg.*control).master_ = true;
+	(reg.*control).prescale_ = SpiStatusControl::Prescale::F4;
+//	(reg.*control).prescale_ = SpiStatusControl::Prescale::F16;
 }
 
 template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
@@ -368,7 +368,7 @@ template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Regi
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::spiRelease ()
 {
-	(reg.*control)->enable_ = false;
+	(reg.*control).enable_ = false;
 }
 
 template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
@@ -378,14 +378,14 @@ bool ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 {
 	// Реализация повторяет вызов instruction (). Однако "ответ" приходит не в последнем байте, а в предпоследнем.
 	(reg.*dataReg) = 0xAC;
-	while(! (reg.*control)->transferComplete );
+	while(! (reg.*control).transferComplete );
 	(reg.*dataReg) = 0x53;
-	while(! (reg.*control)->transferComplete );
+	while(! (reg.*control).transferComplete );
 	(reg.*dataReg) = 0;
-	while(! (reg.*control)->transferComplete );
+	while(! (reg.*control).transferComplete );
 	register bool result = ( (reg.*dataReg) == 0x53 );
 	(reg.*dataReg) = 0;
-	while(! (reg.*control)->transferComplete );
+	while(! (reg.*control).transferComplete );
 	return result;
 }
 
@@ -395,13 +395,13 @@ template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Regi
 uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::instruction (uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4)
 {
 	(reg.*dataReg) = b1;
-	while(! (reg.*control)->transferComplete );							// Дожидаемся конца передачи
+	while(! (reg.*control).transferComplete );							// Дожидаемся конца передачи
 	(reg.*dataReg) = b2;
-	while(! (reg.*control)->transferComplete );
+	while(! (reg.*control).transferComplete );
 	(reg.*dataReg) = b3;
-	while(! (reg.*control)->transferComplete );;
+	while(! (reg.*control).transferComplete );;
 	(reg.*dataReg) = b4;
-	while(! (reg.*control)->transferComplete );
+	while(! (reg.*control).transferComplete );
 	return (reg.*dataReg);
 }
 

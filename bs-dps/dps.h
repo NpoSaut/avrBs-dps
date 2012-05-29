@@ -114,9 +114,9 @@ public:
 
 				// Определение направления движения
 				uint8_t vr = ((affectus + canalis) / 2) & 1;
-				if ( vr == versusRotatio->retro )				 // Направление "применяется" только после подтверждения
-					versusRotatio->modo = versusRotatio->retro;	//  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
-				versusRotatio->retro = vr;
+				if ( vr == versusRotatio.retro )				 // Направление "применяется" только после подтверждения
+					versusRotatio.modo = versusRotatio.retro;	//  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
+				versusRotatio.retro = vr;
 
 				debugImpulsio[0] = impulsio[0];
 				debugImpulsio[1] = impulsio[1];
@@ -181,7 +181,7 @@ public:
 	// Направление движения. 0 - вперёд
 	bool accipioVersus () const
 	{
-		return (versusInversio ^ !(versusRotatio->modo ^ positio));
+		return (versusInversio ^ !(versusRotatio.modo ^ positio));
 	}
 	// Остановка
 	bool sicinCommoratio () const
@@ -323,10 +323,10 @@ public:
 		causarius[0] = {0,0,0};
 		causarius[1] = {0,0,0};
 		Bitfield<Eeprom::Saut::Configuration> conf ( eeprom_read_byte( (uint8_t*) &eeprom.saut.configuration ) );
-		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, 0 );
-		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, 0 );
-//		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
-//		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
+		dimetior[0] = new DimetiorType( diametros0, conf.dps0Position, 0 );
+		dimetior[1] = new DimetiorType( diametros1, conf.dps1Position, 0 );
+//		dimetior[0] = new DimetiorType( diametros0, conf.dps0Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
+//		dimetior[1] = new DimetiorType( diametros1, conf.dps1Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
 
 		(reg.*accessusPortus).in ();
 		(reg.*lanternaPortus).pin<lanterna0>().out ();
@@ -512,8 +512,8 @@ private:
 			// Анализ показаний датчиков, выбор ДПС, установка неисправности
 			uint8_t nMax = (dimetior[0]->accipioCeleritas() + 64) < dimetior[1]->accipioCeleritas(); // +64 чтобы предотвратить постоянное переключение
 
-			causarius[0]->vicis = dimetior[0]->sicinCausarius();
-			causarius[1]->vicis = dimetior[1]->sicinCausarius();
+			causarius[0].vicis = dimetior[0]->sicinCausarius();
+			causarius[1].vicis = dimetior[1]->sicinCausarius();
 
 			if ( !dimetior[0]->sicinCausarius() && !dimetior[1]->sicinCausarius() )
 			{
@@ -522,7 +522,7 @@ private:
 						> dimetior[nMax]->accipioCeleritas()/4  ) // Если разброс большой (и больше 10км/ч)
 				{
 					if (tempusDifferens == maxTempusDifferens) // довольно давно
-						causarius[!nMax]->celeritas = true;
+						causarius[!nMax].celeritas = true;
 					else
 						tempusDifferens ++;
 				}
@@ -556,8 +556,8 @@ private:
 
 				if ( tempusRestitutioValidus == maxTempusRestitutioValidus ) // раз в несколько секунд сбрасывать неисправность
 				{
-					causarius[0]->celeritas = false;
-					causarius[1]->celeritas = false;
+					causarius[0].celeritas = false;
+					causarius[1].celeritas = false;
 				}
 			}
 
@@ -575,8 +575,8 @@ private:
 				{
 					if ( tempusTractusCommoratio >= 70*2 ) // В течении времени 70 сек.
 					{
-						causarius[0]->conjuctio = true;
-						causarius[1]->conjuctio = true;
+						causarius[0].conjuctio = true;
+						causarius[1].conjuctio = true;
 					}
 					else
 						tempusTractusCommoratio ++;
@@ -605,36 +605,36 @@ private:
 			};
 			Bitfield<Mappa> mappa;
 
-			mappa->repeto = repeto;
-			mappa->versus0 = dimetior[0]->accipioVersus();
-			mappa->versus1 = dimetior[1]->accipioVersus();
-			mappa->commoratio = dimetior[nCapio]->sicinCommoratio();
-			mappa->dimetior = nCapio;
+			mappa.repeto = repeto;
+			mappa.versus0 = dimetior[0]->accipioVersus();
+			mappa.versus1 = dimetior[1]->accipioVersus();
+			mappa.commoratio = dimetior[nCapio]->sicinCommoratio();
+			mappa.dimetior = nCapio;
 			// Неисправность != недостоверность
 			// Неисправность - это недостверность при достаточно большой скорости
 			// Потому что при смене направления и дребезге на стоянке возникает недостоверность
-			bool firmusCausarius[2] = { ( causarius[0]->vicis
+			bool firmusCausarius[2] = { ( causarius[0].vicis
 											&& dimetior[0]->accipioCeleritas() > 128*4
 											&& dimetior[1]->accipioCeleritas() > 128*4
 										),
-										( causarius[1]->vicis
+										( causarius[1].vicis
 											&& dimetior[0]->accipioCeleritas() > 128*4
 											&& dimetior[1]->accipioCeleritas() > 128*4
 										)
 									};
-			mappa->validus0 = !(	firmusCausarius[0]
-								|| causarius[0]->celeritas
-								|| causarius[0]->conjuctio
+			mappa.validus0 = !(	firmusCausarius[0]
+								|| causarius[0].celeritas
+								|| causarius[0].conjuctio
 								);
-			mappa->validus1 = !(	firmusCausarius[1]
-								|| causarius[1]->celeritas
-								|| causarius[1]->conjuctio
+			mappa.validus1 = !(	firmusCausarius[1]
+								|| causarius[1].celeritas
+								|| causarius[1].conjuctio
 								);
 
 			// Сохранение неисправности в eeprom
-			if (!mappa->validus0)
+			if (!mappa.validus0)
 				eeprom_update_byte (&eeprom.dps0Good, 0);
-			if (!mappa->validus1)
+			if (!mappa.validus1)
 				eeprom_update_byte (&eeprom.dps1Good, 0);
 
 //			// Индикация неисправности на стоянке
@@ -683,7 +683,7 @@ private:
 				ecAdjust.adjust (spatiumMeters);
 
 				uint8_t ipdState[8] = {
-							(mappa->validus0 == false && mappa->validus1 == false) ? (uint8_t)2 : (uint8_t)0,
+							(mappa.validus0 == false && mappa.validus1 == false) ? (uint8_t)2 : (uint8_t)0,
 							uint8_t(  (versus() * 128)
 									| ((dimetior[nCapio]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
 									| (!dimetior[nCapio]->sicinCommoratio() << 2)
@@ -693,10 +693,10 @@ private:
 							uint8_t( spatiumMeters[0] ),
 							uint8_t( spatiumMeters[2] ),
 							uint8_t(  (ecAdjust.isMismatchCritical() << 5)
-									| (causarius[!nCapio]->celeritas << 4)
+									| (causarius[!nCapio].celeritas << 4)
 									| (nCapio << 3)
 									| (firmusCausarius[!nCapio] << 2)
-									| (causarius[nCapio]->celeritas << 1)
+									| (causarius[nCapio].celeritas << 1)
 									| (firmusCausarius[nCapio] << 0) ),
 							uint8_t( dimetior[nCapio]->accipioAcceleratio()*2 )
 									 };
@@ -720,13 +720,13 @@ private:
 						Celeritas1
 					};
 					DpsFault dpsFault = DpsFault::AllValidus;
-					if ( causarius[0]->vicis )
+					if ( causarius[0].vicis )
 						dpsFault = DpsFault::Causarius0;
-					if ( causarius[1]->vicis )
+					if ( causarius[1].vicis )
 						dpsFault = DpsFault::Causarius1;
-					if ( causarius[0]->vicis && causarius[1]->vicis )
+					if ( causarius[0].vicis && causarius[1].vicis )
 						dpsFault = DpsFault::DuplarisCausarius;
-					if ( causarius[0]->conjuctio && causarius[1]->conjuctio )
+					if ( causarius[0].conjuctio && causarius[1].conjuctio )
 						dpsFault = DpsFault::DuplarisConjuctio;
 
 					scheduler.runIn(

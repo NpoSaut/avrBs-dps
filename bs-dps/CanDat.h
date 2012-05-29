@@ -343,7 +343,7 @@ private:
 		{
 			static void init ()
 			{
-				reg.canPage->mobNumber = num;
+				reg.canPage.mobNumber = num;
 
 				CanMobControl t;
 				t.type_ = CanMobControl::Disable; // Включаются, когда в них заносятся данные
@@ -369,7 +369,7 @@ private:
 		{
 			static void init ()
 			{
-				reg.canPage->mobNumber = num;
+				reg.canPage.mobNumber = num;
 
 				CanMobControl t;
 				t.type_ = CanMobControl::Disable; // Включаются, когда в них заносятся данные
@@ -399,7 +399,7 @@ private:
 		{
 			static void init ()
 			{
-				reg.canPage->mobNumber = num;
+				reg.canPage.mobNumber = num;
 
 				CanMobControl t;
 				t.type_ = CanMobControl::Disable; // Включаются, когда в них заносятся данные
@@ -458,7 +458,7 @@ private:
 		{
 			static void init ()
 			{
-				reg.canPage->mobNumber = num;
+				reg.canPage.mobNumber = num;
 
 				CanMobControl contr;
 				contr.type_ = CanMobControl::Receive; // Включены всегда, получение по прерываниям
@@ -488,7 +488,7 @@ private:
 		{
 			static void init ()
 			{
-				reg.canPage->mobNumber = num;
+				reg.canPage.mobNumber = num;
 
 				CanMobControl contr;
 				contr.type_ = CanMobControl::FrameBufferReceive; // Включены всегда, получение по прерываниям
@@ -660,16 +660,16 @@ CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, 
 
 	typedef typename CanDatPrivate::Tbit<clock, baudKbit, brp, samplePointPercent> Tbits;
 
-	reg.canGeneralConfig->softwareReset = true;
+	reg.canGeneralConfig.softwareReset = true;
 
-	reg.canTiming->baudRatePrescaler_ = brp;
-	reg.canTiming->propagationTime_ = Tbits::tPrs - 1;
-	reg.canTiming->phaseSegment1Time_ = Tbits::tPhs1 - 1;
-	reg.canTiming->phaseSegment2Time_ = Tbits::tPhs2 - 1;
+	reg.canTiming.baudRatePrescaler_ = brp;
+	reg.canTiming.propagationTime_ = Tbits::tPrs - 1;
+	reg.canTiming.phaseSegment1Time_ = Tbits::tPhs1 - 1;
+	reg.canTiming.phaseSegment2Time_ = Tbits::tPhs2 - 1;
 	if (brp != 0)
-		reg.canTiming->threePointSampling_ = true;
+		reg.canTiming.threePointSampling_ = true;
 	else
-		reg.canTiming->threePointSampling_ = false;
+		reg.canTiming.threePointSampling_ = false;
 
 	// Настройка MOb'ов
 	LOKI_STATIC_CHECK (txNumber + rxGroupNumber <= 15, Maximum_number_of_TxDescriptors_plus_RxDescriptorGroups_must_be_less_then_15__Try_to_group_RxDescriptros_to_lesser_number_of_group);
@@ -679,8 +679,8 @@ CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, 
 
 	for (uint8_t i = txNumber + rxGroupNumber; i < 15; i ++) // Отключить остальных
 	{
-		reg.canPage->mobNumber = i;
-		reg.canMobControl->type = CanMobControl::Disable;
+		reg.canPage.mobNumber = i;
+		reg.canMobControl.type = CanMobControl::Disable;
 	}
 
 	// Прерывания
@@ -688,14 +688,14 @@ CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, 
 	interruptFlags |= (GroupBusy <RxDescriptorInterruptList, RxDescriptorGroupList>::value << txNumber);
 	reg.canMobInterruptEnable = interruptFlags;
 
-	reg.canGeneralInterruptEnable->receive_ = true;
-	reg.canGeneralInterruptEnable->transmit_ = true;
-	reg.canGeneralInterruptEnable->general_ = true;
+	reg.canGeneralInterruptEnable.receive_ = true;
+	reg.canGeneralInterruptEnable.transmit_ = true;
+	reg.canGeneralInterruptEnable.general_ = true;
 	CANIT_handler = InterruptHandler::from_method <CanDat, &CanDat::interruptHandler>(this);
 //	CANIT_handler = InterruptHandler (this, &CanDat::rxInterruptHandler);
 
-	reg.canGeneralConfig->enable = true;
-	while (!reg.canGeneralStatus->enable);
+	reg.canGeneralConfig.enable = true;
+	while (!reg.canGeneralStatus.enable);
 }
 
 template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
@@ -844,21 +844,21 @@ void CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptL
 {
 	uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
 
-	reg.canPage->mobNumber_ = reg.canHighestPriorityMob->highestPriorityMob;
-	reg.canPage->dataBufferIndex_ = 0;
-	reg.canPage->autoIncrementDisable_ = false;
+	reg.canPage.mobNumber_ = reg.canHighestPriorityMob.highestPriorityMob;
+	reg.canPage.dataBufferIndex_ = 0;
+	reg.canPage.autoIncrementDisable_ = false;
 
-	if ( reg.canMobStatus->receiveFinish )
+	if ( reg.canMobStatus.receiveFinish )
 	{
-		reg.canMobStatus->receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
+		reg.canMobStatus.receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
 		sei (); // После этого можно разрешить прерывания глобально
 
-		uint8_t len = reg.canMobControl->dataLength_;
-		uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
+		uint8_t len = reg.canMobControl.dataLength_;
+		uint16_t descript = reg.canMobId.idA_ * 0x20 + len;
 		uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
 //		sei (); // После этого можно разрешить прерывания глобально
 
-//		if (reg.canMobStatus->acknowledgmentError_ || reg.canMobStatus->formError_ || reg.canMobStatus->crcError_ || reg.canMobStatus->stuffError_ || reg.canMobStatus->bitError_ || reg.canMobStatus->dataLengthWarning_ )
+//		if (reg.canMobStatus.acknowledgmentError_ || reg.canMobStatus.formError_ || reg.canMobStatus.crcError_ || reg.canMobStatus.stuffError_ || reg.canMobStatus.bitError_ || reg.canMobStatus.dataLengthWarning_ )
 //			reg.portC.pin5.toggle ();
 
 		if (n != 255) // Пришедший Descriptor есть в наших списках
@@ -883,15 +883,15 @@ void CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptL
 		}
 
 //		cli ();
-		reg.canMobControl->type = CanMobControl::Receive; // реинициализация
+		reg.canMobControl.type = CanMobControl::Receive; // реинициализация
 	}
 	else // окончание передачи
 	{
-		reg.canMobStatus->transmitFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
+		reg.canMobStatus.transmitFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
 		sei (); // После этого можно разрешить прерывания глобально
 
-		uint8_t len = reg.canMobControl->dataLength_;
-		uint16_t descript = reg.canMobId->idA_ * 0x20 + len;
+		uint8_t len = reg.canMobControl.dataLength_;
+		uint16_t descript = reg.canMobId.idA_ * 0x20 + len;
 
 		uint8_t ni = IndexFinder<TxDescriptorInterruptList>::index(descript);
 		if (ni != 255)

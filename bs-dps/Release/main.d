@@ -2,7 +2,14 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/thread-safe.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/Chizhov/AVR/atomic.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/universal.h \
+ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypeTraits.h \
+ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/Typelist.h \
+ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/NullType.h \
+ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypeManip.h \
+ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypelistMacros.h \
+ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/Sequence.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/timers.h \
+ D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/hole-field.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/usart.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/spi.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/watchdog.h \
@@ -19,9 +26,6 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/map-static.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/int-typelist.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/Typelist.h \
- D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/NullType.h \
- D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypeManip.h \
- D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypelistMacros.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h ../id.h \
  ../programming.h ../ProgSpi.h ../CanDat.h ../dps.h ../eeprom.h \
  ../ec-adjust.h ../kpt.h ../mph.h ../neutral-insertion.h
@@ -34,7 +38,21 @@ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/Chizhov/AVR/atomic.h:
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/universal.h:
 
+D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypeTraits.h:
+
+D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/Typelist.h:
+
+D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/NullType.h:
+
+D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypeManip.h:
+
+D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypelistMacros.h:
+
+D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/Sequence.h:
+
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/timers.h:
+
+D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/hole-field.h:
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/usart.h:
 
@@ -73,12 +91,6 @@ D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/map-static.h:
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/int-typelist.h:
 
 D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/Typelist.h:
-
-D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/NullType.h:
-
-D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypeManip.h:
-
-D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/TypelistMacros.h:
 
 D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h:
 

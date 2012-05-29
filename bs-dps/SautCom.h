@@ -104,18 +104,18 @@ public:
 
 		baudRateSet (115200);
 
-		(reg.*usartControl)->charSize2bit_ = true;												//
-		(reg.*usartControl)->charSize1bit_ = true;												//
-		(reg.*usartControl)->charSize0bit_ = true;												// 9 бит
+		(reg.*usartControl).charSize2bit_ = true;												//
+		(reg.*usartControl).charSize1bit_ = true;												//
+		(reg.*usartControl).charSize0bit_ = true;												// 9 бит
 
-		(reg.*usartControl)->synchronous_ = false;
-		(reg.*usartControl)->parityGeneration_ = false;
-		(reg.*usartControl)->parityOdd_ = false;
-		(reg.*usartControl)->stopBitDouble_ = false;
+		(reg.*usartControl).synchronous_ = false;
+		(reg.*usartControl).parityGeneration_ = false;
+		(reg.*usartControl).parityOdd_ = false;
+		(reg.*usartControl).stopBitDouble_ = false;
 
-		(reg.*usartControl)->txEnable_ = true;													// Включен всегда, но молчит, когда нет отправки.
-		(reg.*usartControl)->rxCompleteInterrupt_ = true;										// Всегда заходить в прерывание по получении данных.
-		(reg.*usartControl)->txCompleteInterrupt_ = true;
+		(reg.*usartControl).txEnable_ = true;													// Включен всегда, но молчит, когда нет отправки.
+		(reg.*usartControl).rxCompleteInterrupt_ = true;										// Всегда заходить в прерывание по получении данных.
+		(reg.*usartControl).txCompleteInterrupt_ = true;
 
 		block3Byte = 1;
 
@@ -123,11 +123,11 @@ public:
 
 		// DEBUG
 		reg.timer2Compare = 255;
-		reg.timer2Control->clockType_ = TimerControl8_2::ClockType::Prescale8; // 0,66667 мкс
-		reg.timer2Control->waveform_ = TimerControl8_2::Waveform::Normal;
-		reg.timer2Control->outputMode_ = TimerControl8_2::OutputMode::OutPinDisconnect;
-		reg.timer2InterruptMask->CompInterrupt_ = false;
-		reg.timer2InterruptMask->OverflowInterrupt_ = false;
+		reg.timer2Control.clockType_ = TimerControl8_2::ClockType::Prescale8; // 0,66667 мкс
+		reg.timer2Control.waveform_ = TimerControl8_2::Waveform::Normal;
+		reg.timer2Control.outputMode_ = TimerControl8_2::OutputMode::OutPinDisconnect;
+		reg.timer2InterruptMask.CompInterrupt_ = false;
+		reg.timer2InterruptMask.OverflowInterrupt_ = false;
 	}
 
 	uint16_t dataOut;
@@ -200,41 +200,41 @@ private:
 		unsigned int ubrrToUse;
 		if(err1 > err2)
 		{
-			(reg.*usartControl)->doubleSpeed_ = true;
+			(reg.*usartControl).doubleSpeed_ = true;
 			ubrrToUse = ubrr2x;
 		}
 		else
 		{
-			(reg.*usartControl)->doubleSpeed_ = false;
+			(reg.*usartControl).doubleSpeed_ = false;
 			ubrrToUse = ubrr_;
 		}
-		(reg.*usartBaudRate)->baudRate_ = ubrrToUse;
+		(reg.*usartBaudRate).baudRate_ = ubrrToUse;
 	}
 	inline void reset ()
 	{
-		(reg.*usartControl)->multiProcessorCommunicationMode = true;			// Получать только фреймы с адресом
+		(reg.*usartControl).multiProcessorCommunicationMode = true;			// Получать только фреймы с адресом
 		inMode ();
 		step = Address;
 	}
 	inline void inMode ()
 	{
-//		ucsrb->txCompleteInterrupt_ = false;
-//		ucsrb->dataRegEmptyInterrupt = false;								// Запрет прерываний по освобождению буфера - то же, что запрет отправки
+//		ucsrb.txCompleteInterrupt_ = false;
+//		ucsrb.dataRegEmptyInterrupt = false;								// Запрет прерываний по освобождению буфера - то же, что запрет отправки
 //		ATOMIC
 //		{
 			(reg.*ioSwitchPort).pin<ioSwitchPin>() = 1;							// Конфигурируем селектор
-			(reg.*usartControl)->rxEnable = true;								// Разрешаем приём на UART'е
+			(reg.*usartControl).rxEnable = true;								// Разрешаем приём на UART'е
 //		}
 	}
 	inline void outMode ()
 	{
-//		ucsrb->txCompleteInterrupt_ = true;
+//		ucsrb.txCompleteInterrupt_ = true;
 //		ATOMIC
 //		{
-			(reg.*usartControl)->rxEnable = false;							// Запрещаем приём на UART'е
+			(reg.*usartControl).rxEnable = false;							// Запрещаем приём на UART'е
 			(reg.*ioSwitchPort).pin<ioSwitchPin>() = 0;						// Конфигурируем селектор
 //		}
-//		ucsrb->dataRegEmptyInterrupt = true;								// Разрешаем прерывания по освобождению буфера, т.е. начинаем передачу
+//		ucsrb.dataRegEmptyInterrupt = true;								// Разрешаем прерывания по освобождению буфера, т.е. начинаем передачу
 	}
 
 	bool ioSwitch ()
@@ -260,7 +260,7 @@ template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<Usart
 			typename DatType, DatType& dat >
 void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, ioSwitchPort, ioSwitchPin, scPort, scPin, myAdr, DatType, dat>::rxHandler ()
 {
-	bool usartErrors = (reg.*usartControl)->dataOverRunError_ || (reg.*usartControl)->frameError_ ;
+	bool usartErrors = (reg.*usartControl).dataOverRunError_ || (reg.*usartControl).frameError_ ;
 
 	struct
 	{
@@ -268,7 +268,7 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 		MessageType	type;
 	} get;
 
-	get.type = (MessageType) ((reg.*usartControl)->rxDataBit8);	// Адрес или данные
+	get.type = (MessageType) ((reg.*usartControl).rxDataBit8);	// Адрес или данные
 
 	struct GetByte												// Проверка целосности
 	{
@@ -279,20 +279,20 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 
 	if (!usartErrors)
 	{
-		if ( getByte != ham[get.type][getByte->val] )			// Получили с ошибками
+		if ( getByte != ham[get.type][getByte.val] )			// Получили с ошибками
 			goto reset;
 		else
-			get.data = getByte->val;
+			get.data = getByte.val;
 
-//		(reg.*usartControl)->rxCompleteInterrupt = false;		// На время обработки запрещаем наши прерывания
+//		(reg.*usartControl).rxCompleteInterrupt = false;		// На время обработки запрещаем наши прерывания
 //		sei ();													// но все другие разрешаем
 start:
 		if (step == Address)
 		{
 			if (get.type == Adr)
 			{
-				packet.head->adr = get.data;
-				(reg.*usartControl)->multiProcessorCommunicationMode = false; // Начинаем принимать всё
+				packet.head.adr = get.data;
+				(reg.*usartControl).multiProcessorCommunicationMode = false; // Начинаем принимать всё
 			}
 			else
 			{
@@ -302,7 +302,7 @@ start:
 		else if (step == Address2)
 		{
 			if (get.type == Adr)								// Снова адрес - признак дополнительной области
-				packet.head->adr |= (1 << 4);
+				packet.head.adr |= (1 << 4);
 			else												// На самом деле получили порт
 				step = Port_Sc;;								// Cразу переходим на следющий step
 		}
@@ -316,10 +316,10 @@ start:
 			};
 			Bitfield<GetCompl> getCompl (get.data);
 
-			if ( getCompl->selfComplect == (reg.*scPort).pin<scPin>() )		// Наш полукомплект
+			if ( getCompl.selfComplect == (reg.*scPort).pin<scPin>() )		// Наш полукомплект
 			{
-				packet.head->input = getCompl->input;
-				packet.head->port = getCompl->port;
+				packet.head.input = getCompl.input;
+				packet.head.port = getCompl.port;
 
 				if (!block3Byte)								// Если 3-ий байт нужно отправлять нам
 				{
@@ -334,7 +334,7 @@ start:
 					{
 						dataOut = (uint16_t) packet.data;
 						cli ();									// Дождаться выхода из этого обработчика
-						(reg.*usartControl)->dataRegEmptyInterrupt = true;	// Оттуда отправка данных
+						(reg.*usartControl).dataRegEmptyInterrupt = true;	// Оттуда отправка данных
 					}
 					else
 					{
@@ -369,7 +369,7 @@ start:
 					outMode ();
 					dataOut = (uint16_t) packet.data;
 					cli ();										// Дождаться выхода из этого обработчика
-					(reg.*usartControl)->dataRegEmptyInterrupt = true;	// Оттуда отправка данных
+					(reg.*usartControl).dataRegEmptyInterrupt = true;	// Оттуда отправка данных
 				}
 			}
 		}
@@ -381,19 +381,19 @@ start:
 				goto start;
 			}
 			packet.data = 0;
-			packet.data->d0 = (get.data);						// Получаем полубайт
+			packet.data.d0 = (get.data);						// Получаем полубайт
 		}
 		else if (step == Data1)
 		{
-			packet.data->d1 = (get.data);						// Получаем полубайт
+			packet.data.d1 = (get.data);						// Получаем полубайт
 		}
 		else if (step == Data2)
 		{
-			packet.data->d2 = (get.data);						// Получаем полубайт
+			packet.data.d2 = (get.data);						// Получаем полубайт
 		}
 		else if (step == Data3)
 		{
-			packet.data->d3 = (get.data);						// Получаем полубайт
+			packet.data.d3 = (get.data);						// Получаем полубайт
 		}
 	step = (Step) (step + 1);
 	} // Получили без ошибок
@@ -404,14 +404,14 @@ reset:		reset ();
 	{
 		reset ();
 //		cli ();
-//		(reg.*usartControl)->rxCompleteInterrupt = true;		// Закончиил обработку. Можно принемать новые.
+//		(reg.*usartControl).rxCompleteInterrupt = true;		// Закончиил обработку. Можно принемать новые.
 																// Нужно разрешить приём новых данных, т.к. долго
 																// можем провисеть в обработчике принятых данных
 																// я надеюсь на то, что в обработчике будет sei
 		dat.recieve (packet);									// Передаём полученные данные дальше на обработку
 	}
 //	else
-//		(reg.*usartControl)->rxCompleteInterrupt = true;		// Закончиил обработку. Можно принемать новые.
+//		(reg.*usartControl).rxCompleteInterrupt = true;		// Закончиил обработку. Можно принемать новые.
 
 
 
@@ -432,7 +432,7 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 	else if (step == Data3)
 	{
 		(reg.*usartData) = ham[Data][ dataOut & 0xF ];
-		(reg.*usartControl)->dataRegEmptyInterrupt = false;	// Выключаем прерывания по осовбождению буфера (заканчиваем передачу).
+		(reg.*usartControl).dataRegEmptyInterrupt = false;	// Выключаем прерывания по осовбождению буфера (заканчиваем передачу).
 															// После завершения передачи уйдём в прервыание по окончанию передачи
 	}
 	step = (Step) (step + 1);
@@ -452,9 +452,9 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 	else if (flag)
 	{
 		flag = false;
-//		if ( reg.timer2InterruptFlag->OverflowOccur )
+//		if ( reg.timer2InterruptFlag.OverflowOccur )
 //		{
-//			reg.timer2InterruptFlag->OverflowOccur = 1;
+//			reg.timer2InterruptFlag.OverflowOccur = 1;
 //			time = 0xFF;
 //		}
 

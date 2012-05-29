@@ -162,27 +162,27 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 
 	Command& command = _cast(Command, data[0]);
 
-	if ( command->init )
+	if ( command.init )
 	{
 		active = Active::nothing; // Прерываем текущий сеанс
 		activateSystem ();
-		switch (command->action)
+		switch (command.action)
 		{
 			case Action::read:
 			case Action::write:
-				if (command->memoryType == MemoryType::fuse)
+				if (command.memoryType == MemoryType::fuse)
 				{
 
 				}
 				else
 				{
-					if ( command->memoryType == MemoryType::flash )
+					if ( command.memoryType == MemoryType::flash )
 						memType = ProgSpi::MemType::flash;
-					else if ( command->memoryType == MemoryType::eeprom )
+					else if ( command.memoryType == MemoryType::eeprom )
 						memType = ProgSpi::MemType::eeprom;
 					else
 					{
-						while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_MEMORY, command->action,}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
+						while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_MEMORY, command.action,}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
 						break;
 					}
 
@@ -193,7 +193,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 					// Проверки
 					if ( size > 256 )
 					{
-						while ( !canDat.template send<controlDescriptor> ({ Answer({Status::SIZE_LIMIT, command->action}), 0, 1 ,0 ,0 ,0 ,0 ,0 }) );
+						while ( !canDat.template send<controlDescriptor> ({ Answer({Status::SIZE_LIMIT, command.action}), 0, 1 ,0 ,0 ,0 ,0 ,0 }) );
 						break;
 					}
 
@@ -201,7 +201,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 					{
 						if ( startAdr + (uint32_t)size > flashSize )
 						{
-							while ( !canDat.template send<controlDescriptor> ({Answer({Status::OUT_OF_RANGE, command->action}),
+							while ( !canDat.template send<controlDescriptor> ({Answer({Status::OUT_OF_RANGE, command.action}),
 										uint8_t(flashSize), uint8_t(flashSize/256), uint8_t(flashSize/256/256), uint8_t(flashSize/256/256/256), 0, 0, 0 }) );
 							break;
 						}
@@ -210,7 +210,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 					{
 						if ( startAdr + (uint32_t)size > eepromSize )
 						{
-							while ( !canDat.template send<controlDescriptor> ({Answer({Status::OUT_OF_RANGE, command->action}),
+							while ( !canDat.template send<controlDescriptor> ({Answer({Status::OUT_OF_RANGE, command.action}),
 										uint8_t(eepromSize), uint8_t(eepromSize/256), 0, 0, 0, 0, 0 }) );
 							break;
 						}
@@ -225,7 +225,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 
 						disactivateSystem ();
 
-						if ( command->action == Action::read )
+						if ( command.action == Action::read )
 						{
 							active = Active::reading;
 							readDataToBuffer (txData);
@@ -235,7 +235,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 							active = Active::writing;
 					}
 					else
-						while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_ERROR, command->action}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
+						while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_ERROR, command.action}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
 				}
 				break;
 
@@ -262,7 +262,7 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getComma
 				break;
 
 			default:
-				while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_COMMAND, command->action}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
+				while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_COMMAND, command.action}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
 				break;
 		}
 	}
@@ -602,9 +602,9 @@ void Programming::comParser ()
 //commandGet = get[0];
 //confirmCode = get[1];
 //
-//if (commandGet->operation == Operation::InProcess)
+//if (commandGet.operation == Operation::InProcess)
 //{
-//	if (commandGet->memory == Memory::Fuse)
+//	if (commandGet.memory == Memory::Fuse)
 //	{
 //		if (operationCurrent == Operation::Write)
 //		{
@@ -626,7 +626,7 @@ void Programming::comParser ()
 //			Return (Operation::Complete);
 //		}
 //	}
-//	if (commandGet->memory == Memory::Eeprom)
+//	if (commandGet.memory == Memory::Eeprom)
 //	{
 //		if (operationCurrent == Operation::Write)
 //		{
@@ -650,7 +650,7 @@ void Programming::comParser ()
 //				Return (Operation::Complete);
 //		}
 //	}
-//	if (commandGet->memory == Memory::Flash)
+//	if (commandGet.memory == Memory::Flash)
 //	{
 //		if (operationCurrent == Operation::Write)
 //		{
@@ -677,24 +677,24 @@ void Programming::comParser ()
 //}
 //else
 //{
-//	operationCurrent = commandGet->operation;
-//	if (commandGet->operation == Operation::Write || commandGet->operation == Operation::Read)
+//	operationCurrent = commandGet.operation;
+//	if (commandGet.operation == Operation::Write || commandGet.operation == Operation::Read)
 //	{
-//		if (commandGet->memory != Memory::Fuse)
+//		if (commandGet.memory != Memory::Fuse)
 //			memAreaSet();
 //		Return (operationCurrent);
 //	}
-//	else if (commandGet->operation == Operation::Erase)
+//	else if (commandGet.operation == Operation::Erase)
 //	{
 //		Return (Operation::Erase);
 //		neighbour.erase ();
 //		Return (Operation::Complete);
 //	}
-//	else if (commandGet->operation == Operation::Exit)
+//	else if (commandGet.operation == Operation::Exit)
 //	{
-//		if (commandGet->memory == Memory::Eeprom)
+//		if (commandGet.memory == Memory::Eeprom)
 //			neighbour.flush<ProgSpi::eeprom> ();
-//		if (commandGet->memory == Memory::Flash)
+//		if (commandGet.memory == Memory::Flash)
 //			neighbour.flush<ProgSpi::flash> ();
 //
 //		Return (Operation::Exit);

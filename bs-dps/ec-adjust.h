@@ -34,7 +34,7 @@ public:
 		Message& message = *( (Message *)(pointerToMessage) );
 
 		Bitfield<CardState>& cardState = _cast(Bitfield<CardState>, message[0]);
-		if ( cardState->map && cardState->mapVerify && !cardState->error )
+		if ( cardState.map && cardState.mapVerify && !cardState.error )
 		{
 			// Получение данных от ЭК
 			Complex<int32_t> ec = {

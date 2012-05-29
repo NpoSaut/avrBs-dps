@@ -669,10 +669,10 @@ void commandParser ()
 //	command = uint8_t(get / 256);
 	command = uint8_t(data.member<DpsCommand>() / 256);
 
-	if (command->block3Byte)
+	if (command.block3Byte)
 		com.block3Byte = 1;
 
-	if (!command->idRead && !command->eepromRead)	// стандартный режим работы ДПС
+	if (!command.idRead && !command.eepromRead)	// стандартный режим работы ДПС
 	{
 		data.member<DpsOut2>() = dps.diametros(0); // выводим диаметры бандажа
 		data.member<DpsOut3>() = dps.diametros(1);
@@ -683,7 +683,7 @@ void commandParser ()
 	{
 		dps.constituoPassivus ();
 
-		if (command->idRead)
+		if (command.idRead)
 		{
 			data.member<DpsOut0>() = ( (uint16_t) pgm_read_byte(&id.version) << 8 ) | pgm_read_byte(&id.year);
 			data.member<DpsOut1>() = ( (uint16_t) pgm_read_byte(&id.modif)   << 8 ) | pgm_read_byte(&id.manth);
@@ -691,7 +691,7 @@ void commandParser ()
 			data.member<DpsOut3>() = ( (uint16_t) pgm_read_byte(&id.parametersSummH)  << 8 ) | ( (uint16_t) pgm_read_byte(&id.parametersSummL) );
 		}
 
-		if (command->eepromRead)
+		if (command.eepromRead)
 		{
 			uint16_t *Adr = (uint16_t *) ((data.member<DpsCommand>() & 0x00ff)*8);// Адрес из линии RS-485 * 8
 			data.member<DpsOut0>() = swap( eeprom_read_word (Adr++) );
