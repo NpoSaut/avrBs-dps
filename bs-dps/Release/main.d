@@ -6,6 +6,7 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/usart.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/spi.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/watchdog.h \
+ D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/eeprom.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/can.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/dispatcher.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/delegate/delegate.hpp \
@@ -40,6 +41,8 @@ D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/usart.h:
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/spi.h:
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/watchdog.h:
+
+D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/eeprom.h:
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io/can.h:
 
