@@ -41,6 +41,7 @@ void Init (void)
 	// Светодиоды.
 	reg.portC.pin4.out();
 	reg.portC.pin5.out();
+	reg.portD.pin7.out();
 	reg.portC.pin4 = true;
 	reg.portC.pin5 = true;
 

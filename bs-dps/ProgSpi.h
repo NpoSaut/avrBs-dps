@@ -98,7 +98,7 @@ enum MemType : uint8_t
 	eeprom
 };
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 class ProgSpiSimple
@@ -146,7 +146,7 @@ private:
 };
 
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::ProgSpiSimple()
@@ -155,7 +155,7 @@ ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort
 	rebootInWork();
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 bool ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::rebootInProg()
@@ -182,7 +182,7 @@ bool ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	return false;
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::rebootInWork()
@@ -192,7 +192,7 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	progMode = false;
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::erase()
@@ -201,7 +201,7 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	_delay_ms (T_WD_ERASE);
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 template <	MemType type	>
@@ -217,7 +217,7 @@ uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, r
 	return data;
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 template <	MemType type	>
@@ -226,7 +226,7 @@ Complex<uint16_t> ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, 
 	return Complex<uint16_t>{ read<type>(), read<type>() };
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 template <	MemType type	>
@@ -248,7 +248,7 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	position ++;
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 template <	MemType type	>
@@ -258,7 +258,7 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	write<type> ((uint8_t)(data>>8));
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 template <	MemType type	>
@@ -276,7 +276,7 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	}
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseWriteLow (uint8_t bits)
@@ -285,7 +285,7 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	_delay_ms (T_WD_FUSE);
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseWriteHigh (uint8_t bits)
@@ -294,7 +294,7 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	_delay_ms (T_WD_FUSE);
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseWriteExt (uint8_t bits)
@@ -303,7 +303,7 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	_delay_ms (T_WD_FUSE);
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseReadLow ()
@@ -311,7 +311,7 @@ uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, r
 	return instruction ( 0x50, 0x00, 0, 0 );
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseReadHigh ()
@@ -319,7 +319,7 @@ uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, r
 	return instruction ( 0x58, 0x08, 0, 0 );
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::fuseReadExt ()
@@ -329,7 +329,7 @@ uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, r
 
 // private:
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::pinConfig ()
@@ -340,7 +340,7 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	(reg.*port).pin<ssPin>().out ();									// SS пин конфигурируется на выход, чтобы при 0 на нём (вдруг - это вдруг случилось) не сбрасывался мастер-режим
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::pinRelease ()
@@ -352,26 +352,26 @@ void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	(reg.*port).pin<ssPin>().in ();
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::spiConfig ()
 {
-	(reg.*control).enable_ = true;
-	(reg.*control).master_ = true;
-	(reg.*control).prescale_ = SpiStatusControl::Prescale::F4;
-//	(reg.*control).prescale_ = SpiStatusControl::Prescale::F16;
+	(reg.*control).enable = true;
+	(reg.*control).master = true;
+	(reg.*control).prescale = SpiStatusControl::Prescale::F4;
+//	(reg.*control).prescale = SpiStatusControl::Prescale::F16;
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::spiRelease ()
 {
-	(reg.*control).enable_ = false;
+	(reg.*control).enable = false;
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 bool ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::enableProg ()
@@ -389,7 +389,7 @@ bool ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, rese
 	return result;
 }
 
-template <	Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
+template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,
 			Port Register::* port, uint8_t ssPin, uint8_t sckPin, uint8_t mosiPin, uint8_t misoPin,
 			Port Register::* resetPort, uint8_t resetPin	>
 uint8_t ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::instruction (uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4)

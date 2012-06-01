@@ -79,7 +79,7 @@ struct Packet
 	Head head;
 };
 
-template	< BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
+template	< volatile Bitfield<UsartControl> Register::* usartControl, volatile Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
 			  Port Register::* rxPort, uint8_t rxPin, Port Register::* txPort, uint8_t txPin, Port Register::* ioSwitchPort, uint8_t ioSwitchPin, Port Register::* scPort, uint8_t scPin,
 			  uint8_t myAdr,
 			  typename DatType, DatType& dat >
@@ -102,20 +102,24 @@ public:
 //		txHandler_ = InterruptHandler (this, &Com::txHandler);
 //		udreHandler_ = InterruptHandler (this, &Com::udreHandler);
 
-		baudRateSet (115200);
+		UsartControl control;
 
-		(reg.*usartControl).charSize2bit_ = true;												//
-		(reg.*usartControl).charSize1bit_ = true;												//
-		(reg.*usartControl).charSize0bit_ = true;												// 9 бит
+		control.doubleSpeed = baudRateSet (115200);
 
-		(reg.*usartControl).synchronous_ = false;
-		(reg.*usartControl).parityGeneration_ = false;
-		(reg.*usartControl).parityOdd_ = false;
-		(reg.*usartControl).stopBitDouble_ = false;
+		control.charSize2bit = true;												//
+		control.charSize1bit = true;												//
+		control.charSize0bit = true;												// 9 бит
 
-		(reg.*usartControl).txEnable_ = true;													// Включен всегда, но молчит, когда нет отправки.
-		(reg.*usartControl).rxCompleteInterrupt_ = true;										// Всегда заходить в прерывание по получении данных.
-		(reg.*usartControl).txCompleteInterrupt_ = true;
+		control.synchronous = false;
+		control.parityGeneration = false;
+		control.parityOdd = false;
+		control.stopBitDouble = false;
+
+		control.txEnable = true;													// Включен всегда, но молчит, когда нет отправки.
+		control.rxCompleteInterrupt = true;										// Всегда заходить в прерывание по получении данных.
+		control.txCompleteInterrupt = true;
+
+		(reg.*usartControl) = control;
 
 		block3Byte = 1;
 
@@ -123,11 +127,11 @@ public:
 
 		// DEBUG
 		reg.timer2Compare = 255;
-		reg.timer2Control.clockType_ = TimerControl8_2::ClockType::Prescale8; // 0,66667 мкс
-		reg.timer2Control.waveform_ = TimerControl8_2::Waveform::Normal;
-		reg.timer2Control.outputMode_ = TimerControl8_2::OutputMode::OutPinDisconnect;
-		reg.timer2InterruptMask.CompInterrupt_ = false;
-		reg.timer2InterruptMask.OverflowInterrupt_ = false;
+		reg.timer2Control.clockType = TimerControl8_2::ClockType::Prescale8; // 0,66667 мкс
+		reg.timer2Control.waveform = TimerControl8_2::Waveform::Normal;
+		reg.timer2Control.outputMode = TimerControl8_2::OutputMode::OutPinDisconnect;
+		reg.timer2InterruptMask.CompInterrupt = false;
+		reg.timer2InterruptMask.OverflowInterrupt = false;
 	}
 
 	uint16_t dataOut;
@@ -178,7 +182,7 @@ private:
 
 	// Задаёт скорость передачи данных
 	// (все расчёты проводятся на момент компиляции, если известно baud)
-	inline void baudRateSet (unsigned long baud)
+	inline bool baudRateSet (unsigned long baud)
 	{
 		unsigned int ubrr_ = (F_CPU/16/baud-1);
 		unsigned int ubrr2x = (F_CPU/8/baud-1);
@@ -197,18 +201,20 @@ private:
 		else
 			err2 = (rbaud2x - baud)*1000/rbaud2x;
 
+		bool doubleSpeed;
 		unsigned int ubrrToUse;
 		if(err1 > err2)
 		{
-			(reg.*usartControl).doubleSpeed_ = true;
+			doubleSpeed = true;
 			ubrrToUse = ubrr2x;
 		}
 		else
 		{
-			(reg.*usartControl).doubleSpeed_ = false;
+			doubleSpeed = false;
 			ubrrToUse = ubrr_;
 		}
-		(reg.*usartBaudRate).baudRate_ = ubrrToUse;
+		(reg.*usartBaudRate).baudRate = ubrrToUse;
+		return doubleSpeed;
 	}
 	inline void reset ()
 	{
@@ -218,7 +224,7 @@ private:
 	}
 	inline void inMode ()
 	{
-//		ucsrb.txCompleteInterrupt_ = false;
+//		ucsrb.txCompleteInterrupt = false;
 //		ucsrb.dataRegEmptyInterrupt = false;								// Запрет прерываний по освобождению буфера - то же, что запрет отправки
 //		ATOMIC
 //		{
@@ -228,7 +234,7 @@ private:
 	}
 	inline void outMode ()
 	{
-//		ucsrb.txCompleteInterrupt_ = true;
+//		ucsrb.txCompleteInterrupt = true;
 //		ATOMIC
 //		{
 			(reg.*usartControl).rxEnable = false;							// Запрещаем приём на UART'е
@@ -243,7 +249,7 @@ private:
 	}
 };
 
-template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
+template <  volatile Bitfield<UsartControl> Register::* usartControl, volatile Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
 			Port Register::* rxPort, uint8_t rxPin, Port Register::* txPort, uint8_t txPin, Port Register::* ioSwitchPort, uint8_t ioSwitchPin, Port Register::* scPort, uint8_t scPin,
 			uint8_t myAdr,
 			typename DatType, DatType& dat >
@@ -254,13 +260,13 @@ const uint8_t Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort,
 					};
 
 
-template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
+template <  volatile Bitfield<UsartControl> Register::* usartControl, volatile Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
 			Port Register::* rxPort, uint8_t rxPin, Port Register::* txPort, uint8_t txPin, Port Register::* ioSwitchPort, uint8_t ioSwitchPin, Port Register::* scPort, uint8_t scPin,
 			uint8_t myAdr,
 			typename DatType, DatType& dat >
 void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, ioSwitchPort, ioSwitchPin, scPort, scPin, myAdr, DatType, dat>::rxHandler ()
 {
-	bool usartErrors = (reg.*usartControl).dataOverRunError_ || (reg.*usartControl).frameError_ ;
+	bool usartErrors = (reg.*usartControl).dataOverRunError || (reg.*usartControl).frameError ;
 
 	struct
 	{
@@ -417,7 +423,7 @@ reset:		reset ();
 
 }
 
-template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
+template <  volatile Bitfield<UsartControl> Register::* usartControl, volatile Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
 			Port Register::* rxPort, uint8_t rxPin, Port Register::* txPort, uint8_t txPin, Port Register::* ioSwitchPort, uint8_t ioSwitchPin, Port Register::* scPort, uint8_t scPin,
 			uint8_t myAdr,
 			typename DatType, DatType& dat >
@@ -438,7 +444,7 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 	step = (Step) (step + 1);
 }
 
-template <  BitfieldDummy<UsartControl> Register::* usartControl, Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
+template <  volatile Bitfield<UsartControl> Register::* usartControl, volatile Bitfield<UsartBaudRate> Register::* usartBaudRate, volatile uint8_t Register::* usartData,
 			Port Register::* rxPort, uint8_t rxPin, Port Register::* txPort, uint8_t txPin, Port Register::* ioSwitchPort, uint8_t ioSwitchPin, Port Register::* scPort, uint8_t scPin,
 			uint8_t myAdr,
 			typename DatType, DatType& dat  >

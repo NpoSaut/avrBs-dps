@@ -346,18 +346,18 @@ private:
 				reg.canPage.mobNumber = num;
 
 				CanMobControl t;
-				t.type_ = CanMobControl::Disable; // Включаются, когда в них заносятся данные
-				t.dataLength_ = 8; // Не актуально. Реальное значение заносится при отправке.
-				t.idExtension_ = false;
-				t.automaticReply_ = false;
+				t.type = CanMobControl::Disable; // Включаются, когда в них заносятся данные
+				t.dataLength = 8; // Не актуально. Реальное значение заносится при отправке.
+				t.idExtension = false;
+				t.automaticReply = false;
 				reg.canMobControl = t;
 
 				// Id заносится в момент отправки
 
 				CanMobMask m;
-				m.idExtension_ = 1;
-				m.remoteTransmissionRequest_ = 1;
-				m.idA_ = 0x7FF;
+				m.idExtension = 1;
+				m.remoteTransmissionRequest = 1;
+				m.idA = 0x7FF;
 				reg.canMobMask = m;
 
 				InitTxList<Tail, num+1>::init ();
@@ -372,22 +372,22 @@ private:
 				reg.canPage.mobNumber = num;
 
 				CanMobControl t;
-				t.type_ = CanMobControl::Disable; // Включаются, когда в них заносятся данные
-				t.dataLength_ = Head::value & 0xF;
-				t.idExtension_ = false;
-				t.automaticReply_ = false;
+				t.type = CanMobControl::Disable; // Включаются, когда в них заносятся данные
+				t.dataLength = Head::value & 0xF;
+				t.idExtension = false;
+				t.automaticReply = false;
 				reg.canMobControl = t;
 
 				CanMobId id;
-				id.rb0_ = 0;
-				id.remoteTransmissionRequest_ = 0;
-				id.idA_ = Head::value / 0x20;
+				id.rb0 = 0;
+				id.remoteTransmissionRequest = 0;
+				id.idA = Head::value / 0x20;
 				reg.canMobId = id;
 
 				CanMobMask mask;
-				mask.idExtension_ = 1;
-				mask.remoteTransmissionRequest_ = 1;
-				mask.idA_ = 0x7FF;
+				mask.idExtension = 1;
+				mask.remoteTransmissionRequest = 1;
+				mask.idA = 0x7FF;
 				reg.canMobMask = mask;
 
 				InitTxList<Tail, num+1>::init ();
@@ -402,22 +402,22 @@ private:
 				reg.canPage.mobNumber = num;
 
 				CanMobControl t;
-				t.type_ = CanMobControl::Disable; // Включаются, когда в них заносятся данные
-				t.dataLength_ = Head::value & 0xF;
-				t.idExtension_ = false;
-				t.automaticReply_ = false;
+				t.type = CanMobControl::Disable; // Включаются, когда в них заносятся данные
+				t.dataLength = Head::value & 0xF;
+				t.idExtension = false;
+				t.automaticReply = false;
 				reg.canMobControl = t;
 
 				CanMobId id;
-				id.rb0_ = 0;
-				id.remoteTransmissionRequest_ = 0;
-				id.idA_ = Head::value / 0x20;
+				id.rb0 = 0;
+				id.remoteTransmissionRequest = 0;
+				id.idA = Head::value / 0x20;
 				reg.canMobId = id;
 
 				CanMobMask mask;
-				mask.idExtension_ = 1;
-				mask.remoteTransmissionRequest_ = 1;
-				mask.idA_ = 0x7FF;
+				mask.idExtension = 1;
+				mask.remoteTransmissionRequest = 1;
+				mask.idA = 0x7FF;
 				reg.canMobMask = mask;
 
 				InitTxList<Tail, num+1>::init ();
@@ -461,22 +461,22 @@ private:
 				reg.canPage.mobNumber = num;
 
 				CanMobControl contr;
-				contr.type_ = CanMobControl::Receive; // Включены всегда, получение по прерываниям
-				contr.dataLength_ = 8; // Реальную длину всегда получаем вместе с сообщением
-				contr.idExtension_ = false;
-				contr.automaticReply_ = false;
+				contr.type = CanMobControl::Receive; // Включены всегда, получение по прерываниям
+				contr.dataLength = 8; // Реальную длину всегда получаем вместе с сообщением
+				contr.idExtension = false;
+				contr.automaticReply = false;
 				reg.canMobControl = contr;
 
 				CanMobId id;
-				id.rb0_ = 0;
-				id.remoteTransmissionRequest_ = 0;
-				id.idA_ = HeadHead::value / 0x20; // id нулевого элемента (можно брать любого)
+				id.rb0 = 0;
+				id.remoteTransmissionRequest = 0;
+				id.idA = HeadHead::value / 0x20; // id нулевого элемента (можно брать любого)
 				reg.canMobId = id;
 
 				CanMobMask mask;
-				mask.idExtension_ = 1;
-				mask.remoteTransmissionRequest_ = 1;
-				mask.idA_ = (Mask< Typelist<HeadHead, HeadTail> >::value / 0x20) ^ 0x7FF ;
+				mask.idExtension = 1;
+				mask.remoteTransmissionRequest = 1;
+				mask.idA = (Mask< Typelist<HeadHead, HeadTail> >::value / 0x20) ^ 0x7FF ;
 				reg.canMobMask = mask;
 
 				InitRxGroupList<Tail, num+1>::init ();
@@ -491,22 +491,22 @@ private:
 				reg.canPage.mobNumber = num;
 
 				CanMobControl contr;
-				contr.type_ = CanMobControl::FrameBufferReceive; // Включены всегда, получение по прерываниям
-				contr.dataLength_ = 8; // Реальную длину всегда получаем вместе с сообщением
-				contr.idExtension_ = false;
-				contr.automaticReply_ = false;
+				contr.type = CanMobControl::FrameBufferReceive; // Включены всегда, получение по прерываниям
+				contr.dataLength = 8; // Реальную длину всегда получаем вместе с сообщением
+				contr.idExtension = false;
+				contr.automaticReply = false;
 				reg.canMobControl = contr;
 
 				CanMobId id;
-				id.rb0_ = 0;
-				id.remoteTransmissionRequest_ = 0;
-				id.idA_ = Head::value / 0x20; // id
+				id.rb0 = 0;
+				id.remoteTransmissionRequest = 0;
+				id.idA = Head::value / 0x20; // id
 				reg.canMobId = id;
 
 				CanMobMask mask;
-				mask.idExtension_ = 1;
-				mask.remoteTransmissionRequest_ = 1;
-				mask.idA_ = 0x7FF;; // только этот id
+				mask.idExtension = 1;
+				mask.remoteTransmissionRequest = 1;
+				mask.idA = 0x7FF;; // только этот id
 				reg.canMobMask = mask;
 
 				InitRxGroupList<Tail, num+1>::init ();
@@ -662,14 +662,16 @@ CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, 
 
 	reg.canGeneralConfig.softwareReset = true;
 
-	reg.canTiming.baudRatePrescaler_ = brp;
-	reg.canTiming.propagationTime_ = Tbits::tPrs - 1;
-	reg.canTiming.phaseSegment1Time_ = Tbits::tPhs1 - 1;
-	reg.canTiming.phaseSegment2Time_ = Tbits::tPhs2 - 1;
+	CanTiming canTiming;
+	canTiming.baudRatePrescaler = brp;
+	canTiming.propagationTime = Tbits::tPrs - 1;
+	canTiming.phaseSegment1Time = Tbits::tPhs1 - 1;
+	canTiming.phaseSegment2Time = Tbits::tPhs2 - 1;
 	if (brp != 0)
-		reg.canTiming.threePointSampling_ = true;
+		canTiming.threePointSampling = true;
 	else
-		reg.canTiming.threePointSampling_ = false;
+		canTiming.threePointSampling = false;
+	reg.canTiming = canTiming;
 
 	// Настройка MOb'ов
 	LOKI_STATIC_CHECK (txNumber + rxGroupNumber <= 15, Maximum_number_of_TxDescriptors_plus_RxDescriptorGroups_must_be_less_then_15__Try_to_group_RxDescriptros_to_lesser_number_of_group);
@@ -679,8 +681,8 @@ CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, 
 
 	for (uint8_t i = txNumber + rxGroupNumber; i < 15; i ++) // Отключить остальных
 	{
-		reg.canPage.mobNumber = i;
-		reg.canMobControl.type = CanMobControl::Disable;
+		reg.canPage = CanPage {0, 0, i};
+		reg.canMobControl = CanMobControl {0, 0, 0, CanMobControl::Disable};
 	}
 
 	// Прерывания
@@ -688,13 +690,15 @@ CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, 
 	interruptFlags |= (GroupBusy <RxDescriptorInterruptList, RxDescriptorGroupList>::value << txNumber);
 	reg.canMobInterruptEnable = interruptFlags;
 
-	reg.canGeneralInterruptEnable.receive_ = true;
-	reg.canGeneralInterruptEnable.transmit_ = true;
-	reg.canGeneralInterruptEnable.general_ = true;
+	CanGeneralInterruptEnable interruptEnable;
+	interruptEnable.receive = true;
+	interruptEnable.transmit = true;
+	interruptEnable.general = true;
+	reg.canGeneralInterruptEnable = interruptEnable;
 	CANIT_handler = InterruptHandler::from_method <CanDat, &CanDat::interruptHandler>(this);
-//	CANIT_handler = InterruptHandler (this, &CanDat::rxInterruptHandler);
 
 	reg.canGeneralConfig.enable = true;
+
 	while (!reg.canGeneralStatus.enable);
 }
 
@@ -718,17 +722,17 @@ bool CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptL
 		uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
 
 		CanPage page;
-		page.mobNumber_ = mobN;
-		page.dataBufferIndex_ = 0;
-		page.autoIncrementDisable_ = false;
+		page.mobNumber = mobN;
+		page.dataBufferIndex = 0;
+		page.autoIncrementDisable = false;
 		reg.canPage = page;
 
 		if (IsGroup< typename TypeAt<TxDescriptorGroupList, mobN>::Result >::value) // если этот моб для нескольких id
 		{
 			CanMobId id;
-			id.rb0_ = 0;
-			id.remoteTransmissionRequest_ = 0;
-			id.idA_ = descriptor / 0x20;
+			id.rb0 = 0;
+			id.remoteTransmissionRequest = 0;
+			id.idA = descriptor / 0x20;
 			reg.canMobId = id;
 		}
 
@@ -738,10 +742,10 @@ bool CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptL
 		}
 
 		CanMobControl control;
-		control.type_ = CanMobControl::Transmit; // Включаются, когда в них заносятся данные
-		control.dataLength_ = size;
-		control.idExtension_ = false;
-		control.automaticReply_ = false;
+		control.type = CanMobControl::Transmit; // Включаются, когда в них заносятся данные
+		control.dataLength = size;
+		control.idExtension = false;
+		control.automaticReply = false;
 		reg.canMobControl = control;
 
 		reg.canPage = canPageSave; // возвращаем на место
@@ -770,25 +774,25 @@ bool CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptL
 		uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
 
 		CanPage page;
-		page.mobNumber_ = mobN;
-		page.dataBufferIndex_ = 0;
-		page.autoIncrementDisable_ = false;
+		page.mobNumber = mobN;
+		page.dataBufferIndex = 0;
+		page.autoIncrementDisable = false;
 		reg.canPage = page;
 
 		if (IsGroup< typename TypeAt<TxDescriptorGroupList, mobN>::Result >::value) // если этот моб для нескольких id
 		{
 			CanMobId id;
-			id.rb0_ = 0;
-			id.remoteTransmissionRequest_ = 0;
-			id.idA_ = descriptor / 0x20;
+			id.rb0 = 0;
+			id.remoteTransmissionRequest = 0;
+			id.idA = descriptor / 0x20;
 			reg.canMobId = id;
 		}
 
 		CanMobControl control;
-		control.type_ = CanMobControl::Transmit; // Включаются, когда в них заносятся данные
-		control.dataLength_ = size;
-		control.idExtension_ = false;
-		control.automaticReply_ = false;
+		control.type = CanMobControl::Transmit; // Включаются, когда в них заносятся данные
+		control.dataLength = size;
+		control.idExtension = false;
+		control.automaticReply = false;
 		reg.canMobControl = control;
 
 		reg.canPage = canPageSave; // возвращаем на место
@@ -844,21 +848,21 @@ void CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptL
 {
 	uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
 
-	reg.canPage.mobNumber_ = reg.canHighestPriorityMob.highestPriorityMob;
-	reg.canPage.dataBufferIndex_ = 0;
-	reg.canPage.autoIncrementDisable_ = false;
+	reg.canPage.mobNumber = reg.canHighestPriorityMob.highestPriorityMob;
+	reg.canPage.dataBufferIndex = 0;
+	reg.canPage.autoIncrementDisable = false;
 
 	if ( reg.canMobStatus.receiveFinish )
 	{
 		reg.canMobStatus.receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
 		sei (); // После этого можно разрешить прерывания глобально
 
-		uint8_t len = reg.canMobControl.dataLength_;
-		uint16_t descript = reg.canMobId.idA_ * 0x20 + len;
+		uint8_t len = reg.canMobControl.dataLength;
+		uint16_t descript = reg.canMobId.idA * 0x20 + len;
 		uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
 //		sei (); // После этого можно разрешить прерывания глобально
 
-//		if (reg.canMobStatus.acknowledgmentError_ || reg.canMobStatus.formError_ || reg.canMobStatus.crcError_ || reg.canMobStatus.stuffError_ || reg.canMobStatus.bitError_ || reg.canMobStatus.dataLengthWarning_ )
+//		if (reg.canMobStatus.acknowledgmentError || reg.canMobStatus.formError || reg.canMobStatus.crcError || reg.canMobStatus.stuffError || reg.canMobStatus.bitError || reg.canMobStatus.dataLengthWarning )
 //			reg.portC.pin5.toggle ();
 
 		if (n != 255) // Пришедший Descriptor есть в наших списках
@@ -890,8 +894,8 @@ void CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptL
 		reg.canMobStatus.transmitFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
 		sei (); // После этого можно разрешить прерывания глобально
 
-		uint8_t len = reg.canMobControl.dataLength_;
-		uint16_t descript = reg.canMobId.idA_ * 0x20 + len;
+		uint8_t len = reg.canMobControl.dataLength;
+		uint16_t descript = reg.canMobId.idA * 0x20 + len;
 
 		uint8_t ni = IndexFinder<TxDescriptorInterruptList>::index(descript);
 		if (ni != 255)
