@@ -734,7 +734,6 @@ int main ()
 	asm volatile ("nop"); // !!! 126 version hack !!!
 	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 	asm volatile ("nop");
-//	asm volatile ("nop");
 
 	data.interruptHandler<DpsCommand> () = InterruptHandler::from_function<&commandParser>();
 	data.interruptHandler<Club0> () = InterruptHandler::from_function<&kptCommandParse>();
