@@ -323,10 +323,10 @@ public:
 		causarius[0] = {0,0,0};
 		causarius[1] = {0,0,0};
 		Bitfield<Eeprom::Saut::Configuration> conf ( eeprom_read_byte( (uint8_t*) &eeprom.saut.configuration ) );
-//		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, 0 );
-//		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, 0 );
-		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
-		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
+		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, 0 );
+		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, 0 );
+//		dimetior[0] = new DimetiorType( diametros0, conf->dps0Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
+//		dimetior[1] = new DimetiorType( diametros1, conf->dps1Position, (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
 
 		(reg.*accessusPortus).in ();
 		(reg.*lanternaPortus).pin<lanterna0>().out ();
@@ -637,20 +637,20 @@ private:
 			if (!mappa->validus1)
 				eeprom_update_byte (&eeprom.dps1Good, 0);
 
-			// Индикация неисправности на стоянке
-			if ( dimetior[nCapio]->sicinCommoratio() )
-			{
-				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
-				{
-					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom_read_byte (&eeprom.dps0Good);
-					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom_read_byte (&eeprom.dps0Good);
-				}
-				else
-				{
-					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom_read_byte (&eeprom.dps1Good);
-					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom_read_byte (&eeprom.dps1Good);
-				}
-			}
+//			// Индикация неисправности на стоянке
+//			if ( dimetior[nCapio]->sicinCommoratio() )
+//			{
+//				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
+//				{
+//					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom_read_byte (&eeprom.dps0Good);
+//					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom_read_byte (&eeprom.dps0Good);
+//				}
+//				else
+//				{
+//					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom_read_byte (&eeprom.dps1Good);
+//					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom_read_byte (&eeprom.dps1Good);
+//				}
+//			}
 
 			// Вывод данных в линию связи
 			acceleratioEtAffectus <<= (uint16_t(dimetior[nCapio]->accipioAcceleratio()) * 256) | mappa;

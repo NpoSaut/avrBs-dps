@@ -259,7 +259,28 @@ void sysDiagnostics (uint16_t a)
 
 	if (unit == Unit::IPD || unit == Unit::BS_DPS)
 	{
-		if ( request == Request::VERSION  )
+		if ( (uint8_t)request == 0x50 )
+		{
+			const uint8_t& par = canDat.get<CanRx::SYS_DIAGNOSTICS>() [2];
+			if ( par == 128 )
+			{
+				Complex<uint32_t> time = clock.getTime();
+				if (reg.portB.pin7 == 0)
+					canDat.send<CanTx::AUX_RESOURCE_IPD_A>({time[0], time[1], time[2], time[3], 0});
+				else
+					canDat.send<CanTx::AUX_RESOURCE_IPD_B>({time[0], time[1], time[2], time[3], 0});
+			}
+			else if (par < 16)
+			{
+				typedef uint8_t DataArray[9];
+				DataArray& da = *((DataArray*) &(scheduler.task[par]));
+				if (reg.portB.pin7 == 0)
+					canDat.send<CanTx::AUX_RESOURCE_IPD_A>({da[6], da[7], da[8], 0, 0});
+				else
+					canDat.send<CanTx::AUX_RESOURCE_IPD_B>({da[6], da[7], da[8], 0, 0});
+			}
+		}
+		else if ( request == Request::VERSION  )
 		{
 			uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
 			uint16_t checkSumm = 0;
@@ -783,6 +804,12 @@ void unsetResetFlag (uint16_t)
 	dps.repeto = false;
 }
 
+void lamLam (uint16_t)
+{
+	reg.portC.pin4.toggle();
+	scheduler.runIn ( Command{SoftIntHandler::from_function<&lamLam>(), 0}, 500 );
+}
+
 // --------------------------------------------- main -------------------------------------------►
 
 int main ()
@@ -903,6 +930,7 @@ int main ()
 	}
 
 	scheduler.runIn( Command {SoftIntHandler::from_function<&unsetResetFlag>(), 0}, 7000 );
+	lamLam (0);
 
     for (;;)
     {
