@@ -760,8 +760,23 @@ void commandParser ()
 
 	if (!command->idRead && !command->eepromRead)	// стандартный режим работы ДПС
 	{
-		data.member<DpsOut2>() = dps.diametros(0); // выводим диаметры бандажа
-		data.member<DpsOut3>() = dps.diametros(1);
+		uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
+
+		static Complex<uint16_t> mobConfig;
+		reg.canPage = 4;
+		mobConfig[0] = reg.canMobControl;
+		reg.canPage = 2;
+		mobConfig[1] = reg.canMobControl;
+		data.member<DpsOut2>() = (uint16_t) mobConfig;
+
+		mobConfig[0] = (reg.canTxErrorCounter/2) | (reg.canGeneralStatus->errorPassiveMode << 7);
+		mobConfig[1] = (reg.canRxErrorCounter/2) | (reg.canGeneralStatus->busOff << 7);
+		data.member<DpsOut3>() = (uint16_t) mobConfig;
+
+		reg.canPage = canPageSave;
+
+//		data.member<DpsOut2>() = dps.diametros(0); // выводим диаметры бандажа
+//		data.member<DpsOut3>() = dps.diametros(1);
 
 		dps.constituoActivus ();
 	}
