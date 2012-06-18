@@ -119,6 +119,7 @@
 #ifndef CANDAT_H_
 #define CANDAT_H_
 
+#include <cpp/universal.h>
 #include <cpp/io.h>
 #include <cpp/interrupt-dynamic.h>
 #include <cpp/dispatcher.h>
@@ -694,8 +695,12 @@ CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, 
 	interruptEnable.receive = true;
 	interruptEnable.transmit = true;
 	interruptEnable.general = true;
+	interruptEnable.bussOff = true;
 	reg.canGeneralInterruptEnable = interruptEnable;
 	CANIT_handler = InterruptHandler::from_method <CanDat, &CanDat::interruptHandler>(this);
+
+	// Настройка highestPriorityMob, чтобы его полностью копировать в canPage
+	reg.canHighestPriorityMob = 0;
 
 	reg.canGeneralConfig.enable = true;
 
@@ -846,62 +851,61 @@ template <	class TxDescriptorGroupList, class RxDescriptorGroupList,
 void CanDat<TxDescriptorGroupList, RxDescriptorGroupList, RxDescriptorInterruptList, dataBufferSize, TxDescriptorInterruptList, baudKbit, samplePointPercent>
 		::interruptHandler ()
 {
-	uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
+	if ( reg.canGeneralStatus.busOff )
+		reboot ();
+	reg.canGeneralStatus = 0xFF; // Снимаем флаги. Интерфейся для снятия флага - запись 1.
 
-	reg.canPage.mobNumber = reg.canHighestPriorityMob.highestPriorityMob;
-	reg.canPage.dataBufferIndex = 0;
-	reg.canPage.autoIncrementDisable = false;
-
-	if ( reg.canMobStatus.receiveFinish )
+	uint8_t highestPriorityMob = reg.canHighestPriorityMob;
+	if ( highestPriorityMob != 0x0F ) // Если прерывание вызвано MOb'ом
 	{
-		reg.canMobStatus.receiveFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
+		uint8_t canPageSave = reg.canPage; // чтобы вернуть назад
+		reg.canPage = highestPriorityMob;
+
+		Bitfield<CanMobStatus> status = reg.canMobStatus;
+		reg.canMobStatus = 0; // Снимаем флаг прерывания, чтобы не войти вновь
 		sei (); // После этого можно разрешить прерывания глобально
 
-		uint8_t len = reg.canMobControl.dataLength;
-		uint16_t descript = reg.canMobId.idA * 0x20 + len;
-		uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
-//		sei (); // После этого можно разрешить прерывания глобально
-
-//		if (reg.canMobStatus.acknowledgmentError || reg.canMobStatus.formError || reg.canMobStatus.crcError || reg.canMobStatus.stuffError || reg.canMobStatus.bitError || reg.canMobStatus.dataLengthWarning )
-//			reg.portC.pin5.toggle ();
-
-		if (n != 255) // Пришедший Descriptor есть в наших списках
+		if ( status.receiveFinish )
 		{
-			for (uint8_t i = 0; i < len; ++i)
-				data[n][i] = reg.canMobData;
+			uint8_t len = reg.canMobControl.dataLength;
+			uint16_t descript = reg.canMobId.idA * 0x20 + len;
+			uint8_t n = IndexFinder<RxDescriptorList>::index(descript);
 
-			// Добавляем в очередь пользовательский обработчик
-			uint8_t ni = IndexFinder<RxDescriptorInterruptList>::index(descript);
-			if (ni != 255) // Есть прерывание для этого дескриптора
+			if (n != 255) // Пришедший Descriptor есть в наших списках
 			{
-				// Копирование данных
-				if (dataInterruptPointer > dataBufferSize-len)
-					dataInterruptPointer = 0;
+				for (uint8_t i = 0; i < len; ++i)
+					data[n][i] = reg.canMobData;
 
-				uint8_t startPointer = dataInterruptPointer;
-				for (uint8_t i = 0; i < len; i ++)
-					dataInterrupt[dataInterruptPointer++] = data[n][i];
+				// Добавляем в очередь пользовательский обработчик
+				uint8_t ni = IndexFinder<RxDescriptorInterruptList>::index(descript);
+				if (ni != 255) // Есть прерывание для этого дескриптора
+				{
+					// Копирование данных
+					if (dataInterruptPointer > dataBufferSize-len)
+						dataInterruptPointer = 0;
 
-				dispatcher.add( handlerRx[ni], uint16_t(&dataInterrupt[startPointer]) );
+					uint8_t startPointer = dataInterruptPointer;
+					for (uint8_t i = 0; i < len; i ++)
+						dataInterrupt[dataInterruptPointer++] = data[n][i];
+
+					dispatcher.add( handlerRx[ni], uint16_t(&dataInterrupt[startPointer]) );
+				}
 			}
+
+			reg.canMobControl = CanMobControl{ len, 0, 0, CanMobControl::Receive }; // реинициализация
+		}
+		else if ( status.transmitFinish )
+		{
+			uint8_t len = reg.canMobControl.dataLength;
+			uint16_t descript = reg.canMobId.idA * 0x20 + len;
+
+			uint8_t ni = IndexFinder<TxDescriptorInterruptList>::index(descript);
+			if (ni != 255)
+				dispatcher.add (handlerTx[ni], 0);
 		}
 
-//		cli ();
-		reg.canMobControl.type = CanMobControl::Receive; // реинициализация
+		reg.canPage = canPageSave;
 	}
-	else // окончание передачи
-	{
-		reg.canMobStatus.transmitFinish = false; // Снимаем флаг прерывания, чтобы не войти вновь
-		sei (); // После этого можно разрешить прерывания глобально
-
-		uint8_t len = reg.canMobControl.dataLength;
-		uint16_t descript = reg.canMobId.idA * 0x20 + len;
-
-		uint8_t ni = IndexFinder<TxDescriptorInterruptList>::index(descript);
-		if (ni != 255)
-			dispatcher.add (handlerTx[ni], 0);
-	}
-	reg.canPage = canPageSave;
 }
 
 #endif /* CANDAT_H_ */
