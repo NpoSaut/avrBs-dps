@@ -425,7 +425,6 @@ DpsType	dps ( 	&Register::portC,
 				com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
 				InterruptHandler::from_method <KptType, &KptType::lisPlusPlus> (&kpt),
 				InterruptHandler::from_method <KptType, &KptType::correctKptDistancePlusPlus> (&kpt),
-//				clubPage[1], clubPage[3],
 				bandDiam (&eeprom.saut.DiameterAvarage, &eeprom.saut.DiameterCorrection[0]),
 				bandDiam (&eeprom.saut.DiameterAvarage, &eeprom.saut.DiameterCorrection[1]) );
 
