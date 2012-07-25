@@ -13,6 +13,7 @@
 
 #include <cpp/universal.h>
 #include <cpp/eeprom.h>
+#include <cpp/scheduler.h>
 #include "CanDat.h"
 #include "CanDesriptors.h"
 
@@ -100,6 +101,7 @@ bool EeCell::read(uint32_t& value)
 
 		if (!s.unWritten)
 		{
+//			Complex<uint32_t> d = 0xAABBCCDD;
 			Complex<uint32_t> d = (uint32_t) data;
 
 			uint8_t crc = 0xFF;
@@ -108,7 +110,7 @@ bool EeCell::read(uint32_t& value)
 
 			if (crc/2 == s.crc7)
 			{
-				value = d;
+				value = tmp;
 				return true;
 			}
 			else
@@ -483,6 +485,8 @@ public:
 	void updateCell (uint8_t number, Complex<uint32_t> data, const SoftIntHandler& afterUpdate);
 	void reset (SoftIntHandler afterReset);
 
+	uint8_t plainMap[32]; // отображение в ram данных из eeprom
+
 private:
 	struct DiametersSaut
 	{
@@ -490,6 +494,7 @@ private:
 		int8_t	correction[2];	// знак в прямом коде
 	};
 
+	void init1StringPlainMap (uint16_t );
 	void dataUpdate (uint16_t);
 	DiametersSaut diametersConvert (const uint16_t& diam0, const uint16_t& diam1);
 	void diametersWriteStep1 (uint16_t);
@@ -500,8 +505,6 @@ private:
 	template<uint16_t poly>
 	uint16_t crcUpdate (uint16_t crc, const uint8_t& data);
 	void afterAllDispatcherTasks (uint16_t);
-
-
 
 	union
 	{
@@ -521,13 +524,24 @@ private:
 		uint8_t writeOperation;
 	};
 	Bitfield<Reset> resetRequest;
+	SoftIntHandler afterStringUpdate;
 	SoftIntHandler afterReset;
 
 };
 
 SautConvert::SautConvert ()
 	: resetRequest (0)
-{}
+{
+	stringNumber = 0;
+	afterStringUpdate = SoftIntHandler::from_method<SautConvert, &SautConvert::init1StringPlainMap>(this);
+	updateStringCrc (0);
+}
+
+void SautConvert::init1StringPlainMap (uint16_t	)
+{
+	stringNumber = 1;
+	updateStringCrc (0);
+}
 
 void SautConvert::updateCell (uint8_t number, Complex<uint32_t> data, const SoftIntHandler& afterUpdate)
 {
@@ -833,7 +847,16 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 		if (byte == 14)
 		{
 			if ( eeprom.saut.string[string].crc.updateUnblock( swap(crc), runAfter ) )
+			{
+				plainMap[string*16+14] = uint8_t(crc/256);
+				plainMap[string*16+15] = uint8_t(crc);
+
+				if (afterStringUpdate)
+					dispatcher.add( afterStringUpdate, 0 );
+				afterStringUpdate = SoftIntHandler();
+
 				return;
+			}
 		}
 		else
 		{
@@ -860,8 +883,12 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 					if ( eeprom.saut.string[1].data[1].updateUnblock( 0x01, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 						return;
 				}
-				else // "Номера строк" прописаны корректно. Выполняем подсчёт crc..
+				else // "Номера строк" прописаны корректно.
 				{
+					// Обновляем plainMap
+					plainMap[string*16+byte] = data;
+
+					// Выполняем подсчёт crc..
 					crc = crcUpdate<0xEBA9> (crc, data);
 					readNextStringByte( Complex<uint16_t>{string, byte+1} );
 					return;
@@ -910,6 +937,8 @@ public:
 	void getLeftDataMessage (uint16_t getDataPointer);
 	void getQueryMessage (uint16_t getDataPointer);
 
+	SautConvert sautConvert;
+
 private:
 	void isWritten (uint16_t res);
 	void isGood (uint16_t res);
@@ -938,7 +967,6 @@ private:
 	};
 	void endOperation (const Status& status);
 
-	SautConvert sautConvert;
 
 	struct Packet
 	{
@@ -949,22 +977,15 @@ private:
 
 	struct
 	{
-		union
-		{
-			uint8_t byte[13];
-			struct
-			{
-				Complex<uint32_t>	train; 			// 3
-				uint8_t				category;		// 4
-				uint8_t				lengthWagon;	// 6
-				Complex<uint16_t>	type;			// 11
-				uint8_t				vRedYellow;		// 13
-				uint16_t			blockLength;	// 14
-				Complex<uint16_t>	configuration;	// 18
-				Complex<uint16_t>	vGreen;			// 19
-				uint8_t				trackMPH;		// 23
-			};
-		};
+		Complex<uint32_t>	train; 			// 3
+		uint8_t				category;		// 4
+		uint8_t				lengthWagon;	// 6
+		Complex<uint16_t>	type;			// 11
+		uint8_t				vRedYellow;		// 13
+		uint16_t			blockLength;	// 14
+		Complex<uint16_t>	configuration;	// 18
+		Complex<uint16_t>	vGreen;			// 19
+		uint8_t				trackMPH;		// 23
 		struct WrittenFlags
 		{
 			uint16_t	train			:1;
@@ -994,7 +1015,7 @@ private:
 template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 ConstValModule<CanDatType, canDat, Scheduler, scheduler>::ConstValModule ()
-	:  sautConvert (), checkNumber (128), dataReadStep(0)
+	:  sautConvert (), interrogateCell (128), wrongCell (0)
 {
 	scheduler.runIn(
 			Command {SoftIntHandler::from_method<ConstValModule,&ConstValModule::sendState> (this), 0},
@@ -1024,7 +1045,12 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getWriteMessage (
 			eeprom.club.cell[packet.number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::isWritten>(this) );
 		}
 		else
-			canDat.template send<0x6265> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+		{
+			if (reg.portB.pin7 == 0) // первый полукомплект
+				canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+			else
+				canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+		}
 	}
 }
 
@@ -1046,7 +1072,12 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getLeftDataMessag
 			eeprom.club.cell[packet.number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::isWritten>(this) );
 		}
 		else
-			canDat.template send<0x6265> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+		{
+			if (reg.portB.pin7 == 0) // первый полукомплект
+				canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+			else
+				canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+		}
 	}
 }
 
@@ -1056,14 +1087,17 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getQueryMessage (
 {
 	uint8_t& number = *((uint8_t *) getDataPointer);
 
-	if (activePacket.number == 0) // свободны
+	if (number != 1) // По 1 я не работаю
 	{
-		activePacket.number = number;
+		if (activePacket.number == 0) // свободны
+		{
+			activePacket.number = number;
 
-		killerId = scheduler.runIn(
-							Command {SoftIntHandler::from_method<ConstValModule, &ConstValModule::resetAllOps>(this), 0},
-							200 );
-		eeprom.club.cell[number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::read> (this) );
+			killerId = scheduler.runIn(
+								Command {SoftIntHandler::from_method<ConstValModule, &ConstValModule::resetAllOps>(this), 0},
+								200 );
+			eeprom.club.cell[number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::read> (this) );
+		}
 	}
 }
 
@@ -1193,10 +1227,14 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 				monitoredData.category,
 				monitoredData.vRedYellow,
 				monitoredData.vGreen[0],
-				(monitoredData.vGreen[1] << 6) | (monitoredData.blockLength/100),
+				uint8_t( (monitoredData.vGreen[1] << 6) | (monitoredData.blockLength/100) ),
 				monitoredData.lengthWagon
 								};
-		canDat.template send<0x63E7> (sysDataState);
+		if (reg.portB.pin7 == 0) // первый полукомплект
+			canDat.template send<CanTx::SYS_DATA_STATE_A> (sysDataState);
+		else
+			canDat.template send<CanTx::SYS_DATA_STATE_B> (sysDataState);
+
 
 		if ( monitoredData.written.configuration &&
 			 monitoredData.written.type )
@@ -1208,11 +1246,13 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.type[1],
 					monitoredData.type[0],
 					0,
-					scheduler.fill,
-					sautCom.termTime
+					0,
+					0
 									};
-			canDat.template send<CanTx::SYS_DATA_STATE2> (sysDataState2);
-			sautCom.termTime = 0;
+			if (reg.portB.pin7 == 0) // первый полукомплект
+				canDat.template send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
+			else
+				canDat.template send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);
 		}
 
 		if ( monitoredData.written.trackMPH &&
@@ -1228,7 +1268,10 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					0,
 					0
 								};
-			canDat.template send<CanTx::IPD_PARAM> (ipdParam);
+			if (reg.portB.pin7 == 0) // первый полукомплект
+				canDat.template send<CanTx::IPD_PARAM_A> (ipdParam);
+			else
+				canDat.template send<CanTx::IPD_PARAM_B> (ipdParam);
 		}
 
 		if ( monitoredData.written.train &&
@@ -1240,7 +1283,10 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.train[0],
 					monitoredData.category
 								};
-			canDat.template send<CanTx::MPH_STATE_A> (mphState);
+			if (reg.portB.pin7 == 0) // первый полукомплект
+				canDat.template send<CanTx::MPH_STATE_A> (mphState);
+			else
+				canDat.template send<CanTx::MPH_STATE_B> (mphState);
 		}
 	}
 	else // Вызов функции с включенным resetMonitor означает конец сброса
@@ -1267,7 +1313,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkWrite (uint1
 	if (!resetMonitor)
 	{
 		if (written)
-			eeprom.club.cell[checkNumber].isGood(
+			eeprom.club.cell[interrogateCell].isGood(
 				 SoftIntHandler::from_method<ConstValModule, &ConstValModule::checkNext>(this) );
 		else
 			checkNext (2);
@@ -1287,7 +1333,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 		if (resPrev == 1) // записан, и без ошибок
 		{
 			bool readSuccess = true;
-			uint32_t tmp;
+			uint32_t tmp = 0xCD;
 			if (interrogateCell == 3)
 			{
 				readSuccess = eeprom.club.property.train.read (tmp);
@@ -1296,6 +1342,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 			else if (interrogateCell == 4)
 			{
 				readSuccess = eeprom.club.property.category.read (tmp);
+				if (readSuccess)
+					reg.portC.pin4.toggle();
+//				monitoredData.category = 0xAB;
 				monitoredData.category = tmp;
 			}
 			else if (interrogateCell == 6)
@@ -1305,12 +1354,12 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 			}
 			else if (interrogateCell == 11)
 			{
-				readSuccess = eeprom.club.property.type.read (tmp);
+				readSuccess = eeprom.club.property.typeLoco.read (tmp);
 				monitoredData.type = tmp;
 			}
 			else if (interrogateCell == 13)
 			{
-				readSuccess = eeprom.club.property.vRegYellow.read (tmp);
+				readSuccess = eeprom.club.property.vRedYellow.read (tmp);
 				monitoredData.vRedYellow = uint8_t(tmp);
 			}
 			else if (interrogateCell == 14)
@@ -1336,7 +1385,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 
 			if (!readSuccess)
 			{
-				dispathcher.add( SoftIntHandler::from_method<ConstValModule, &ConstValModule::checkNext>(this), 1 );
+				dispatcher.add( SoftIntHandler::from_method<ConstValModule, &ConstValModule::checkNext>(this), 1 );
 				return;
 			}
 		}
@@ -1365,9 +1414,8 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 				wrongCell = interrogateCell;
 		}
 
-
-		if (++checkNumber < 128)
-			eeprom.club.cell[checkNumber].isWritten(
+		if (++interrogateCell < 128)
+			eeprom.club.cell[interrogateCell].isWritten(
 					 SoftIntHandler::from_method<ConstValModule, &ConstValModule::checkWrite>(this) );
 	}
 	else
@@ -1381,9 +1429,19 @@ template <  typename CanDatType, CanDatType& canDat,
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::endOperation (const Status& status)
 {
 	if (status == Status::OK)
-		canDat.template send<0x6265> ({activePacket.number, activePacket.data[0], activePacket.data[1], activePacket.data[2], activePacket.data[3]});
+	{
+		if (reg.portB.pin7 == 0) // первый полукомплект
+			canDat.template send<CanTx::SYS_DATA_A> ({activePacket.number, activePacket.data[0], activePacket.data[1], activePacket.data[2], activePacket.data[3]});
+		else
+			canDat.template send<CanTx::SYS_DATA_B> ({activePacket.number, activePacket.data[0], activePacket.data[1], activePacket.data[2], activePacket.data[3]});
+	}
 	else
-		canDat.template send<0x6265> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0});
+	{
+		if (reg.portB.pin7 == 0) // первый полукомплект
+			canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0});
+		else
+			canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0});
+	}
 
 	activePacket.number = 0;
 }
@@ -1411,8 +1469,6 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::initAfterReset (u
 	endOperation (Status::ErrBusy);
 }
 
-typedef ConstValModule<CanDatType, canDat, SchedulerType, scheduler> CVMType;
-CVMType mph;
 
 
 #endif /* MPH_H_ */

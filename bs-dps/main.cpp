@@ -44,6 +44,7 @@ void Init (void)
 	reg.portD.pin7.out();
 	reg.portC.pin4 = true;
 	reg.portC.pin5 = true;
+	reg.portD.pin7 = true;
 
 	// Watchdog
 	wdt_enable (WDTO_500MS);
@@ -62,35 +63,41 @@ SchedulerType scheduler;
 
 // ---------------------------------------------- CAN -------------------------------------------►
 
-typedef INT_TYPELIST_3 (CanTx::IPD_STATE_A,	CanTx::IPD_STATE_B, CanTx::IPD_DPS_FAULT) IPD_STATE;
-typedef INT_TYPELIST_2 (CanTx::SAUT_INFO_A,	CanTx::SAUT_INFO_B) SAUT_INFO;
-typedef INT_TYPELIST_10 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
-						CanTx::AUX_RESOURCE_IPD_A,	CanTx::AUX_RESOURCE_IPD_B,
-						CanTx::SYS_DATA,
-						CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
-						CanTx::MY_KPT_A, CanTx::MY_KPT_B, CanTx::IPD_PARAM ) AUX_RESOURCE_SYS_DATA;
-typedef INT_TYPELIST_2 (CanTx::SYS_DATA_STATE, CanTx::IPD_NEUTRAL) SYS_DATA_STATE_IPD_NEUTRAL;
+typedef INT_TYPELIST_3	(CanTx::IPD_STATE_A,	CanTx::IPD_STATE_B, CanTx::IPD_DPS_FAULT) IPD_STATE;
+typedef INT_TYPELIST_2	(CanTx::SAUT_INFO_A,	CanTx::SAUT_INFO_B) SAUT_INFO;
+typedef INT_TYPELIST_3	(CanTx::SYS_DATA_STATE_A, CanTx::SYS_DATA_STATE_B,
+						 CanTx::IPD_NEUTRAL) SYS_DATA_STATE_IPD_NEUTRAL;
+typedef INT_TYPELIST_2	(CanTx::SYS_DATA_STATE2_A, CanTx::SYS_DATA_STATE2_B) SYS_DATA_STATE2;
+typedef INT_TYPELIST_2	(CanTx::MPH_STATE_A, CanTx::MPH_STATE_B) MPH_STATE;
+typedef INT_TYPELIST_12 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
+						 CanTx::AUX_RESOURCE_IPD_A,	CanTx::AUX_RESOURCE_IPD_B,
+						 CanTx::SYS_DATA_A, CanTx::SYS_DATA_B,
+						 CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
+						 CanTx::MY_KPT_A, CanTx::MY_KPT_B,
+						 CanTx::IPD_PARAM_A, CanTx::IPD_PARAM_B ) AUX_RESOURCE_SYS_DATA_IPD_PARAM;
 
-typedef INT_TYPELIST_4 (CanRx::MCO_STATE_A, CanRx::MCO_LIMITS_A, CanRx::MCO_STATE_B, CanRx::MCO_LIMITS_B) MCO_STATE_LIMITS;
+typedef INT_TYPELIST_5 (CanRx::MCO_STATE_A, CanRx::MCO_STATE_B,
+						CanRx::MCO_LIMITS_A, CanRx::MCO_LIMITS_B,
+						CanRx::MCO_DATA) MCO;
 typedef INT_TYPELIST_8 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_ON_TIME_A, CanRx::MP_ALS_OFF_TIME_A,
 						CanRx::MP_ALS_ON_B, CanRx::MP_ALS_OFF_B, CanRx::MP_ALS_ON_TIME_B, CanRx::MP_ALS_OFF_TIME_B) MP_ALS;
 typedef INT_TYPELIST_2 (CanRx::MM_DATA, CanRx::MM_NEUTRAL) MM;
-typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA) INPUT;
+typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA_A) INPUT;
 typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
 typedef INT_TYPELIST_4 (CanRx::PROGRAM_IPD_CONTROL_A, CanRx::PROGRAM_IPD_DATA_A,
 						CanRx::PROGRAM_IPD_CONTROL_B, CanRx::PROGRAM_IPD_DATA_B) PROGRAM_IPD;
 
-typedef CanDat < LOKI_TYPELIST_6(					// Список дескрипторов для отправки
+typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов для отправки
 						IPD_STATE,
 						SAUT_INFO,
 						SYS_DATA_STATE_IPD_NEUTRAL,
-						Int2Type< CanTx::SYS_DATA_STATE2 >,
-						AUX_RESOURCE_SYS_DATA,
+						SYS_DATA_STATE2,
+						MPH_STATE,
+						AUX_RESOURCE_SYS_DATA_IPD_PARAM,
 						PROGRAM_IPD
 								),
-				 LOKI_TYPELIST_9(
-						 Int2Type< CanRx::MCO_DATA >,
-						 MCO_STATE_LIMITS,
+				 LOKI_TYPELIST_8(
+						 MCO,
 						 Int2Type< CanRx::SYS_DATA_QUERY >,
 						 MP_ALS,
 						 MM,
@@ -103,7 +110,7 @@ typedef CanDat < LOKI_TYPELIST_6(					// Список дескрипторов �
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
-						 Int2Type< CanTx::SYS_DATA >,
+						 Int2Type< CanTx::SYS_DATA_A >,
 						 Int2Type< CanRx::SYS_DATA_QUERY >,
 						 Int2Type< CanRx::SYS_DIAGNOSTICS >,
 						 Int2Type< CanRx::AUX_RESOURCE_MCO_A >,
@@ -270,40 +277,40 @@ void sysDiagnostics (uint16_t a)
 					canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
 			}
 		}
-		else if ( request == Request::DIST_TRAVEL_WRITE )
-		{
-			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-			eeprom_update_byte( adr  , canDat.get<CanRx::SYS_DIAGNOSTICS>() [5] );
-			eeprom_update_byte( adr+1, canDat.get<CanRx::SYS_DIAGNOSTICS>() [4] );
-			eeprom_update_byte( adr+2, canDat.get<CanRx::SYS_DIAGNOSTICS>() [3] );
-			eeprom_update_byte( adr+3, canDat.get<CanRx::SYS_DIAGNOSTICS>() [2] );
-		}
-		else if ( request == Request::DIST_TRAVEL_READ_A && reg.portB.pin7 == 0 )
-		{
-			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-			uint8_t packet[5] = {
-					(uint8_t) Answer::DATA,
-					eeprom_read_byte (adr+3),
-					eeprom_read_byte (adr+2),
-					eeprom_read_byte (adr+1),
-					eeprom_read_byte (adr)
-								};
-
-			canDat.send<CanTx::AUX_RESOURCE_IPD_A> (packet);
-		}
-		else if ( request == Request::DIST_TRAVEL_READ_B && reg.portB.pin7 != 0 )
-		{
-			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-			uint8_t packet[5] = {
-					(uint8_t) Answer::DATA,
-					eeprom_read_byte (adr+3),
-					eeprom_read_byte (adr+2),
-					eeprom_read_byte (adr+1),
-					eeprom_read_byte (adr)
-								};
-
-			canDat.send<CanTx::AUX_RESOURCE_IPD_B> (packet);
-		}
+//		else if ( request == Request::DIST_TRAVEL_WRITE )
+//		{
+//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
+//			eeprom_update_byte( adr  , canDat.get<CanRx::SYS_DIAGNOSTICS>() [5] );
+//			eeprom_update_byte( adr+1, canDat.get<CanRx::SYS_DIAGNOSTICS>() [4] );
+//			eeprom_update_byte( adr+2, canDat.get<CanRx::SYS_DIAGNOSTICS>() [3] );
+//			eeprom_update_byte( adr+3, canDat.get<CanRx::SYS_DIAGNOSTICS>() [2] );
+//		}
+//		else if ( request == Request::DIST_TRAVEL_READ_A && reg.portB.pin7 == 0 )
+//		{
+//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
+//			uint8_t packet[5] = {
+//					(uint8_t) Answer::DATA,
+//					eeprom_read_byte (adr+3),
+//					eeprom_read_byte (adr+2),
+//					eeprom_read_byte (adr+1),
+//					eeprom_read_byte (adr)
+//								};
+//
+//			canDat.send<CanTx::AUX_RESOURCE_IPD_A> (packet);
+//		}
+//		else if ( request == Request::DIST_TRAVEL_READ_B && reg.portB.pin7 != 0 )
+//		{
+//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
+//			uint8_t packet[5] = {
+//					(uint8_t) Answer::DATA,
+//					eeprom_read_byte (adr+3),
+//					eeprom_read_byte (adr+2),
+//					eeprom_read_byte (adr+1),
+//					eeprom_read_byte (adr)
+//								};
+//
+//			canDat.send<CanTx::AUX_RESOURCE_IPD_B> (packet);
+//		}
 		else if ( request == Request::TEST_RUN && unit == Unit::BS_DPS )
 		{
 			uint8_t packet[5] = {
@@ -404,16 +411,6 @@ void kptCommandParse ()
 
 // ---------------------------------------------- ДПС -------------------------------------------►
 
-uint16_t bandDiam (const uint8_t* avarage, const uint8_t* correction)
-{
-	uint16_t av = eeprom_read_byte (avarage);
-	uint8_t cor = eeprom_read_byte (correction);
-	if (cor & (1<<7)) // отрицательное число по понятиям САУТ
-		return av * 10 - (cor & 0x7F);
-	else
-		return av * 10 + (cor & 0x7F);
-}
-
 typedef
 CeleritasSpatiumDimetior  < &Register::portC, 4, 5, &Register::portB, 7,
 							CanDatType, canDat,
@@ -424,9 +421,7 @@ DpsType;
 DpsType	dps ( 	&Register::portC,
 				com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
 				InterruptHandler::from_method <KptType, &KptType::lisPlusPlus> (&kpt),
-				InterruptHandler::from_method <KptType, &KptType::correctKptDistancePlusPlus> (&kpt),
-				bandDiam (&eeprom.saut.DiameterAvarage, &eeprom.saut.DiameterCorrection[0]),
-				bandDiam (&eeprom.saut.DiameterAvarage, &eeprom.saut.DiameterCorrection[1]) );
+				InterruptHandler::from_method <KptType, &KptType::correctKptDistancePlusPlus> (&kpt) );
 
 
 // --------------------------------------------- mcoState ---------------------------------------►
@@ -522,9 +517,8 @@ void mcoAuxResB (uint16_t pointer)
 
 // --------------------------------- Модуль постоянных характеристик ----------------------------►
 
-typedef MPH <CanDatType, canDat, SchedulerType, scheduler, ComType, com> MPHType;
-MPHType mph (reg.portB.pin7 == 0);
-
+typedef ConstValModule <CanDatType, canDat, SchedulerType, scheduler> MPHType;
+MPHType mph;
 
 // ------------------------------------- Нейтральная вставка -------------------------------------►
 
@@ -693,11 +687,11 @@ void commandParser ()
 
 		if (command.eepromRead)
 		{
-			uint16_t *Adr = (uint16_t *) ((data.member<DpsCommand>() & 0x00ff)*8);// Адрес из линии RS-485 * 8
-			data.member<DpsOut0>() = swap( eeprom_read_word (Adr++) );
-			data.member<DpsOut1>() = swap( eeprom_read_word (Adr++) );
-			data.member<DpsOut2>() = swap( eeprom_read_word (Adr++) );
-			data.member<DpsOut3>() = swap( eeprom_read_word (Adr++) );
+			uint8_t adr = (data.member<DpsCommand>() & 0x000F) * 8;// Адрес из линии RS-485 * 8
+			data.member<DpsOut0>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+1], mph.sautConvert.plainMap[adr+0] };
+			data.member<DpsOut1>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+3], mph.sautConvert.plainMap[adr+2] };
+			data.member<DpsOut2>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+5], mph.sautConvert.plainMap[adr+4] };
+			data.member<DpsOut3>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+7], mph.sautConvert.plainMap[adr+6] };
 		}
 	}
 
@@ -739,14 +733,14 @@ int main ()
 	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getVelocity> (&emulation);
 	canDat.rxHandler<CanRx::IPD_EMULATION>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
 
+	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);
+	canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);
+	canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);
+	canDat.rxHandler<CanTx::SYS_DATA_A>() = SoftIntHandler::from_method <MPHType, &MPHType::getLeftDataMessage> (&mph); // Если кто-то ещё ответит, то обновить мои данные
+	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::getQueryMessage> (&mph);
+
 	if (reg.portB.pin7 == 0) // первый полукомплект
 	{
-		canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
-		canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
-		canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
-		canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::write> (&mph); // Если кто-то ещё ответит, то обновить мои данные
-		canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::read> (&mph);
-
 		canDat.rxHandler<CanRx::MM_NEUTRAL>() = SoftIntHandler::from_method <NeutralInsertionType, &NeutralInsertionType::getEcData> (&neutralInsertion);
 	}
 
@@ -821,12 +815,10 @@ int main ()
     	resetButtonWasFree |= reg.portB.pin5;
     	if ( resetButtonWasFree && !reg.portB.pin5 ) // Нажата кнопка сброса (а до этого была отпущена)
     	{
-    		eeprom_update_byte (&eeprom.dps0Good, 1);
-    		eeprom_update_byte (&eeprom.dps1Good, 1);
+//    		eeprom_update_byte (&eeprom.dps0Good, 1);
+//    		eeprom_update_byte (&eeprom.dps1Good, 1);
     		reboot();
     	}
-
-    	lam<0, 1000> ();
 
     	dispatcher.invoke();
     	wdt_reset();

@@ -27,7 +27,10 @@ public:
 	NeutralInsertion (bool active)
 		: type (Type::NoTarget), coord (0), numberFaultSendTrys (0)
 	{
-		length = trainLengthCalc();
+		trainLength = 300;
+		trainLengthCalc(0);
+		length = trainLength;
+
 		if (active)
 			scheduler.runIn(
 					Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
@@ -46,7 +49,7 @@ public:
 		else
 			return;
 
-		length = trainLengthCalc() + data[5] + uint16_t(data[4] & 0x1F) * 256; // длина поезда + длина вставки
+		length = trainLength + data[5] + uint16_t(data[4] & 0x1F) * 256; // длина поезда + длина вставки
 		coord = uint16_t (data[3]) + uint16_t (data[2]) * 256;
 	}
 private:
@@ -79,11 +82,15 @@ private:
 					100	);
 		}
 	}
-	const uint16_t trainLengthCalc () const
+	void trainLengthCalc (uint16_t )
 	{
-		uint8_t wagonLength =  eeprom_read_dword (&eeprom.club.category) > 5 ? 16 : 25;
-		uint32_t conventionalWagonNumber = eeprom_read_dword (&eeprom.club.lengthWagon);
-		return conventionalWagonNumber * wagonLength + 100;
+		uint32_t category, conventionalWagonNumber;
+		if ( eeprom.club.property.category.read (category) &&
+			 eeprom.club.property.lengthWagon.read (conventionalWagonNumber) )
+		{
+			uint8_t wagonLength =  uint8_t(category) > 5 ? 16 : 25;
+			trainLength = uint16_t(conventionalWagonNumber) * wagonLength + 100;
+		}
 	}
 
 	enum class Type : uint8_t
@@ -94,6 +101,7 @@ private:
 	};
 	Type type;
 	uint16_t length;
+	uint16_t trainLength;
 	uint16_t coord;
 	uint8_t numberFaultSendTrys;
 };

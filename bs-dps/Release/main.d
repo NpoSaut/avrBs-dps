@@ -27,8 +27,9 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/int-typelist.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/Typelist.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h ../id.h \
- ../programming.h ../ProgSpi.h ../CanDat.h ../dps.h ../eeprom.h \
- ../ec-adjust.h ../kpt.h ../mph.h ../neutral-insertion.h
+ ../programming.h ../ProgSpi.h ../CanDat.h ../dps.h ../mph.h \
+ D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/eeprom.h ../ec-adjust.h \
+ ../eeprom.h ../kpt.h ../neutral-insertion.h
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h:
 
@@ -104,12 +105,14 @@ D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h:
 
 ../dps.h:
 
-../eeprom.h:
+../mph.h:
+
+D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/eeprom.h:
 
 ../ec-adjust.h:
 
-../kpt.h:
+../eeprom.h:
 
-../mph.h:
+../kpt.h:
 
 ../neutral-insertion.h:
