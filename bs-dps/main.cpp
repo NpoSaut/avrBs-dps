@@ -820,6 +820,29 @@ int main ()
     		reboot();
     	}
 
+//    	static uint16_t ctr = 0;
+//    	if (ctr++ > 2000)
+//    	{
+//    		sei();
+//    		ctr = 0;
+//			uint8_t sysDataState2[8] = {
+//					0, // Результаты выполнения тестов... здесь не выводим
+//					0,
+//					0,
+//					0,
+//					0,
+//					scheduler.fill,
+//					dispatcher.maxSize,
+//					0
+//									};
+//			dispatcher.maxSize = 0;
+//			if (reg.portB.pin7 == 0) // первый полукомплект
+//				canDat.send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
+//			else
+//				canDat.send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);
+//    	}
+
+    	lam<0,1000> ();
     	dispatcher.invoke();
     	wdt_reset();
     	scheduler.invoke();

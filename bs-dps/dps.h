@@ -405,7 +405,7 @@ public:
 	}
 
 	// диаметр бандажа
-	const uint16_t& diametros (const uint8_t& n) const
+	const uint16_t diametros (const uint8_t& n) const
 	{
 		return dimetior[n]->accipioDiametros();
 	}

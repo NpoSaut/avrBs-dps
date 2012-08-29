@@ -18,6 +18,126 @@
 #include "CanDesriptors.h"
 
 // ------------------------------------------- Ячейка -------------------------------------------►
+//
+// ~~~ Проблема: ~~~
+// Хотелось бы иметь ячейку памяти в eeprom, которая бы помимо хранения значения ещё бы:
+// 1. Хранила информацию о том, была ли она записана (то есть содержит реальные данные)
+// 2. Контролировала целостность хранимых данных.
+// 3. Взяла бы на себя функции по ожиданию готовности eeprom и прочее.
+//
+//  ~~~ Задача: ~~~
+// 1. Создать класс, объект которого должен содержать доп. информацию (флаг записи и контрольную сумму)
+// 2. Его функции чтения/записи берут на себя контроль контрльной суммы и выставление флага записи.
+// 3. Являются неблокирующими и сами дожидаются освобождения eeprom.
+//
+// ~~~ Решение: ~~~
+// 1. Класс содержит 4-х байтное значение и один служебный байт.
+// 2. В служебном байте: 1 бит - флаг записанности, 7 бит - crc7 на полиноме 0x37
+// 3. Если идёт операция с одним из объектов EeCell, то блокируется доступ ко всем другим.
+// 4. Операция чтения возвращает значение сразу же (не повисает в цикле ожидания), но запускается если:
+//		- данные доступны для чтения
+//		- они записаны
+//		- они записаны корректно (сходиться контрольная сумма)
+// 5. Операция записи неблокирующая, начинает выполняться если
+//		- нет активных операций с лбюбым объектом класса EeCell
+//	  по завершению записи гарантированно вызывает пользовательский делегат.
+//    Делегату в качестве параметра передаётя статус завершения (успешность записи).
+// 6. Операция определения записанности неблокирующая, запускатеся всегда,
+//    по завершению вызывает делегат, которому передаёт результат работы.
+// 7. Операция проверки целостности неблокирующая, запускается всегда,
+//    по завершению вызывает делегат, которому передаёт результат работы.
+// 8. Операция прерывания всех текущих неблокирующих операций.
+//    Прерывает все операции так быстро, как это возможно. После этого вызывает делегат.
+//
+/* ~~~ Пример: ~~~
+	EeCell cell;
+
+
+	void periodicalFunction (uint16_t)
+	{
+		static uint32_t data = 0;
+		cell.read (data);	// data будет прочитано, если получится
+							// в противном случае, значение data просто сохраниться
+
+		// ... работа с data ...
+	}
+
+	void getWrittenResult (uint16_t);
+	void getGoodnessResult (uint16_t);
+	void exactlyGetData (uint16_t)
+	{
+		static uint32_t data = 0;
+		if ( cell.read (data) ) // если получилось
+		{
+			// OK
+		}
+		else
+		{
+			cell.isWritten( SoftIntHandler::from_function<&getWrittenResult>() );
+		}
+	}
+
+	void getWrittenResult (uint16_t result)
+	{
+		if (result) // записан?
+		{
+			// ячейка записана. имеет смысл проверить целостность
+			 cell.isGood( SoftIntHandler::from_function<&getGoodnessResult>() );
+		}
+		else
+		{
+			// к сожалению, ячейка не записана...
+		}
+
+	}
+
+	void getGoodnessnResult (uint16_t result)
+	{
+		if (result) // без ошибок?
+		{
+			// ячейка корректно записана.
+			// чтение не удалось из-за занятости. повторим ещё раз.
+			dispatcher.add ( SoftIntHandler::from_function<&exactlyGetData>(), 0 );
+		}
+		else
+		{
+			// к сожалению, память испорчена, данные повреждены...
+		}
+	}
+
+	void afterWrite (uint16_t result);
+	void writeValue (uint16_t value)
+	{
+		if ( cell.write (value) ) // пытаемся записать
+		{
+			// процесс началася. Запись идёт в фоне, после неё будет вызыван делегат.
+		}
+		else
+		{
+			// память занята. что же, попробуем ещё раз.
+			dispatcher.add( SoftIntHandler::from_fucntion<&writeValue>(), value );
+		}
+	}
+
+	void afterWrite (uint16_t result)
+	{
+		if (result) // записана корректно
+		{
+			// примите мои поздравления!
+		}
+		else
+		{
+			// примите мои соболезнования...
+		}
+	}
+
+	int main ()
+	{
+		for (;;)
+			dispatcher.invoke ();
+	}
+ *
+ */
 
 namespace EeCellStaticPrivate
 {
@@ -38,12 +158,14 @@ namespace EeCellStaticPrivate
 	SoftIntHandler isGoodResultGetter;
 	SoftIntHandler isWrittenResultGetter;
 
-	struct Reset
+	bool eepromOpRunning;
+	enum ResetRequest
 	{
-		uint8_t statusRequest;
-		uint8_t writeOperation;
+		No	= 0,
+		SelfWaitCycle = 1,
+		AfterEepromOp = 2
 	};
-	Bitfield<Reset> reset (0);
+	ResetRequest resetRequest (No);
 	SoftIntHandler afterReset;
 }
 
@@ -66,7 +188,7 @@ private:
 	void lastControl (uint16_t);
 	void goodDelayedRequest (uint16_t);
 	void writtenDelayedRequest (uint16_t);
-	void afterAllDispatcherTasks (uint16_t);
+	void runAfterReset (uint16_t);
 
 	Eeprom< EeCellStaticPrivate::Status > status;
 	Eeprom<uint32_t> data;
@@ -101,7 +223,6 @@ bool EeCell::read(uint32_t& value)
 
 		if (!s.unWritten)
 		{
-//			Complex<uint32_t> d = 0xAABBCCDD;
 			Complex<uint32_t> d = (uint32_t) data;
 
 			uint8_t crc = 0xFF;
@@ -110,7 +231,7 @@ bool EeCell::read(uint32_t& value)
 
 			if (crc/2 == s.crc7)
 			{
-				value = tmp;
+				value = d;
 				return true;
 			}
 			else
@@ -125,45 +246,85 @@ bool EeCell::read(uint32_t& value)
 
 void EeCell::isGood( const SoftIntHandler& resultGetter )
 {
-	if ( !EeCellStaticPrivate::activeWrite )
+	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
 	{
-		EeCellStaticPrivate::Status s = status;
-
-		if (!s.unWritten)
+		if ( !EeCellStaticPrivate::activeWrite )
 		{
-			Complex<uint32_t> d = (uint32_t) data;
+			uint8_t sreg = reg.status;
+			cli();
+			if ( status.isReady() )
+			{
+				EeCellStaticPrivate::Status s = status;
+				reg.status = sreg;
 
-			uint8_t crc = 0xFF;
-			for (uint8_t i = 0; i < 4; i++)
-				crc = crc7x2 (crc, d[i]);
+				if (!s.unWritten)
+				{
+					uint8_t sreg = reg.status;
+					cli();
+					if ( data.isReady() )
+					{
+						Complex<uint32_t> d = (uint32_t) data;
+						reg.status = sreg;
 
-			dispatcher.add( resultGetter, crc/2 == s.crc7 );
+						uint8_t crc = 0xFF;
+						for (uint8_t i = 0; i < 4; i++)
+							crc = crc7x2 (crc, d[i]);
+
+						dispatcher.add( resultGetter, crc/2 == s.crc7 );
+						return;
+					}
+					else
+						reg.status = sreg;
+				}
+				else
+				{
+					dispatcher.add( resultGetter, true );
+					return;
+				}
+			}
+			else
+				reg.status = sreg;
 		}
-		else
-			dispatcher.add( resultGetter, true );
-	}
-	else if (!EeCellStaticPrivate::reset.statusRequest)
-	{
+		// Если не ушли по return выше
 		EeCellStaticPrivate::isGoodResultGetter = resultGetter;
 		dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::goodDelayedRequest> (this), 0 );
+	}
+	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
+	{
+		runAfterReset (0);
 	}
 }
 
 void EeCell::isWritten( const SoftIntHandler& resultGetter )
 {
-	if ( !EeCellStaticPrivate::activeWrite )
+	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
 	{
-		EeCellStaticPrivate::Status s = status;
+		if ( !EeCellStaticPrivate::activeWrite )
+		{
+			uint8_t sreg = reg.status;
+			cli();
+			if ( status.isReady() )
+			{
+				EeCellStaticPrivate::Status s = status;
+				reg.status = sreg;
 
-		if (!s.unWritten)
-			dispatcher.add( resultGetter, true );
-		else
-			dispatcher.add( resultGetter, false );
-	}
-	else if (!EeCellStaticPrivate::reset.statusRequest)
-	{
+				if (!s.unWritten)
+					dispatcher.add( resultGetter, true );
+				else
+					dispatcher.add( resultGetter, false );
+
+				return;
+			}
+			else
+				reg.status = sreg;
+		}
+		// Если не ушли по return выше
 		EeCellStaticPrivate::isWrittenResultGetter = resultGetter;
 		dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writtenDelayedRequest> (this), 0 );
+	}
+	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
+	{
+		runAfterReset (0);
 	}
 }
 
@@ -171,11 +332,15 @@ void EeCell::reset( const SoftIntHandler& runAfterReset )
 {
 	using namespace EeCellStaticPrivate;
 	afterReset = runAfterReset;
-	EeCellStaticPrivate::reset.statusRequest = 1;
-	if (activeWrite)
-		EeCellStaticPrivate::reset.writeOperation = 1;
 
-	dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::afterAllDispatcherTasks> (this), 0 );
+	if (eepromOpRunning)
+		resetRequest = ResetRequest::AfterEepromOp;
+	else
+	{
+		resetRequest = ResetRequest::SelfWaitCycle;
+		// После всех задач в очереди запустить:
+		dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::runAfterReset> (this), 0 );
+	}
 }
 
 uint8_t EeCell::crc7x2 (uint8_t crcx2, uint8_t data)
@@ -189,71 +354,72 @@ uint8_t EeCell::crc7x2 (uint8_t crcx2, uint8_t data)
 
 void EeCell::writeStatus (uint16_t )
 {
-	if (!EeCellStaticPrivate::reset.writeOperation)
+	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
 	{
-		if ( !status.updateUnblock( EeCellStaticPrivate::status, SoftIntHandler::from_method<EeCell, &EeCell::writeData>(this) ) )
+		if ( status.updateUnblock( EeCellStaticPrivate::status, SoftIntHandler::from_method<EeCell, &EeCell::writeData>(this) ) )
+			EeCellStaticPrivate::eepromOpRunning = true;
+		else
 				dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writeStatus> (this), 0 );
 	}
-	else
+	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
 	{
-		using namespace EeCellStaticPrivate;
-		EeCellStaticPrivate::reset.writeOperation = false;
-
-		if (!EeCellStaticPrivate::reset.statusRequest)
-			dispatcher.add( afterReset, 0 );
-
-		activeWrite = false;
+		runAfterReset (0);
 	}
 }
 
 void EeCell::writeData (uint16_t )
 {
-	if (!EeCellStaticPrivate::reset.writeOperation)
+	EeCellStaticPrivate::eepromOpRunning = false;
+
+	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
 	{
-		if ( !data.updateUnblock( EeCellStaticPrivate::data, SoftIntHandler::from_method<EeCell, &EeCell::calcCrc>(this) ) )
-				dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writeData> (this), 0 );
+		if ( data.updateUnblock( EeCellStaticPrivate::data, SoftIntHandler::from_method<EeCell, &EeCell::calcCrc>(this) ) )
+			EeCellStaticPrivate::eepromOpRunning = true;
+		else
+			dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writeData> (this), 0 );
 	}
-	else
+	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
 	{
-		using namespace EeCellStaticPrivate;
-		EeCellStaticPrivate::reset.writeOperation = false;
-
-		if (!EeCellStaticPrivate::reset.statusRequest)
-			dispatcher.add( afterReset, 0 );
-
-		activeWrite = false;
+		runAfterReset (0);
 	}
 }
 
 void EeCell::calcCrc (uint16_t )
 {
-	namespace Static = EeCellStaticPrivate;
-	uint8_t crc = 0xFF;
-	for (uint8_t i = 0; i < 4; i++)
-		crc = crc7x2 (crc, Static::data[i]);
+	EeCellStaticPrivate::eepromOpRunning = false;
 
-	Static::status.crc7 = crc/2;
-	Static::status.unWritten = 0;
+	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
+	{
+		namespace Static = EeCellStaticPrivate;
+		uint8_t crc = 0xFF;
+		for (uint8_t i = 0; i < 4; i++)
+			crc = crc7x2 (crc, Static::data[i]);
 
-	writeCrc (0);
+		Static::status.crc7 = crc/2;
+		Static::status.unWritten = 0;
+
+		writeCrc (0);
+	}
+	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
+	{
+		runAfterReset (0);
+	}
 }
 
 void EeCell::writeCrc (uint16_t )
 {
-	if (!EeCellStaticPrivate::reset.writeOperation)
+	EeCellStaticPrivate::eepromOpRunning = false;
+
+	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
 	{
-		if ( !status.updateUnblock( EeCellStaticPrivate::status,  SoftIntHandler::from_method<EeCell, &EeCell::lastControl>(this) ) )
-			dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writeCrc> (this), 0 );
+		if ( status.updateUnblock( EeCellStaticPrivate::status,  SoftIntHandler::from_method<EeCell, &EeCell::lastControl>(this) ) )
+			EeCellStaticPrivate::eepromOpRunning = true;
 		else
-		{
-			using namespace EeCellStaticPrivate;
-			EeCellStaticPrivate::reset.writeOperation = false;
-
-			if (!EeCellStaticPrivate::reset.statusRequest)
-				dispatcher.add( afterReset, 0 );
-
-			activeWrite = false;
-		}
+			dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writeCrc> (this), 0 );
+	}
+	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
+	{
+		runAfterReset (0);
 	}
 }
 
@@ -261,10 +427,34 @@ void EeCell::lastControl (uint16_t )
 {
 	namespace Static = EeCellStaticPrivate;
 
-	dispatcher.add( EeCellStaticPrivate::afterWrite,
-					(Static::status == (Static::Status)status) && (Static::data == data) );
+	Static::eepromOpRunning = false;
 
-	EeCellStaticPrivate::activeWrite = false;
+	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
+	{
+		uint8_t sreg = reg.status;
+		cli ();
+		if ( status.isReady() && data.isReady() )
+		{
+			Static::Status s = status;
+			uint32_t d = data;
+			reg.status = sreg;
+
+			dispatcher.add( EeCellStaticPrivate::afterWrite,
+							(Static::status == s) && (Static::data == d) );
+
+			Static::activeWrite = false;
+		}
+		else
+		{
+			reg.status = sreg;
+			dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::lastControl>(this), 0 );
+		}
+	}
+	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
+	{
+		runAfterReset (0);
+	}
+
 }
 
 void EeCell::goodDelayedRequest (uint16_t )
@@ -277,15 +467,11 @@ void EeCell::writtenDelayedRequest (uint16_t )
 	isWritten ( EeCellStaticPrivate::isWrittenResultGetter );
 }
 
-void EeCell::afterAllDispatcherTasks (uint16_t)
+void EeCell::runAfterReset (uint16_t)
 {
-	using namespace EeCellStaticPrivate;
-	EeCellStaticPrivate::reset.statusRequest = 0;
-	if (!EeCellStaticPrivate::reset) // Завершили
-	{
-		dispatcher.add( afterReset, 0 );
-		activeWrite = false;
-	}
+	EeCellStaticPrivate::resetRequest = EeCellStaticPrivate::ResetRequest::No;
+	dispatcher.add( EeCellStaticPrivate::afterReset, 0 );
+	EeCellStaticPrivate::activeWrite = false;
 }
 
 
@@ -338,7 +524,7 @@ struct EepromData
 			};
 			Eeprom< Bitfield<Configuration> > configuration;// +!
 			Eeprom<uint16_t>	reserv1;    				// Резерв
-			Eeprom<uint8_t>		diameterCorrection[2]; 		// + Уточнение диаметров бандажей соответственно для ДПС1 и ДПС2. Вычисляются как разность между точным значением
+			Eeprom<int8_t>		diameterCorrection[2]; 		// + Уточнение диаметров бандажей соответственно для ДПС1 и ДПС2. Вычисляются как разность между точным значением
 															//   соответствующего диаметра бандажа в миллиметрах и средним значением, умноженным на 10.
 															//   Седьмой бит - знаковый. -- ВНИМАНИЕ -- это не дополнительный код
 			Eeprom<uint16_t>	controlSumm1;     			// + Контрольная сумма первой строки: CRC16 на базисе 0xA9EB
@@ -478,6 +664,41 @@ struct EepromData
 
 
 // ------------------------------------ Конвертация в САУТ --------------------------------------►
+//
+// ~~~ Проблема: ~~~
+// Характеристики записываются и читаются из ячеек по алгоритму КЛУБа. Ячейки описаны выше в структуре Club,
+// Но для совместимости с САУТом нужно хранить записанную в ячейки информацию ещё и в формате САУТ. (см. выше Saut)
+// САУТ только читает эту информацию, но не записывает.
+//
+// ~~~ Задача: ~~~
+// 1. Каждый раз при записи любой ячейки КЛУБа проверять, что за ячейка (и какая информация) записывается.
+// 2. Если эта информация содержиться в базе САУТ, то преобразовывать её в нужный формат и записывать туда.
+//
+// ~~~ Решение: ~~~
+// 1. После всех шагов по записи данных в ячейку КЛУБ, но до выдачи подтверждения вставить этап конвертации в САУТ. На этом этапе:
+//		- Если записываемая информация содержиться в САУТ, то сконвертировать её.
+//		- Записать в нужные поля области САУТ.
+//		- Обновить crc соответсвующей строки.
+//		- Проверить наличие заголовка строки.
+// 2. При этом отсутсвует контроль целостности САУТовской части (это может делать САУТ, при этом crc нужно не забывать обновлять нам).
+// 3. В случае прерывания процесса записи обеспечить возможность прервать запись в САУТ.
+// 5. Для быстрого ответа на запрос от САУТа на чтение eeprom нужно хранить копию в оперативке (вдруг не будет доступа к eeprom)
+//    И обновлять эту копию регулярно.
+//
+// ~~~ Интерфейс: ~~~
+// 1. updateCell (number, data, afterUpdate)
+//    - Функция, которая должна быть вызвана в звене этапов записи после записи в КЛУБ и перед выдачей результата.
+//    - Производит всю работу по конвертации и записи (если нужно).
+//    - Является неблокирующей. После выполнения своей работы вызывает делегат afterUpdate.
+//    - Нужно строго следить, чтобы не запустить эту функцию ещё раз до того, как она отработала предыдущий раз!
+// 2. reset (afterReset)
+//    - Функция прерывает текущую работу (если идёт) и после этого вызывает делегат afterReset.
+//    - Что при этом останется в eeprom не известно. Возможно не успеет обновиться crc.
+//      Тогда она восстановится только при следующей записи этой строки.
+// 3. plainMap[32]
+//    - побайтный массив в оперативной памяти, отражающий текущее состояние eeprom.
+//
+
 class SautConvert
 {
 public:
@@ -488,15 +709,8 @@ public:
 	uint8_t plainMap[32]; // отображение в ram данных из eeprom
 
 private:
-	struct DiametersSaut
-	{
-		uint8_t averageDiv10;
-		int8_t	correction[2];	// знак в прямом коде
-	};
-
 	void init1StringPlainMap (uint16_t );
 	void dataUpdate (uint16_t);
-	DiametersSaut diametersConvert (const uint16_t& diam0, const uint16_t& diam1);
 	void diametersWriteStep1 (uint16_t);
 	void diametersWriteStep2 (uint16_t);
 	void diametersWriteStep3 (uint16_t);
@@ -504,41 +718,39 @@ private:
 	void readNextStringByte (uint16_t byteStringNumber);
 	template<uint16_t poly>
 	uint16_t crcUpdate (uint16_t crc, const uint8_t& data);
-	void afterAllDispatcherTasks (uint16_t);
+	void runAfterReset (uint16_t);
 
-	union
-	{
-		uint16_t crc;
-		uint8_t stringNumber;
-	};
+	uint8_t diamAvrDiv10;
+	int8_t diamCor[2];
+
+	uint16_t crc;
+	uint8_t stringNumber;
 	uint8_t cellNumber;
-	union
-	{
-		Complex<uint32_t> data;
-		DiametersSaut diameters;
-	};
+	Complex<uint32_t> data;
 	SoftIntHandler runAfter;
-	struct Reset
+	bool eepromOpRunning;
+	enum ResetRequest
 	{
-		uint8_t statusRequest;
-		uint8_t writeOperation;
+		No	= 0,
+		SelfWaitCycle = 1,
+		AfterEepromOp = 2
 	};
-	Bitfield<Reset> resetRequest;
-	SoftIntHandler afterStringUpdate;
+	ResetRequest resetRequest;
 	SoftIntHandler afterReset;
 
 };
 
 SautConvert::SautConvert ()
-	: resetRequest (0)
+	: eepromOpRunning (false), resetRequest (No)
 {
 	stringNumber = 0;
-	afterStringUpdate = SoftIntHandler::from_method<SautConvert, &SautConvert::init1StringPlainMap>(this);
+	runAfter = SoftIntHandler::from_method<SautConvert, &SautConvert::init1StringPlainMap>(this);
 	updateStringCrc (0);
 }
 
 void SautConvert::init1StringPlainMap (uint16_t	)
 {
+	runAfter = SoftIntHandler();
 	stringNumber = 1;
 	updateStringCrc (0);
 }
@@ -555,79 +767,79 @@ void SautConvert::updateCell (uint8_t number, Complex<uint32_t> data, const Soft
 void SautConvert::reset (SoftIntHandler afterReset)
 {
 	SautConvert::afterReset = afterReset;
-	resetRequest.statusRequest = 1;
-	resetRequest.writeOperation = 1;
 
-	dispatcher.add( SoftIntHandler::from_method<SautConvert, &SautConvert::afterAllDispatcherTasks>(this), 0 );
+	if (eepromOpRunning)
+		resetRequest = ResetRequest::AfterEepromOp;
+	else
+	{
+		resetRequest = ResetRequest::SelfWaitCycle;
+		// после всех задач в очереди запустить:
+		dispatcher.add( SoftIntHandler::from_method<SautConvert, &SautConvert::runAfterReset>(this), 0 );
+	}
+
 }
 
 void SautConvert::dataUpdate (uint16_t )
 {
-	if (!resetRequest.writeOperation)
+	if (resetRequest == ResetRequest::No)
 	{
+		eepromOpRunning = true;
+
 		if (cellNumber == 7) // locoNumber
 		{
 			stringNumber = 1;
-			if ( eeprom.saut.property.locoNumberBigEndian.updateUnblock( (uint16_t)Complex<uint16_t>{ data[2], data[3] }, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+			if ( eeprom.saut.property.locoNumberBigEndian.updateUnblock(
+					(uint16_t)Complex<uint16_t>{ data[1], data[0] },
+					SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
-//		else if (cellNumber == 15) // diameter0
-//		{
-//			uint8_t sreg = reg.status;
-//			cli ();
-//			if ( eeprom.saut.property.diameterCorrection[1].isReady() &&
-//					eeprom.saut.property.diameterAverageDiv10.isReady() )
-//			{
-//				uint8_t cor1 =  eeprom.saut.property.diameterCorrection[1];
-//				uint8_t avr =  eeprom.saut.property.diameterAverageDiv10;
-//				reg.status = sreg;
-//
-//				uint16_t diam1;
-//				if (cor1 & (1<<7)) // отрицательное число по понятиям САУТ
-//					diam1 = uint16_t(avr) * 10 - (cor1 & 0x7F);
-//				else
-//					diam1 = uint16_t(avr) * 10 + (cor1 & 0x7F);
-//
-//				uint16_t diam0 = (uint16_t)Complex<uint16_t>{ data[3], data[2] };
-//
-//				diameters = diametersConvert (diam0, diam1);
-//
-//				dispatcher.add( SoftIntHandler::from_method<SautConvert, &SautConvert::diametersWriteStep1>(this), 0 );
-//				return;
-//			}
-//			else
-//				reg.status = sreg;
-//		}
-//		else if (cellNumber == 16) // diameter1
-//		{
-//			uint8_t sreg = reg.status;
-//			cli ();
-//			if ( eeprom.saut.property.diameterCorrection[0].isReady() &&
-//					eeprom.saut.property.diameterAverageDiv10.isReady() )
-//			{
-//				uint8_t cor =  eeprom.saut.property.diameterCorrection[0];
-//				uint8_t avr =  eeprom.saut.property.diameterAverageDiv10;
-//				reg.status = sreg;
-//
-//				uint16_t diam0;
-//				if (cor & (1<<7)) // отрицательное число по понятиям САУТ
-//					diam0 = uint16_t(avr) * 10 - (cor & 0x7F);
-//				else
-//					diam0 = uint16_t(avr) * 10 + (cor & 0x7F);
-//
-//				uint16_t diam1 = (uint16_t)Complex<uint16_t>{ data[3], data[2] };
-//
-//				diameters = diametersConvert (diam0, diam1);
-//
-//				dispatcher.add( SoftIntHandler::from_method<SautConvert, &SautConvert::diametersWriteStep1>(this), 0 );
-//				return;
-//			}
-//			else
-//				reg.status = sreg;
-//		}
+		else if (cellNumber == 15 || cellNumber == 16) // diameter0, diameter1
+		{
+			uint8_t num = (cellNumber == 16); // Номер вводимого бандажа
+			eepromOpRunning = false;
+
+			uint8_t sreg = reg.status;
+			cli ();
+			if (	eeprom.saut.property.diameterCorrection[!num].isReady() &&
+					eeprom.saut.property.diameterAverageDiv10.isReady() 	)
+			{
+				diamCor[!num] =  eeprom.saut.property.diameterCorrection[!num];
+				diamAvrDiv10  =  eeprom.saut.property.diameterAverageDiv10;
+				reg.status = sreg;
+
+				uint16_t diam[2];
+				diam[!num] = uint16_t(diamAvrDiv10) * 10 +
+								(diamCor[!num] & 0x7F) * (diamCor[!num] >= 0 ? 1 : -1); // отрицательное в прямом коде
+				diam[num] = (uint16_t)Complex<uint16_t>{ data[0], data[1] };
+
+				if ( abs(diam[num] - diam[!num]) > 246 )  // другое значение отстоит слишком далеко
+				{
+					// тогда, что делать, подвинем его поближе
+					if (diam[num] < diam[!num])
+						diam[!num] = diam[num] + 245;
+					else
+						diam[!num] = diam[num] - 245;
+				}
+
+				 // На этот момент различие в диаметрах не более 10, поэтому корректировки не более 127
+				diamAvrDiv10 = (diam[num] + diam[!num]) / 20;
+
+				for (uint8_t i = 0; i <= 1; i ++)
+				{
+					diamCor[i] = diam[i] - diamAvrDiv10 * 10;
+					if ( diamCor[i] < 0 )
+						diamCor[i] = ((~diamCor[i]) | 128) + 1; // знак в прямом коде
+				}
+
+				dispatcher.add( SoftIntHandler::from_method<SautConvert, &SautConvert::diametersWriteStep1>(this), 0 );
+				return;
+			}
+			else
+				reg.status = sreg;
+		}
 		else if (cellNumber == 18) // configuration
 		{
-			Bitfield<EepromData::Club::Property::Configuration> clubConf = (uint32_t)Complex<uint32_t>{ data[3], data[2], data[1], data[0] };
+			Bitfield<EepromData::Club::Property::Configuration> clubConf = (uint32_t)Complex<uint32_t>{ data[0], data[1], data[2], data[3] };
 
 			Bitfield<EepromData::Saut::Property::Configuration> sautConf (0);
 			sautConf.dps0Position = clubConf.dps0Position;
@@ -653,9 +865,9 @@ void SautConvert::dataUpdate (uint16_t )
 				reg.status = sreg;
 
 				if (cellNumber == 100)
-					vPas.maxDiv10Minus1 = data[3]/10 - 1;
+					vPas.maxDiv10Minus1 = data[0]/10 - 1;
 				if (cellNumber == 101)
-					vPas.redYellowDiv10Minus1 = data[3]/10 - 1;
+					vPas.redYellowDiv10Minus1 = data[0]/10 - 1;
 
 				stringNumber = 0;
 				if ( eeprom.saut.property.vPassenger.updateUnblock( vPas, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
@@ -674,9 +886,9 @@ void SautConvert::dataUpdate (uint16_t )
 				reg.status = sreg;
 
 				if (cellNumber == 102)
-					vCargo.maxDiv10Minus1 = data[3]/10 - 1;
+					vCargo.maxDiv10Minus1 = data[0]/10 - 1;
 				if (cellNumber == 103)
-					vCargo.redYellowDiv10Minus1 = data[3]/10 - 1;
+					vCargo.redYellowDiv10Minus1 = data[0]/10 - 1;
 
 				stringNumber = 0;
 				if ( eeprom.saut.property.vCargo.updateUnblock( vCargo, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
@@ -695,9 +907,9 @@ void SautConvert::dataUpdate (uint16_t )
 				reg.status = sreg;
 
 				if (cellNumber == 104)
-					vElecticTrain.maxDiv10Minus1 = data[3]/10 - 1;
+					vElecticTrain.maxDiv10Minus1 = data[0]/10 - 1;
 				if (cellNumber == 105)
-					vElecticTrain.redYellowDiv10Minus1 = data[3]/10 - 1;
+					vElecticTrain.redYellowDiv10Minus1 = data[0]/10 - 1;
 
 				stringNumber = 0;
 				if ( eeprom.saut.property.vElecticTrain.updateUnblock( vElecticTrain, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
@@ -709,129 +921,119 @@ void SautConvert::dataUpdate (uint16_t )
 		else if (cellNumber == 106) // vConstruct
 		{
 			stringNumber = 1;
-			if ( eeprom.saut.property.vConstruct.updateUnblock( data[3], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+			if ( eeprom.saut.property.vConstruct.updateUnblock( data[0], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
 		else if (cellNumber == 107) // locoType
 		{
 			stringNumber = 0;
-			if ( eeprom.saut.property.locoType.updateUnblock( data[3], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+			if ( eeprom.saut.property.locoType.updateUnblock( data[0], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
 		else if (cellNumber == 108) // locoTip
 		{
 			stringNumber = 1;
-			if ( eeprom.saut.property.locoTip.updateUnblock( data[3], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+			if ( eeprom.saut.property.locoTip.updateUnblock( data[0], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
 		else if (cellNumber == 109) // locoName1
 		{
 			stringNumber = 1;
 			if ( eeprom.saut.property.locoName14.updateUnblock(
-					(uint32_t)Complex<uint32_t>{ data[0], data[1], data[2], data[3] }, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+					(uint32_t)Complex<uint32_t>{ data[3], data[2], data[1], data[0] }, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
 		else if (cellNumber == 110) // locoName2
 		{
 			stringNumber = 1;
 			if ( eeprom.saut.property.locoName56.updateUnblock(
-					(uint16_t)Complex<uint16_t>{ data[0], data[1] }, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+					(uint16_t)Complex<uint16_t>{ data[3], data[2] }, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
 		else if (cellNumber == 111) // section
 		{
 			stringNumber = 1;
-			if ( eeprom.saut.property.sectionNumber.updateUnblock( data[3], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+			if ( eeprom.saut.property.sectionNumber.updateUnblock( data[0], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
 		else
 		{
+			eepromOpRunning = false;
 			dispatcher.add( runAfter, 0 );
 			return;
 		}
 
 		// Если в своём месте успешно не завершился return'ом
+		eepromOpRunning = false;
 		dispatcher.add( Command{SoftIntHandler::from_method<SautConvert, &SautConvert::dataUpdate>(this), 0} );
 	}
-	else
+	else if (resetRequest == ResetRequest::SelfWaitCycle)
 	{
-		resetRequest.writeOperation = false;
-		if (!resetRequest.statusRequest)
-			dispatcher.add( afterReset, 0 );
+		runAfterReset(0);
 	}
-}
-
-SautConvert::DiametersSaut SautConvert::diametersConvert (const uint16_t& diam0, const uint16_t& diam1)
-{
-	DiametersSaut saut;
-
-	saut.averageDiv10 = (diam1 > diam0) ? diam1/10 : diam0/10;
-
-	auto convert =
-			[](int8_t twosComplement) -> int8_t { return (twosComplement < 0) ? ((~twosComplement)|128 ) + 1 : twosComplement; };
-
-	saut.correction[0] = convert (diam0 - saut.averageDiv10*10);
-	saut.correction[1] = convert (diam1 - saut.averageDiv10*10);
-
-	return saut;
 }
 
 void SautConvert::diametersWriteStep1 (uint16_t)
 {
-	if (!resetRequest.writeOperation)
+	eepromOpRunning = false;
+	if (resetRequest == ResetRequest::No)
 	{
-		if ( !eeprom.saut.property.diameterAverageDiv10.updateUnblock(
-				diameters.averageDiv10,
+		if ( eeprom.saut.property.diameterAverageDiv10.updateUnblock(
+				diamAvrDiv10,
 				SoftIntHandler::from_method<SautConvert, &SautConvert::diametersWriteStep2>(this) )
 				)
+			eepromOpRunning = true;
+		else
 			dispatcher.add( SoftIntHandler::from_method<SautConvert, &SautConvert::diametersWriteStep1>(this), 0 );
 	}
-	else
+	else if (resetRequest == ResetRequest::AfterEepromOp)
 	{
-		resetRequest.writeOperation = false;
-		if (!resetRequest.statusRequest)
-			dispatcher.add( afterReset, 0 );
+		runAfterReset(0);
 	}
 }
 
 void SautConvert::diametersWriteStep2 (uint16_t)
 {
-	if (!resetRequest.writeOperation)
+	eepromOpRunning = false;
+	if (resetRequest == ResetRequest::No)
 	{
-		if ( !eeprom.saut.property.diameterCorrection[0].updateUnblock(
-				(uint8_t)diameters.correction[0],
+		if ( eeprom.saut.property.diameterCorrection[0].updateUnblock(
+				diamCor[0],
 				SoftIntHandler::from_method<SautConvert, &SautConvert::diametersWriteStep3>(this) )
 				)
+			eepromOpRunning = true;
+		else
 			dispatcher.add( SoftIntHandler::from_method<SautConvert, &SautConvert::diametersWriteStep2>(this), 0 );
 	}
-	else
+	else if (resetRequest == ResetRequest::AfterEepromOp)
 	{
-		resetRequest.writeOperation = false;
-		if (!resetRequest.statusRequest)
-			dispatcher.add( afterReset, 0 );
+		runAfterReset(0);
 	}
 }
 
 void SautConvert::diametersWriteStep3 (uint16_t)
 {
-	if (!resetRequest.writeOperation)
+	eepromOpRunning = false;
+	if (resetRequest == ResetRequest::No)
 	{
-		if ( !eeprom.saut.property.diameterCorrection[1].updateUnblock(
-				(uint8_t)diameters.correction[1],
+		stringNumber = 0;
+		if ( eeprom.saut.property.diameterCorrection[1].updateUnblock(
+				diamCor[1],
 				SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) )
 				)
+			eepromOpRunning = true;
+		else
 			dispatcher.add( SoftIntHandler::from_method<SautConvert, &SautConvert::diametersWriteStep3>(this), 0 );
 	}
-	else
+	else if (resetRequest == ResetRequest::AfterEepromOp)
 	{
-		resetRequest.writeOperation = false;
-		if (!resetRequest.statusRequest)
-			dispatcher.add( afterReset, 0 );
+		runAfterReset(0);
 	}
 }
 
 void SautConvert::updateStringCrc (uint16_t pointer)
 {
+	eepromOpRunning = false; // Эта функция вызывается по завершению операции eeprom
 	uint8_t str = stringNumber;
 	crc = 0;
 	readNextStringByte( Complex<uint16_t>{str,0} );
@@ -839,10 +1041,10 @@ void SautConvert::updateStringCrc (uint16_t pointer)
 
 void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 {
-	if (!resetRequest.writeOperation)
+	if (resetRequest == ResetRequest::No)
 	{
-		uint8_t& byte = Complex<uint16_t> (byteStringNumber)[1];
 		uint8_t& string = Complex<uint16_t> (byteStringNumber)[0];
+		uint8_t& byte = Complex<uint16_t> (byteStringNumber)[1];
 
 		if (byte == 14)
 		{
@@ -850,10 +1052,6 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 			{
 				plainMap[string*16+14] = uint8_t(crc/256);
 				plainMap[string*16+15] = uint8_t(crc);
-
-				if (afterStringUpdate)
-					dispatcher.add( afterStringUpdate, 0 );
-				afterStringUpdate = SoftIntHandler();
 
 				return;
 			}
@@ -867,7 +1065,9 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 				uint8_t data = eeprom.saut.string[string].data[byte];
 				reg.status = sreg;
 
+
 				// Восстановление "номера строки" в случае отсутсвия
+				eepromOpRunning = true; // приготовимся к записи
 				if (byte == 0 && data != 0x06)
 				{
 					if ( eeprom.saut.string[string].data[0].updateUnblock( 0x06, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
@@ -885,6 +1085,8 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 				}
 				else // "Номера строк" прописаны корректно.
 				{
+					eepromOpRunning = false; // запись не понадобилась
+
 					// Обновляем plainMap
 					plainMap[string*16+byte] = data;
 
@@ -900,11 +1102,9 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 
 		dispatcher.add( Command{SoftIntHandler::from_method<SautConvert, &SautConvert::readNextStringByte>(this), byteStringNumber} );
 	}
-	else
+	else if (resetRequest == ResetRequest::AfterEepromOp)
 	{
-		resetRequest.writeOperation = false;
-		if (!resetRequest.statusRequest)
-			dispatcher.add( afterReset, 0 );
+		runAfterReset(0);
 	}
 }
 
@@ -917,11 +1117,10 @@ uint16_t SautConvert::crcUpdate (uint16_t crc, const uint8_t& data)
     return crc;
 }
 
-void SautConvert::afterAllDispatcherTasks (uint16_t)
+void SautConvert::runAfterReset (uint16_t)
 {
-	resetRequest.statusRequest = 0;
-	if (!resetRequest)
-		dispatcher.add( afterReset, 0 );
+	resetRequest = ResetRequest::No;
+	dispatcher.add( afterReset, 0 );
 }
 
 // --------------------------------------- Связь с CAN ------------------------------------------►
@@ -1015,7 +1214,7 @@ private:
 template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 ConstValModule<CanDatType, canDat, Scheduler, scheduler>::ConstValModule ()
-	:  sautConvert (), interrogateCell (128), wrongCell (0)
+	: sautConvert (), interrogateCell (128), wrongCell (0), activePacket({0,0}), reset(false)
 {
 	scheduler.runIn(
 			Command {SoftIntHandler::from_method<ConstValModule,&ConstValModule::sendState> (this), 0},
@@ -1038,10 +1237,15 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getWriteMessage (
 
 		if (activePacket.number == 0) // свободны
 		{
-			activePacket = packet;
+			activePacket.number = packet.number;
+			activePacket.data[0] = packet.data[3];
+			activePacket.data[1] = packet.data[2];
+			activePacket.data[2] = packet.data[1];
+			activePacket.data[3] = packet.data[0];
+
 			killerId = scheduler.runIn(
 								Command {SoftIntHandler::from_method<ConstValModule, &ConstValModule::resetAllOps>(this), 0},
-								200 );
+								400 );
 			eeprom.club.cell[packet.number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::isWritten>(this) );
 		}
 		else
@@ -1065,10 +1269,15 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getLeftDataMessag
 	{
 		if (activePacket.number == 0) // свободны
 		{
-			activePacket = packet;
+			activePacket.number = packet.number;
+			activePacket.data[0] = packet.data[3];
+			activePacket.data[1] = packet.data[2];
+			activePacket.data[2] = packet.data[1];
+			activePacket.data[3] = packet.data[0];
+
 			killerId = scheduler.runIn(
 								Command {SoftIntHandler::from_method<ConstValModule, &ConstValModule::resetAllOps>(this), 0},
-								200 );
+								400 );
 			eeprom.club.cell[packet.number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::isWritten>(this) );
 		}
 		else
@@ -1095,7 +1304,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getQueryMessage (
 
 			killerId = scheduler.runIn(
 								Command {SoftIntHandler::from_method<ConstValModule, &ConstValModule::resetAllOps>(this), 0},
-								200 );
+								400 );
 			eeprom.club.cell[number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::read> (this) );
 		}
 	}
@@ -1105,22 +1314,28 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::isWritten (uint16_t res)
 {
-	if (res)
-		confirm (0);
-	else
-		write (0);
+	if (!reset)
+	{
+		if (res)
+			confirm (0);
+		else
+			write (0);
+	}
 }
 
 template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::isGood (uint16_t res)
 {
-	if (res)
-		confirm (1);
-	else
+	if (!reset)
 	{
-		scheduler.deleteId (killerId);
-		endOperation(Status::ErrWrongCrc);
+		if (res)
+			confirm (1);
+		else
+		{
+			scheduler.deleteId (killerId);
+			endOperation(Status::ErrWrongCrc);
+		}
 	}
 }
 
@@ -1128,23 +1343,25 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::confirm (uint16_t tryNumber)
 {
-	uint32_t savedData;
-	if ( eeprom.club.cell[activePacket.number].read (savedData) )
+	if (!reset)
 	{
-		if (savedData == activePacket.data)
+		uint32_t savedData;
+		if ( eeprom.club.cell[activePacket.number].read (savedData) )
 		{
-			scheduler.deleteId (killerId);
-			endOperation (Status::OK);
+			if (savedData == activePacket.data)
+			{
+				sautWrite (true);
+			}
+			else
+				write (0);
 		}
 		else
-			write (0);
-	}
-	else if (!reset)
-	{
-		if (tryNumber > 0)
-			dispatcher.add( SoftIntHandler::from_method <ConstValModule, &ConstValModule::confirm> (this), tryNumber );
-		else
-			eeprom.club.cell[activePacket.number].isGood( SoftIntHandler::from_method<ConstValModule, &ConstValModule::isGood>(this) );
+		{
+			if (tryNumber > 0)
+				dispatcher.add( SoftIntHandler::from_method <ConstValModule, &ConstValModule::confirm> (this), tryNumber );
+			else
+				eeprom.club.cell[activePacket.number].isGood( SoftIntHandler::from_method<ConstValModule, &ConstValModule::isGood>(this) );
+		}
 	}
 }
 
@@ -1152,32 +1369,37 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::write (uint16_t)
 {
-	if ( !eeprom.club.cell[activePacket.number].write( activePacket.data,
-												  SoftIntHandler::from_method <ConstValModule, &ConstValModule::sautWrite> (this) ) )
-		if (!reset)
+	if (!reset)
+	{
+		if ( !eeprom.club.cell[activePacket.number].write( activePacket.data,
+															SoftIntHandler::from_method <ConstValModule, &ConstValModule::sautWrite> (this) ) )
 			dispatcher.add( SoftIntHandler::from_method <ConstValModule, &ConstValModule::write> (this), 0);
+	}
 }
 
 template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::read (uint16_t written)
 {
-	if (written)
+	if (!reset)
 	{
-		if ( eeprom.club.cell[activePacket.number].read(activePacket.data) )
+		if (written)
+		{
+			if ( eeprom.club.cell[activePacket.number].read(activePacket.data) )
+			{
+				scheduler.deleteId (killerId);
+				endOperation (Status::OK);
+			}
+			else
+			{
+				dispatcher.add( SoftIntHandler::from_method <ConstValModule, &ConstValModule::read> (this), 1 );
+			}
+		}
+		else
 		{
 			scheduler.deleteId (killerId);
-			endOperation (Status::OK);
+			endOperation (Status::ErrUnwritten);
 		}
-		else if (!reset)
-		{
-			dispatcher.add( SoftIntHandler::from_method <ConstValModule, &ConstValModule::read> (this), 1 );
-		}
-	}
-	else
-	{
-		scheduler.deleteId (killerId);
-		endOperation (Status::ErrUnwritten);
 	}
 }
 
@@ -1185,15 +1407,18 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sautWrite (uint16_t status)
 {
-	if (status == true)
+	if (!reset)
 	{
-		sautConvert.updateCell (activePacket.number, activePacket.data,
-				SoftIntHandler::from_method<ConstValModule, &ConstValModule::successEnd>(this) );
-	}
-	else
-	{
-		scheduler.deleteId (killerId);
-		endOperation(Status::ErrUnknown);
+		if (status == true)
+		{
+			sautConvert.updateCell (activePacket.number, activePacket.data,
+					SoftIntHandler::from_method<ConstValModule, &ConstValModule::successEnd>(this) );
+		}
+		else
+		{
+			scheduler.deleteId (killerId);
+			endOperation(Status::ErrUnknown);
+		}
 	}
 }
 
@@ -1213,7 +1438,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 	{
 		if (interrogateCell != 128) // Предыдущий опрос не завершён
 		{
-			resetMonitor = false;
+			resetMonitor = true;
 			return;
 		}
 
@@ -1245,10 +1470,11 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.configuration[0],
 					monitoredData.type[1],
 					monitoredData.type[0],
-					0,
-					0,
+					scheduler.fill,
+					dispatcher.maxSize,
 					0
 									};
+			dispatcher.maxSize = 0;
 			if (reg.portB.pin7 == 0) // первый полукомплект
 				canDat.template send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
 			else
@@ -1333,7 +1559,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 		if (resPrev == 1) // записан, и без ошибок
 		{
 			bool readSuccess = true;
-			uint32_t tmp = 0xCD;
+			uint32_t tmp = 0;
 			if (interrogateCell == 3)
 			{
 				readSuccess = eeprom.club.property.train.read (tmp);
@@ -1342,9 +1568,6 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 			else if (interrogateCell == 4)
 			{
 				readSuccess = eeprom.club.property.category.read (tmp);
-				if (readSuccess)
-					reg.portC.pin4.toggle();
-//				monitoredData.category = 0xAB;
 				monitoredData.category = tmp;
 			}
 			else if (interrogateCell == 6)
@@ -1431,9 +1654,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::endOperation (con
 	if (status == Status::OK)
 	{
 		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<CanTx::SYS_DATA_A> ({activePacket.number, activePacket.data[0], activePacket.data[1], activePacket.data[2], activePacket.data[3]});
+			canDat.template send<CanTx::SYS_DATA_A> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]});
 		else
-			canDat.template send<CanTx::SYS_DATA_B> ({activePacket.number, activePacket.data[0], activePacket.data[1], activePacket.data[2], activePacket.data[3]});
+			canDat.template send<CanTx::SYS_DATA_B> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]});
 	}
 	else
 	{
