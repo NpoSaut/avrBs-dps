@@ -11,7 +11,7 @@
 
 #include <avr/pgmspace.h>
 
-#define ID_VERSION 131
+#define ID_VERSION 137
 #define ID_YEAR 0x1F
 #define ID_MODIF 0x21
 #define ID_MANTH 0x0C

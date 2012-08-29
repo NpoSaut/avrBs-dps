@@ -1470,11 +1470,10 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.configuration[0],
 					monitoredData.type[1],
 					monitoredData.type[0],
-					scheduler.fill,
-					dispatcher.maxSize,
+					0,
+					0,
 					0
 									};
-			dispatcher.maxSize = 0;
 			if (reg.portB.pin7 == 0) // первый полукомплект
 				canDat.template send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
 			else
