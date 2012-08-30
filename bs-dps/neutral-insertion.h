@@ -11,6 +11,7 @@
 #ifndef NEUTRAL_INSERTION_H_
 #define NEUTRAL_INSERTION_H_
 
+#include <cpp/dispatcher.h>
 #include <cpp/universal.h>
 #include <cpp/scheduler.h>
 #include <cpp/delegate/delegate.hpp>
@@ -24,22 +25,14 @@ template <  typename CanDatType, CanDatType& canDat,
 class NeutralInsertion
 {
 public:
-	NeutralInsertion (bool active)
-		: type (Type::NoTarget), coord (0), numberFaultSendTrys (0)
-	{
-		trainLength = 300;
-		trainLengthCalc(0);
-		length = trainLength;
+	NeutralInsertion ()
+		: active (false)
+	{}
 
-		if (active)
-			scheduler.runIn(
-					Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
-					500	);
-	}
-
-	void getEcData (uint16_t)
+	void getEcData (uint16_t pointerToData)
 	{
-		const uint8_t (&data) [8] = canDat.template get <CanRx::MM_NEUTRAL> ();
+		typedef const uint8_t Data[8];
+		Data& data = *((Data*) pointerToData);
 
 		uint8_t inputType = data[1] & 0b11;
 		if ( inputType == 0 )
@@ -49,8 +42,17 @@ public:
 		else
 			return;
 
+		uint16_t trainLength;
+		if ( !trainLengthCalc(trainLength) && !active ) // если не удалось прочитать в первый раз
+			trainLength = 300;
+
 		length = trainLength + data[5] + uint16_t(data[4] & 0x1F) * 256; // длина поезда + длина вставки
-		coord = uint16_t (data[3]) + uint16_t (data[2]) * 256;
+
+		if (!active)
+		{
+			active = true;
+			sendData(0);
+		}
 	}
 private:
 	void sendData (uint16_t)
@@ -60,39 +62,52 @@ private:
 		{
 			int16_t distance = coord - uint16_t(dps.spatiumMeters);
 			if ( distance + length <= 0 )
+			{
 				type = Type::NoTarget;
+				active = false;
+			}
 
 			if ( distance > 0 && distance < 1500 )
 				outDistance = distance;
 		}
 
-		uint8_t data[3] = { (uint8_t)type, outDistance[0], outDistance[1] };
-		if ( canDat.template send<CanTx::IPD_NEUTRAL> (data) )
+		if (active)
 		{
-			numberFaultSendTrys = 0;
-			scheduler.runIn(
+			uint8_t data[3] = { (uint8_t)type, outDistance[0], outDistance[1] };
+			if ( canDat.template send<CanTx::IPD_NEUTRAL> (data) )
+			{
+				scheduler.runIn(
 					Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
 					500	);
-		}
-		else if ( numberFaultSendTrys < 4 )
-		{
-			numberFaultSendTrys ++;
-			scheduler.runIn(
-					Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
-					100	);
+			}
+			else
+			{
+				sendAttempts ++;
+				dispatcher.add( SoftIntHandler::from_method<NeutralInsertion, &NeutralInsertion::sendData>(this), 0 );
+			}
 		}
 	}
-	void trainLengthCalc (uint16_t )
+	bool trainLengthCalc (uint16_t& length)
 	{
-		uint32_t category, conventionalWagonNumber;
-		if ( eeprom.club.property.category.read (category) &&
-			 eeprom.club.property.lengthWagon.read (conventionalWagonNumber) )
+		uint32_t conventionalWagonNumber;
+//		uint32_t category, conventionalWagonNumber;
+//		if ( eeprom.club.property.category.read (category) &&
+		if ( eeprom.club.property.lengthWagon.read (conventionalWagonNumber) )
 		{
-			uint8_t wagonLength =  uint8_t(category) > 5 ? 16 : 25;
-			trainLength = uint16_t(conventionalWagonNumber) * wagonLength + 100;
+//			uint8_t wagonLength =  uint8_t(category) > 5 ? 16 : 25;
+			uint8_t wagonLength = 25;
+			length = uint16_t(conventionalWagonNumber) * wagonLength + 50;
+			return true;
 		}
+		else
+			return false;
 	}
 
+	union
+	{
+		bool active;
+		uint8_t sendAttempts;
+	};
 	enum class Type : uint8_t
 	{
 		NoTarget,
@@ -101,9 +116,7 @@ private:
 	};
 	Type type;
 	uint16_t length;
-	uint16_t trainLength;
 	uint16_t coord;
-	uint8_t numberFaultSendTrys;
 };
 
 

@@ -523,7 +523,7 @@ MPHType mph;
 // ------------------------------------- Нейтральная вставка -------------------------------------►
 
 typedef NeutralInsertion<CanDatType, canDat, SchedulerType, scheduler, DpsType, dps> NeutralInsertionType;
-NeutralInsertionType neutralInsertion (reg.portB.pin7 == 0);
+NeutralInsertionType neutralInsertion;
 
 // --------------------------------------- Эмуляция движения ------------------------------------►
 
