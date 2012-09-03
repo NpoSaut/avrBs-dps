@@ -357,10 +357,11 @@ template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uin
 			Port Register::* resetPort, uint8_t resetPin	>
 void ProgSpiSimple<control, dataReg, port, ssPin, sckPin, mosiPin, misoPin, resetPort, resetPin>::spiConfig ()
 {
-	(reg.*control).enable = true;
-	(reg.*control).master = true;
-	(reg.*control).prescale = SpiStatusControl::Prescale::F4;
-//	(reg.*control).prescale = SpiStatusControl::Prescale::F16;
+	Bitfield<SpiStatusControl> ctr (0);
+	ctr.enable = true;
+	ctr.master = true;
+	ctr.prescale = SpiStatusControl::Prescale::F4;
+	(reg.*control) = ctr;
 }
 
 template <	volatile Bitfield<SpiStatusControl> Register::* control, volatile uint8_t Register::* dataReg,

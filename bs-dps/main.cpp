@@ -75,6 +75,7 @@ typedef INT_TYPELIST_12 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 						 CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
 						 CanTx::MY_KPT_A, CanTx::MY_KPT_B,
 						 CanTx::IPD_PARAM_A, CanTx::IPD_PARAM_B ) AUX_RESOURCE_SYS_DATA_IPD_PARAM;
+typedef INT_TYPELIST_2 	(CanTx::PROGRAM_SLAVE_CTRL, CanTx::PROGRAM_SLAVE_DATA) PROGRAM_SLAVE;
 
 typedef INT_TYPELIST_5 (CanRx::MCO_STATE_A, CanRx::MCO_STATE_B,
 						CanRx::MCO_LIMITS_A, CanRx::MCO_LIMITS_B,
@@ -84,8 +85,7 @@ typedef INT_TYPELIST_8 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_O
 typedef INT_TYPELIST_2 (CanRx::MM_DATA, CanRx::MM_NEUTRAL) MM;
 typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA_A) INPUT;
 typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
-typedef INT_TYPELIST_4 (CanRx::PROGRAM_IPD_CONTROL_A, CanRx::PROGRAM_IPD_DATA_A,
-						CanRx::PROGRAM_IPD_CONTROL_B, CanRx::PROGRAM_IPD_DATA_B) PROGRAM_IPD;
+typedef INT_TYPELIST_2 (CanRx::PROGRAM_MASTER_CTRL, CanRx::PROGRAM_MASTER_DATA) PROGRAM_MASTER;
 
 typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов для отправки
 						IPD_STATE,
@@ -94,7 +94,7 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 						SYS_DATA_STATE2,
 						MPH_STATE,
 						AUX_RESOURCE_SYS_DATA_IPD_PARAM,
-						PROGRAM_IPD
+						PROGRAM_SLAVE
 								),
 				 LOKI_TYPELIST_8(
 						 MCO,
@@ -104,9 +104,9 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 						 INPUT,
 						 DIAGNOSTICS,
 						 Int2Type< CanRx::IPD_EMULATION >,
-						 PROGRAM_IPD
+						 PROGRAM_MASTER
 						 	 	 ),
-				 LOKI_TYPELIST_25(
+				 LOKI_TYPELIST_23(
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
@@ -128,15 +128,13 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 						 Int2Type< CanRx::MP_ALS_OFF_TIME_B >,
 						 Int2Type< CanRx::MM_NEUTRAL >,
 						 Int2Type< CanRx::IPD_EMULATION>,
-						 Int2Type< CanRx::PROGRAM_IPD_CONTROL_A>,
-						 Int2Type< CanRx::PROGRAM_IPD_CONTROL_B>,
-						 Int2Type< CanRx::PROGRAM_IPD_DATA_A>,
-						 Int2Type< CanRx::PROGRAM_IPD_DATA_B>
+						 Int2Type< CanRx::PROGRAM_MASTER_CTRL>,
+						 Int2Type< CanRx::PROGRAM_MASTER_DATA>
 								),
 					128,
 					LOKI_TYPELIST_2(
-						 Int2Type< CanRx::PROGRAM_IPD_DATA_A>,
-						 Int2Type< CanRx::PROGRAM_IPD_DATA_B>
+						 Int2Type< CanTx::PROGRAM_SLAVE_CTRL>,
+						 Int2Type< CanTx::PROGRAM_SLAVE_DATA>
 								),
 				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
 	CanDatType;
@@ -636,15 +634,11 @@ Programming programming (
 	data.member<Dps0>(),	data.member<Dps1>(),	data.member<Dps2>(),	data.member<Dps3>(),
 	data.member<DpsOut0>(),	data.member<DpsOut1>(),	data.member<DpsOut2>(),	data.member<DpsOut3>() );
 
-typedef ProgrammingCan <CanDatType, canDat, CanRx::PROGRAM_IPD_CONTROL_A, CanRx::PROGRAM_IPD_DATA_A> ProgrammingCanTypeA;
-ProgrammingCanTypeA programmingCanA (	Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
-										Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps)
+typedef ProgrammingCan <CanDatType, canDat, CanTx::PROGRAM_SLAVE_CTRL, CanTx::PROGRAM_SLAVE_DATA > ProgrammingCanType;
+ProgrammingCanType programmingCan (	Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
+										Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps),
+										reg.portB.pin7 == 0
 									);
-typedef ProgrammingCan <CanDatType, canDat, CanRx::PROGRAM_IPD_CONTROL_B, CanRx::PROGRAM_IPD_DATA_B> ProgrammingCanTypeB;
-ProgrammingCanTypeB programmingCanB (	Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
-										Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps)
-								 	);
-
 
 // ---------------------------------- Парсер команд по линии связи ------------------------------►
 
@@ -724,7 +718,7 @@ int main ()
 		if (sum != 0) // В id.controlSumm хранится дополнение до 0
 			reboot ();
 	}
-	asm volatile ("nop"); // !!! 126 version hack !!!
+//	asm volatile ("nop"); // !!! 126 version hack !!!
 //	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 //	asm volatile ("nop");
 
@@ -763,19 +757,11 @@ int main ()
 	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallTimeB>();
 
 	// Программирование по CAN
-	if (reg.portB.pin7 == 0) // первый полукомплект
-	{
-		canDat.rxHandler<CanRx::PROGRAM_IPD_CONTROL_A>() = SoftIntHandler::from_method <ProgrammingCanTypeA, &ProgrammingCanTypeA::getCommand> (&programmingCanA);
-		canDat.rxHandler<CanRx::PROGRAM_IPD_DATA_A>() = SoftIntHandler::from_method <ProgrammingCanTypeA, &ProgrammingCanTypeA::getData> (&programmingCanA);
-		canDat.txHandler<CanRx::PROGRAM_IPD_DATA_A>() = SoftIntHandler::from_method <ProgrammingCanTypeA, &ProgrammingCanTypeA::sendData> (&programmingCanA);
-	}
-	else
-	{
-		canDat.rxHandler<CanRx::PROGRAM_IPD_CONTROL_B>() = SoftIntHandler::from_method <ProgrammingCanTypeB, &ProgrammingCanTypeB::getCommand> (&programmingCanB);
-		canDat.rxHandler<CanRx::PROGRAM_IPD_DATA_B>() = SoftIntHandler::from_method <ProgrammingCanTypeB, &ProgrammingCanTypeB::getData> (&programmingCanB);
-		canDat.txHandler<CanRx::PROGRAM_IPD_DATA_B>() = SoftIntHandler::from_method <ProgrammingCanTypeB, &ProgrammingCanTypeB::sendData> (&programmingCanB);
-	}
-	dps.constituoActivus();
+	canDat.rxHandler<CanRx::PROGRAM_MASTER_CTRL>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::getCommand> (&programmingCan);
+	canDat.rxHandler<CanRx::PROGRAM_MASTER_DATA>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::getData> (&programmingCan);
+	canDat.txHandler<CanTx::PROGRAM_SLAVE_DATA>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::sendData> (&programmingCan);
+
+		dps.constituoActivus();
 
 	sei();
 
@@ -815,8 +801,8 @@ int main ()
     	resetButtonWasFree |= reg.portB.pin5;
     	if ( resetButtonWasFree && !reg.portB.pin5 ) // Нажата кнопка сброса (а до этого была отпущена)
     	{
-//    		eeprom_update_byte (&eeprom.dps0Good, 1);
-//    		eeprom_update_byte (&eeprom.dps1Good, 1);
+    		eeprom.dps0Good = 1;
+    		eeprom.dps1Good = 1;
     		reboot();
     	}
 
@@ -842,7 +828,6 @@ int main ()
 //				canDat.send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);
 //    	}
 
-    	lam<0,1000> ();
     	dispatcher.invoke();
     	wdt_reset();
     	scheduler.invoke();

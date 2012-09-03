@@ -1,4 +1,4 @@
-#Thu Aug 16 10:01:43 YEKST 2012
+#Mon Sep 03 13:00:42 YEKST 2012
 avrtarget/ClockFrequency=12000000
 avrtarget/ExtRAMSize=0
 avrtarget/ExtendedRAM=false
@@ -7,7 +7,7 @@ avrtarget/UseEEPROM=false
 avrtarget/UseExtendedRAMforHeap=true
 avrtarget/avrdude/BitBangDelay=
 avrtarget/avrdude/Bitclock=
-avrtarget/avrdude/EEPROMFile=${workspace_loc\:/avr-test/Release/written-test2.eeprom.bin}
+avrtarget/avrdude/EEPROMFile=${workspace_loc\:/bs-dps/Release/2es6.eeprom.bin}
 avrtarget/avrdude/EEPROMFromConfig=false
 avrtarget/avrdude/FlashFile=
 avrtarget/avrdude/FlashFromConfig=true

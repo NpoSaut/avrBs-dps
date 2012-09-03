@@ -64,7 +64,7 @@ template <  typename CanDat, CanDat& canDat,
 class ProgrammingCan
 {
 public:
-	ProgrammingCan (Delegate<void ()> activateSystem, Delegate<void ()> disactivateSystem);
+	ProgrammingCan (Delegate<void ()> activateSystem, Delegate<void ()> disactivateSystem, uint8_t selfComplect);
 
 	void getCommand (uint16_t parametersArrayPointer);
 
@@ -82,24 +82,19 @@ private:
 	Controller;
 	Controller controller;
 
+	enum Device : uint8_t
+	{
+		bsDpsA = 1,
+		bsDpsB = 2
+	};
 	enum Action : uint8_t
 	{
-		write = 0,
-		read = 1,
-		erase = 2,
-		reboot_neighbour = 3,
-		ping = 4
-	};
-	enum Status : uint8_t
-	{
-		OK = 0,
-		UNKNOWN_ERROR = 1,
-		SIZE_LIMIT = 2,
-		OUT_OF_RANGE = 3,
-		CRC_ERROR = 4,
-		UNKNOWN_MEMORY = 5,
-		UNRECOGNIZED_DATA = 6,
-		UNKNOWN_COMMAND = 7
+		exit = 0,
+		enter = 1,
+		write = 2,
+		read = 3,
+		erase = 4,
+		ping = 5
 	};
 	enum MemoryType : uint8_t
 	{
@@ -107,21 +102,52 @@ private:
 		eeprom = 1,
 		fuse = 2
 	};
-
+	enum Status : uint8_t
+	{
+		OK = 0,
+		UNKNOWN_ERROR = 1,
+		SIZE_LIMIT = 2,
+		OUT_OF_RANGE = 3,
+		UNKNOWN_MEMORY = 4,
+		NOT_IN_PROG_MODE = 5,
+		UNKNOWN_COMMAND = 15
+	};
 	struct CommandMap
 	{
-		MemoryType memoryType	:3;
-		Action action			:3;
-		uint8_t init			:1;
-		uint8_t					:1;
+		CommandMap () {}
+		CommandMap (Device device, MemoryType memoryType, Action action, uint16_t size = 0, uint32_t startAdr = 0)
+			: device (device), memoryType (memoryType), action (action), size (size), startAdr (startAdr) {}
+
+		Device device;
+		MemoryType memoryType	:4;
+		Action action			:4;
+		uint16_t size;
+		uint32_t startAdr;
 	};
 	typedef Bitfield<CommandMap> Command;
 	struct AnswerMap
 	{
-		Status	status			:3;
-		Action	action			:3;
-		uint8_t 				:1; // дл ответа этот флаг = 0
-		uint8_t					:1; // резерв
+		AnswerMap () {}
+		AnswerMap (Device device, Status status, Action action)
+			: device (device), status (status), action (action) {}
+		AnswerMap (Device device, Status status, Action action, uint16_t crc)
+			: device (device), status (status), action (action), crc (crc) {}
+		AnswerMap (Device device, Status status, Action action, uint32_t memAreaStart, uint32_t memAreaEnd)
+			: device (device), status (status), action (action), memAreaStart (memAreaStart), memAreaEnd (memAreaEnd) {}
+
+		Device device;
+		Status	status			:4;
+		Action	action			:4;
+		union
+		{
+			uint16_t crc;
+			uint16_t sizeLimit;
+			struct
+			{
+				uint32_t memAreaStart	:24;
+				uint32_t memAreaEnd		:24;
+			};
+		};
 	};
 	typedef Bitfield<AnswerMap> Answer;
 
@@ -132,7 +158,9 @@ private:
 
 	void readDataToBuffer (uint8_t (&data) [8]);
 	bool prepareController ();
+	void send (const Answer&);
 
+	const uint8_t selfComplect;
 	uint16_t counter; // обратный отсчёт байт до конца сеанса
 	uint8_t txData[8]; // отправляемые данные
 	Complex<uint16_t> crc;
@@ -149,8 +177,8 @@ private:
 
 template <  typename CanDat, CanDat& canDat,
 			uint16_t controlDescriptor, uint16_t dataDescriptor >
-ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::ProgrammingCan (Delegate<void ()> activateSystem, Delegate<void ()> disactivateSystem)
-	: controller (), counter (0), crc (0), wantedCrc (0), active (Active::nothing), activateSystem (activateSystem), disactivateSystem (disactivateSystem)
+ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::ProgrammingCan (Delegate<void ()> activateSystem, Delegate<void ()> disactivateSystem, uint8_t selfComplect)
+	: controller (), selfComplect (selfComplect), counter (0), crc (0), wantedCrc (0), active (Active::nothing), activateSystem (activateSystem), disactivateSystem (disactivateSystem)
 {
 }
 
@@ -158,113 +186,103 @@ template <  typename CanDat, CanDat& canDat,
 			uint16_t controlDescriptor, uint16_t dataDescriptor >
 void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getCommand (uint16_t parametersArrayPointer)
 {
-	Data& data = *( (Data *)(parametersArrayPointer) );
+	Command& command = *( (Command *)(parametersArrayPointer) );
 
-	Command& command = _cast(Command, data[0]);
-
-	if ( command.init )
+	if ( (command.device == Device::bsDpsA && selfComplect == 1) ||		// команда на прошивку соседнего полукомплекта
+		 (command.device == Device::bsDpsB && selfComplect == 0)	)
 	{
 		active = Active::nothing; // Прерываем текущий сеанс
 		activateSystem ();
-		switch (command.action)
+		if ( command.action == Action::enter )
 		{
-			case Action::read:
-			case Action::write:
-				if (command.memoryType == MemoryType::fuse)
-				{
-
-				}
-				else
-				{
-					if ( command.memoryType == MemoryType::flash )
-						memType = ProgSpi::MemType::flash;
-					else if ( command.memoryType == MemoryType::eeprom )
-						memType = ProgSpi::MemType::eeprom;
-					else
-					{
-						while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_MEMORY, command.action,}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
-						break;
-					}
-
-					uint16_t& size = _cast (uint16_t, data[1]);
-					uint32_t startAdr = Complex<uint32_t> {data[3], data[4], data[5], 0};
-					uint16_t& getCrc = _cast (uint16_t, data[6]);
-
-					// Проверки
-					if ( size > 256 )
-					{
-						while ( !canDat.template send<controlDescriptor> ({ Answer({Status::SIZE_LIMIT, command.action}), 0, 1 ,0 ,0 ,0 ,0 ,0 }) );
-						break;
-					}
-
-					if ( memType == ProgSpi::MemType::flash )
-					{
-						if ( startAdr + (uint32_t)size > flashSize )
-						{
-							while ( !canDat.template send<controlDescriptor> ({Answer({Status::OUT_OF_RANGE, command.action}),
-										uint8_t(flashSize), uint8_t(flashSize/256), uint8_t(flashSize/256/256), uint8_t(flashSize/256/256/256), 0, 0, 0 }) );
-							break;
-						}
-					}
-					else
-					{
-						if ( startAdr + (uint32_t)size > eepromSize )
-						{
-							while ( !canDat.template send<controlDescriptor> ({Answer({Status::OUT_OF_RANGE, command.action}),
-										uint8_t(eepromSize), uint8_t(eepromSize/256), 0, 0, 0, 0, 0 }) );
-							break;
-						}
-					}
-
-					if ( prepareController() )
-					{
-						controller.position = startAdr;
-						counter = size;
-						crc = 0;
-						wantedCrc = getCrc;
-
-						disactivateSystem ();
-
-						if ( command.action == Action::read )
-						{
-							active = Active::reading;
-							readDataToBuffer (txData);
-							sendData (0);
-						}
-						else
-							active = Active::writing;
-					}
-					else
-						while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_ERROR, command.action}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
-				}
-				break;
-
-			case Action::erase:
-				if ( prepareController() )
-				{
-					controller.erase();
-					while ( !canDat.template send<controlDescriptor> ({ Answer({Status::OK, Action::erase}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
-				}
-				else
-					while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_ERROR, Action::erase}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
-				break;
-
-			case Action::reboot_neighbour:
-				if ( controller.isInProgState() )
-					controller.flush<ProgSpi::MemType::flash>();
-					controller.flush<ProgSpi::MemType::eeprom>();
-				controller.rebootInWork();
-				while ( !canDat.template send<controlDescriptor> ({ Answer({Status::OK, Action::reboot_neighbour}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
-				break;
-
-			case Action::ping:
-				while ( !canDat.template send<controlDescriptor> ({ Answer({Status::OK, Action::ping}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
-				break;
-
-			default:
-				while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNKNOWN_COMMAND, command.action}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
-				break;
+			if ( !prepareController() )
+			{
+				send( AnswerMap{command.device, Status::UNKNOWN_ERROR, command.action} );
+				return;
+			}
 		}
+		else if ( command.action == Action::read ||
+				  command.action == Action::write  )
+		{
+			if ( command.memoryType == MemoryType::flash )
+				memType = ProgSpi::MemType::flash;
+			else if ( command.memoryType == MemoryType::eeprom )
+				memType = ProgSpi::MemType::eeprom;
+			else
+			{
+				send( AnswerMap{command.device, Status::UNKNOWN_MEMORY, command.action} );
+				return;
+			}
+
+			// Проверки
+			if ( !controller.isInProgState() )
+			{
+				send( AnswerMap{command.device, Status::NOT_IN_PROG_MODE, command.action} );
+				return;
+			}
+
+			if ( command.size > 256 )
+			{
+				send( AnswerMap{command.device, Status::SIZE_LIMIT, command.action, 256} );
+				return;
+			}
+
+			if (  command.startAdr + (uint32_t)command.size >
+					( memType == ProgSpi::MemType::flash ? flashSize : eepromSize ) )
+			{
+				send( AnswerMap{command.device, Status::OUT_OF_RANGE, command.action, 0, flashSize} );
+				return;
+			}
+
+			controller.position = command.startAdr;
+			counter = command.size;
+			crc = 0;
+
+			disactivateSystem ();
+
+			if ( command.action == Action::read )
+			{
+				active = Active::reading;
+				readDataToBuffer (txData);
+				sendData (0);
+			}
+			else
+				active = Active::writing;
+
+			return;
+		}
+		else if ( command.action == Action::erase )
+		{
+			if ( controller.isInProgState() )
+			{
+				controller.erase();
+			}
+			else
+			{
+				send( AnswerMap{command.device, Status::NOT_IN_PROG_MODE, command.action} );
+				return;
+			}
+		}
+		else if ( command.action == Action::exit )
+		{
+			if ( controller.isInProgState() )
+			{
+				controller.flush<ProgSpi::MemType::flash>();
+				controller.flush<ProgSpi::MemType::eeprom>();
+			}
+			controller.rebootInWork();
+		}
+		else if ( command.action == Action::ping )
+		{
+		}
+		else
+		{
+			send( AnswerMap{command.device, Status::UNKNOWN_COMMAND, command.action} );
+			return;
+		}
+
+		// Если выше не ушли по return
+		send( AnswerMap{command.device, Status::OK, command.action} );
 	}
 }
 
@@ -289,22 +307,20 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getData 
 			{
 				active = Active::nothing;
 				activateSystem ();
-				if (wantedCrc == crc)
-				{
 					if ( memType == ProgSpi::MemType::flash )
 						controller.flush<ProgSpi::MemType::flash>();
 					else
 						controller.flush<ProgSpi::MemType::eeprom>();
-					while ( !canDat.template send<controlDescriptor> ({ Answer({Status::OK, Action::write}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
-				}
-				else
-					while ( !canDat.template send<controlDescriptor> ({ Answer({Status::CRC_ERROR, Action::write}), crc[0], crc[1] ,0 ,0 ,0 ,0 ,0 }) );
+
+				send( AnswerMap{
+						selfComplect ? Device::bsDpsB : Device::bsDpsA,
+						Status::OK,
+						Action::write,
+						crc } );
 				break;
 			}
 		}
 	}
-	else
-		while ( !canDat.template send<controlDescriptor> ({ Answer({Status::UNRECOGNIZED_DATA, Action::write}), 0, 0 ,0 ,0 ,0 ,0 ,0 }) );
 }
 
 template <  typename CanDat, CanDat& canDat,
@@ -319,7 +335,12 @@ void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::sendData
 			counter = 0;
 			active = Active::nothing;
 			activateSystem ();
-			while ( !canDat.template send<controlDescriptor> ({Answer({Status::OK, Action::read}), crc[0], crc[1], 0, 0, 0, 0, 0}) );
+
+			send( AnswerMap{
+					selfComplect ? Device::bsDpsB : Device::bsDpsA,
+					Status::OK,
+					Action::read,
+					crc } );
 		}
 		else
 		{
@@ -357,6 +378,15 @@ bool ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::prepareC
 		return controller.rebootInProg();
 }
 
+template <  typename CanDat, CanDat& canDat,
+			uint16_t controlDescriptor, uint16_t dataDescriptor >
+void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::send (const Answer& answer)
+{
+	typedef const uint8_t Data[8];
+	Data& data = _cast(Data, answer);
+
+	while ( !canDat.template send<controlDescriptor> (data) );
+}
 
 class Programming
 {
@@ -455,7 +485,7 @@ void Programming::comParser ()
 	case Exit:
 	case FUSEExit:
 		Return (4);
-		neighbour.~ProgSpiSimple ();
+		neighbour.rebootInWork();
 		reboot();
 		break;
 

@@ -31,7 +31,9 @@ enum CanTx : uint16_t
 	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 1, // 9983
 	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 3, // 99A3
 	 MY_KPT_A = 			((uint16_t)0x4CE	<< 5) + 1, // 99C1
-	 MY_KPT_B = 			((uint16_t)0x4CF	<< 5) + 1  // 99E1
+	 MY_KPT_B = 			((uint16_t)0x4CF	<< 5) + 1, // 99E1
+	 PROGRAM_SLAVE_CTRL = 	((uint16_t)0x7E1	<< 5) + 8, // FC28
+	 PROGRAM_SLAVE_DATA = 	((uint16_t)0x7E3	<< 5) + 8  // FC68
 };
 
 enum CanRx : uint16_t
@@ -58,10 +60,8 @@ enum CanRx : uint16_t
 	 AUX_RESOURCE_MCO_A =		((uint16_t)0x440	<< 5) + 5, // 8805
 	 AUX_RESOURCE_MCO_B =		((uint16_t)0x450	<< 5) + 5, // 8A05
 	 IPD_EMULATION =			((uint16_t)0x764	<< 5) + 1, // EC81
-	 PROGRAM_IPD_CONTROL_A = 	((uint16_t)0x780	<< 5) + 8, // F008
-	 PROGRAM_IPD_DATA_A = 		((uint16_t)0x781	<< 5) + 8, // F028
-	 PROGRAM_IPD_CONTROL_B = 	((uint16_t)0x782	<< 5) + 8, // F048
-	 PROGRAM_IPD_DATA_B = 		((uint16_t)0x783	<< 5) + 8  // F068
+	 PROGRAM_MASTER_CTRL = 		((uint16_t)0x7E0	<< 5) + 8, // FC08
+	 PROGRAM_MASTER_DATA = 		((uint16_t)0x7E2	<< 5) + 8  // FC48
 };
 
 

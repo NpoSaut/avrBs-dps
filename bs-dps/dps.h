@@ -60,7 +60,7 @@ public:
 			{ 0, 0 }), impulsioLanterna (
 			{ 0, 0 }), tempusPunctum (
 			{ 0, 0 }), affectus (0), versusRotatio (
-			{ !positio, !positio }), causarius (false), commoratio (true), retroCan (0), vicisNum (0)
+			{ !positio, !positio }), causarius (false), commoratio (true)
 	{
 //		if (lanternaOperor)
 //		{
@@ -217,8 +217,8 @@ public:
 	EepromData::DpsPosition positio;
 
 	// --- ДЛЯ ОТЛАДКИ ---
-	uint8_t retroCan; // последний канал, по которому производился расчёт
-	uint8_t vicisNum; // кол-во переключений между каналами
+//	uint8_t retroCan; // последний канал, по которому производился расчёт
+//	uint8_t vicisNum; // кол-во переключений между каналами
 	// --- КОНЕЦ ---
 
 private:
@@ -263,11 +263,11 @@ private:
 
 	void computo (const uint8_t& can) __attribute__ ((noinline))
 	{
-		// Для отладки --- УБРАТЬ
-		if (retroCan != can)
-			vicisNum++;
-		retroCan = can;
-		// конец --- для отладки -- УБРАТЬ
+//		// Для отладки --- УБРАТЬ
+//		if (retroCan != can)
+//			vicisNum++;
+//		retroCan = can;
+//		// конец --- для отладки -- УБРАТЬ
 
 		// Считаем скорость
 		uint16_t celeritasNovus = (((34468 * uint32_t (diametros)) / period) * (impulsio[can] - 1))
@@ -329,10 +329,10 @@ public:
 		causarius[1] =
 		{	0,0,0};
 
-		dimetior[0] = new DimetiorType( 0 );
-		dimetior[1] = new DimetiorType( 0 );
-//		dimetior[0] = new DimetiorType( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
-//		dimetior[1] = new DimetiorType( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
+//		dimetior[0] = new DimetiorType( 0 );
+//		dimetior[1] = new DimetiorType( 0 );
+		dimetior[0] = new DimetiorType( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
+		dimetior[1] = new DimetiorType( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
 		accipioConstans (0);
 
 		(reg.*accessusPortus).in ();
@@ -646,26 +646,26 @@ private:
 					|| causarius[1].conjuctio
 			);
 
-//			// Сохранение неисправности в eeprom
-//			if (!mappa.validus0)
-//			eeprom_update_byte (&eeprom.dps0Good, 0);
-//			if (!mappa.validus1)
-//			eeprom_update_byte (&eeprom.dps1Good, 0);
+			// Сохранение неисправности в eeprom
+			if (!mappa.validus0)
+				eeprom.dps0Good = 0;
+			if (!mappa.validus1)
+				eeprom.dps1Good = 0;
 
-//			// Индикация неисправности на стоянке
-//			if ( dimetior[nCapio]->sicinCommoratio() )
-//			{
-//				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
-//				{
-//					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom_read_byte (&eeprom.dps0Good);
-//					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom_read_byte (&eeprom.dps0Good);
-//				}
-//				else
-//				{
-//					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom_read_byte (&eeprom.dps1Good);
-//					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom_read_byte (&eeprom.dps1Good);
-//				}
-//			}
+			// Индикация неисправности на стоянке
+			if ( dimetior[nCapio]->sicinCommoratio() )
+			{
+				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
+				{
+					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom.dps0Good;
+					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom.dps0Good;
+				}
+				else
+				{
+					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom.dps1Good;
+					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom.dps1Good;
+				}
+			}
 
 			// Вывод данных в линию связи
 			acceleratioEtAffectus <<= (uint16_t(dimetior[nCapio]->accipioAcceleratio()) * 256) | mappa;
@@ -787,40 +787,40 @@ private:
 			dimetior[1]->constituoDiametros (tmp);
 		}
 
-void dpsFaultProduco (uint16_t dpsFault)
-{
-	uint8_t data[2] =
-	{ (uint8_t) dpsFault, 0 };
-	canDat.template send<CanTx::IPD_DPS_FAULT> (data);
-}
+	void dpsFaultProduco (uint16_t dpsFault)
+	{
+		uint8_t data[2] =
+		{ (uint8_t) dpsFault, 0 };
+		canDat.template send<CanTx::IPD_DPS_FAULT> (data);
+	}
 
-// Выдаёт скорость в требуемом формате
-uint16_t signCeleritas (const uint16_t& cel) const
-{
-	uint8_t superiorAliquam = cel >> 15;
-	return (cel << 1) | superiorAliquam;
-}
+	// Выдаёт скорость в требуемом формате
+	uint16_t signCeleritas (const uint16_t& cel) const
+	{
+		uint8_t superiorAliquam = cel >> 15;
+		return (cel << 1) | superiorAliquam;
+	}
 
-// Округление скорости до целых с гистерезисом
-const uint16_t& rotundatioCeleritas (const uint16_t& cel) const
-{
-	if (cel / 128 < retroRotundatioCeleritas)
-		((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 96) / 128;
-	else
-		((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 32) / 128;
-	return retroRotundatioCeleritas;
-}
+	// Округление скорости до целых с гистерезисом
+	const uint16_t& rotundatioCeleritas (const uint16_t& cel) const
+	{
+		if (cel / 128 < retroRotundatioCeleritas)
+			((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 96) / 128;
+		else
+			((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 32) / 128;
+		return retroRotundatioCeleritas;
+	}
 
-// Выдаёт скрость выбранного датчика в км/ч/128
-uint16_t accipioCeleritas ()
-{
-	return dimetior[nCapio]->accipioCeleritas ();
-}
+	// Выдаёт скрость выбранного датчика в км/ч/128
+	uint16_t accipioCeleritas ()
+	{
+		return dimetior[nCapio]->accipioCeleritas ();
+	}
 
-int32_t accipioSpatiumMeters ()
-{
-	return _cast(int32_t, spatiumMeters);
-}
+	int32_t accipioSpatiumMeters ()
+	{
+		return _cast(int32_t, spatiumMeters);
+	}
 };
 
 #endif /* DPS_H_ */
