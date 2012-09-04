@@ -1140,7 +1140,8 @@ public:
 
 private:
 	void isWritten (uint16_t res);
-	void isGood (uint16_t res);
+	void isGoodWhenWrite (uint16_t res);
+	void isGoodWhenRead (uint16_t res);
 	void confirm (uint16_t tryNumber);
 	void write (uint16_t tryNumber);
 	void read (uint16_t written);
@@ -1325,12 +1326,25 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::isWritten (uint16
 
 template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
-void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::isGood (uint16_t res)
+void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::isGoodWhenWrite (uint16_t res)
 {
 	if (!reset)
 	{
 		if (res)
 			confirm (1);
+		else
+			write (0);
+	}
+}
+
+template <  typename CanDatType, CanDatType& canDat,
+			typename Scheduler, Scheduler& scheduler >
+void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::isGoodWhenRead (uint16_t res)
+{
+	if (!reset)
+	{
+		if (res)
+			read (2);
 		else
 		{
 			scheduler.deleteId (killerId);
@@ -1360,7 +1374,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::confirm (uint16_t
 			if (tryNumber > 0)
 				dispatcher.add( SoftIntHandler::from_method <ConstValModule, &ConstValModule::confirm> (this), tryNumber );
 			else
-				eeprom.club.cell[activePacket.number].isGood( SoftIntHandler::from_method<ConstValModule, &ConstValModule::isGood>(this) );
+				eeprom.club.cell[activePacket.number].isGood( SoftIntHandler::from_method<ConstValModule, &ConstValModule::isGoodWhenWrite>(this) );
 		}
 	}
 }
@@ -1392,7 +1406,10 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::read (uint16_t wr
 			}
 			else
 			{
-				dispatcher.add( SoftIntHandler::from_method <ConstValModule, &ConstValModule::read> (this), 1 );
+				if (written == 1) // первая попытка
+					eeprom.club.cell[activePacket.number].isGood( SoftIntHandler::from_method<ConstValModule, &ConstValModule::isGoodWhenRead>(this) );
+				else
+					dispatcher.add( SoftIntHandler::from_method <ConstValModule, &ConstValModule::read> (this), 1 );
 			}
 		}
 		else
