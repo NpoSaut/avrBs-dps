@@ -56,34 +56,49 @@ private:
 		if ( type != Type::NoTarget )
 		{
 			int16_t distance = coord - uint16_t(dps.spatiumMeters);
-			if ( distance + length <= 0 )
+			if ( distance <= -length )
 				type = Type::NoTarget;
 
 			if ( distance > 0 && distance < 1500 )
 				outDistance = distance;
-		}
 
-		uint8_t data[3] = { (uint8_t)type, outDistance[0], outDistance[1] };
-		if ( canDat.template send<CanTx::IPD_NEUTRAL> (data) )
+			uint8_t data[3] = { (uint8_t)type, outDistance[0], outDistance[1] };
+			if ( canDat.template send<CanTx::IPD_NEUTRAL> (data) )
+			{
+				numberFaultSendTrys = 0;
+				scheduler.runIn(
+						Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
+						500	);
+			}
+			else if ( numberFaultSendTrys < 4 )
+			{
+				numberFaultSendTrys ++;
+				scheduler.runIn(
+						Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
+						100	);
+			}
+			else
+			{
+				numberFaultSendTrys = 0;
+				scheduler.runIn(
+						Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
+						500	);
+			}
+		}
+		else
 		{
 			numberFaultSendTrys = 0;
 			scheduler.runIn(
 					Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
 					500	);
 		}
-		else if ( numberFaultSendTrys < 4 )
-		{
-			numberFaultSendTrys ++;
-			scheduler.runIn(
-					Command { SoftIntHandler::from_method <NeutralInsertion, &NeutralInsertion::sendData> (this), 0 },
-					100	);
-		}
 	}
 	const uint16_t trainLengthCalc () const
 	{
-		uint8_t wagonLength =  eeprom_read_dword (&eeprom.club.category) > 5 ? 16 : 25;
+		//uint8_t wagonLength =  eeprom_read_dword (&eeprom.club.category) > 5 ? 16 : 25;
+		uint8_t wagonLength = 25;
 		uint32_t conventionalWagonNumber = eeprom_read_dword (&eeprom.club.lengthWagon);
-		return conventionalWagonNumber * wagonLength + 100;
+		return conventionalWagonNumber * wagonLength + 50;
 	}
 
 	enum class Type : uint8_t
@@ -93,7 +108,7 @@ private:
 		SystemChange
 	};
 	Type type;
-	uint16_t length;
+	int16_t length;
 	uint16_t coord;
 	uint8_t numberFaultSendTrys;
 };

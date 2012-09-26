@@ -25,7 +25,7 @@ struct Eeprom
 		uint8_t D_Ban_Sr; // Средний диаметр бандажа данного типа локомотива (деленный на 10).		-- ?
 		struct Configuration
 		{
-			enum DpsPosition { Left = 0, Rigth = 1 };
+			enum DpsPosition { Left = 0, Right = 1 };
 			DpsPosition	dps0Position	:1;
 			DpsPosition	dps1Position	:1;
 			uint8_t		eks				:1;									// --?

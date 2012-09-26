@@ -650,11 +650,19 @@ class Emulation
 {
 public:
 	Emulation ()
-		: engine ( 0x5555, InterruptHandler::from_method<Emulation, &Emulation::makeAStep>(this) )
+		: engine ( 0x5555, InterruptHandler::from_method<Emulation, &Emulation::makeAStep>(this) ), parity (false)
 //		: engine ( 0x5555, InterruptHandler(this, &Emulation::makeAStep) )
 	{
 		scheduler.runIn( Command{ SoftIntHandler::from_method<Emulation, &Emulation::watchDog>(this), 0 }, 1000 );
-//		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
+
+		Bitfield<Eeprom::Saut::Configuration> config;
+		config = uint8_t (eeprom_read_byte ((uint8_t *) &eeprom.saut.configuration));
+
+		reg.general0 = 0;
+		if ( config->dps0Position == Eeprom::Saut::Configuration::DpsPosition::Right )
+			reg.general0 |= 0b0001;
+		if ( config->dps1Position == Eeprom::Saut::Configuration::DpsPosition::Right )
+			reg.general0 |= 0b0100;
 	}
 
 	void getVelocity ()
@@ -714,12 +722,12 @@ private:
 	{
 		if (parity)
 		{
-			toggle (1);
+			toggle (0);
 			toggle (2);
 		}
 		else
 		{
-			toggle (0);
+			toggle (1);
 			toggle (3);
 		}
 		parity = !parity;
@@ -830,7 +838,7 @@ int main ()
 			reboot ();
 	}
 	asm volatile ("nop"); // !!! 126 version hack !!!
-	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
+//	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 //	asm volatile ("nop");
 //	asm volatile ("nop");
 
