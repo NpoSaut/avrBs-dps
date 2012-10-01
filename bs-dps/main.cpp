@@ -77,7 +77,7 @@ typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_O
 typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_B, CanRx::MP_ALS_OFF_B, CanRx::MP_ALS_ON_TIME_B, CanRx::MP_ALS_OFF_TIME_B) MP_ALS_B;
 typedef INT_TYPELIST_2 (CanRx::MM_DATA, CanRx::MM_NEUTRAL) MM;
 typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA) INPUT;
-typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
+typedef INT_TYPELIST_4 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B, CanRx::IPD_EMULATION) DIAGNOSTICS;
 
 typedef CanDat < LOKI_TYPELIST_6(					// Список дескрипторов для отправки
 						IPD_STATE,
@@ -100,7 +100,7 @@ typedef CanDat < LOKI_TYPELIST_6(					// Список дескрипторов �
 						 INPUT,
 						 DIAGNOSTICS
 						 	 	 ),
-				 LOKI_TYPELIST_21(
+				 LOKI_TYPELIST_22(
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
@@ -122,8 +122,8 @@ typedef CanDat < LOKI_TYPELIST_6(					// Список дескрипторов �
 						 Int2Type< CanRx::MP_ALS_ON_TIME_B >,
 						 Int2Type< CanRx::MP_ALS_OFF_TIME_B >,
 						 Int2Type< CanRx::SYS_KEY >,
-						 Int2Type< CanRx::MM_NEUTRAL >
-//						 Int2Type< CanTx::MY_DEBUG_A>
+						 Int2Type< CanRx::MM_NEUTRAL >,
+						 Int2Type< CanRx::IPD_EMULATION>
 								),
 				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
 	CanDatType;
@@ -686,27 +686,27 @@ public:
 
 		getMessage = true;
 	}
-//	void getCanVelocity (uint16_t)
-//	{
-//		uint8_t newVelocity = canDat.get<CanTx::MY_DEBUG_A>()[0];
-//
-//		if ( newVelocity > 0 )
-//		{
-//			enable();
-//			if ( newVelocity != currentVelocity )
-//			{
-//				currentVelocity = newVelocity;
-//
-//				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
-//				if (period > 150) // Чтобы не повесить систему слишком частым заходом
-//					engine.setPeriod ( period );
-//			}
-//		}
-//		else
-//			disable ();
-//
-//		getMessage = true;
-//	}
+	void getCanVelocity (uint16_t)
+	{
+		uint8_t newVelocity = canDat.get<CanRx::IPD_EMULATION>()[0];
+
+		if ( newVelocity > 0 )
+		{
+			enable();
+			if ( newVelocity != currentVelocity )
+			{
+				currentVelocity = newVelocity;
+
+				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
+				if (period > 150) // Чтобы не повесить систему слишком частым заходом
+					engine.setPeriod ( period );
+			}
+		}
+		else
+			disable ();
+
+		getMessage = true;
+	}
 
 private:
 	void watchDog (uint16_t)
@@ -837,8 +837,8 @@ int main ()
 		if (sum != 0) // В id.controlSumm хранится дополнение до 0
 			reboot ();
 	}
-//	asm volatile ("nop"); // !!! 126 version hack !!!
-//	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
+	asm volatile ("nop"); // !!! 126 version hack !!!
+	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 //	asm volatile ("nop");
 //	asm volatile ("nop");
 
@@ -846,7 +846,7 @@ int main ()
 	data.interruptHandler<Club0> () = InterruptHandler::from_function<&kptCommandParse>();
 	data.interruptHandler<Club1> () = InterruptHandler::from_function<&clubSendNextPageInterrupt>();
 	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getVelocity> (&emulation);
-//	canDat.rxHandler<CanTx::MY_DEBUG_A>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
+	canDat.rxHandler<CanRx::IPD_EMULATION>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
 
 	// ------------------------------ Хранение постоянных характеристик -----------------------------►
 	if (reg.portB.pin7 == 0) // первый полукомплект
