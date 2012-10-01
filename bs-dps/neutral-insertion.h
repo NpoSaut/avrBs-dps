@@ -26,7 +26,7 @@ class NeutralInsertion
 {
 public:
 	NeutralInsertion ()
-		: active (false)
+		: active (false), type (Type::NoTarget), coord (0)
 	{}
 
 	void getEcData (uint16_t pointerToData)
@@ -34,24 +34,30 @@ public:
 		typedef const uint8_t Data[8];
 		Data& data = *((Data*) pointerToData);
 
-		uint8_t inputType = data[1] & 0b11;
-		if ( inputType == 0 )
-			type = Type::NeutralInsertion;
-		else if ( inputType == 1 )
-			type = Type::SystemChange;
-		else
-			return;
-
-		uint16_t trainLength;
-		if ( !trainLengthCalc(trainLength) && !active ) // если не удалось прочитать в первый раз
-			trainLength = 300;
-
-		length = trainLength + data[5] + uint16_t(data[4] & 0x1F) * 256; // длина поезда + длина вставки
-
-		if (!active)
+		uint16_t getCoord = uint16_t (data[3]) + uint16_t (data[2]) * 256;
+		int16_t distance = getCoord - uint16_t(dps.spatiumMeters);
+		if ( distance > 0 && distance < 1500 )
 		{
-			active = true;
-			sendData(0);
+			coord = getCoord;
+			
+			uint16_t trainLength;
+			if ( !trainLengthCalc(trainLength) && !active ) // если не удалось прочитать в первый раз
+				trainLength = 300;
+			length = trainLength + data[5] + uint16_t(data[4] & 0x1F) * 256; // длина поезда + длина вставки
+			
+			uint8_t inputType = data[1] & 0b11;
+			if ( inputType == 0 )
+				type = Type::NeutralInsertion;
+			else if ( inputType == 1 )
+				type = Type::SystemChange;
+			else
+				return;
+				
+			if (!active)
+			{
+				active = true;
+				sendData(0);
+			}
 		}
 	}
 private:

@@ -481,7 +481,7 @@ struct EepromData
 {
 	EepromData () {}
 
-	enum DpsPosition { Left = 0, Rigth = 1 };
+	enum DpsPosition { Left = 0, Right = 1 };
 	enum VelocityGauge { CL = 0, KPD = 1 }; 	// Измеритель скорости
 
 	union Saut
@@ -1489,9 +1489,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.type[0],
 					0,
 					0,
-					reg.general0
+					reg.general1
 									};
-			reg.general0 = 0;
+			reg.general1 = 0;
 			if (reg.portB.pin7 == 0) // первый полукомплект
 				canDat.template send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
 			else

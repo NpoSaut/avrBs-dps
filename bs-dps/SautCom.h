@@ -470,16 +470,16 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 			time = (time * 2) / 3; // время задержки в мкс
 
 //			if (time > termTime)
-			if (time > reg.general0)
+			if (time > reg.general1)
 			{
 				termTime = time;
-				reg.general0 = termTime;
+				reg.general1 = termTime;
 			}
 		}
 		else
 		{
 			termTime = 0xFE;
-			reg.general0 = termTime;
+			reg.general1 = termTime;
 		}
 	}
 

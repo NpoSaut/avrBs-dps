@@ -774,18 +774,19 @@ private:
 				500 );
 
 			uint32_t tmp;
-			eeprom.club.property.configuration.read (tmp);
+			if ( eeprom.club.property.configuration.read (tmp) )
+			{
+				Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
+				dimetior[0]->positio = conf.dps0Position;
+				dimetior[1]->positio = conf.dps1Position;
+			}
 
-			Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
-			dimetior[0]->positio = conf.dps0Position;
-			dimetior[1]->positio = conf.dps1Position;
+			if ( eeprom.club.property.diameter0.read (tmp) )
+				dimetior[0]->constituoDiametros (tmp);
 
-			eeprom.club.property.diameter0.read (tmp);
-			dimetior[0]->constituoDiametros (tmp);
-
-			eeprom.club.property.diameter1.read (tmp);
-			dimetior[1]->constituoDiametros (tmp);
-		}
+			if ( eeprom.club.property.diameter1.read (tmp) )
+				dimetior[1]->constituoDiametros (tmp);
+	}
 
 	void dpsFaultProduco (uint16_t dpsFault)
 	{

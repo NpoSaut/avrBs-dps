@@ -529,11 +529,11 @@ class Emulation
 {
 public:
 	Emulation ()
-		: engine ( 0x5555, InterruptHandler::from_method<Emulation, &Emulation::makeAStep>(this) )
+		: engine ( 0x5555, InterruptHandler::from_method<Emulation, &Emulation::makeAStep>(this) ), parity (false), inverseDirection (false)
 //		: engine ( 0x5555, InterruptHandler(this, &Emulation::makeAStep) )
 	{
 		scheduler.runIn( Command{ SoftIntHandler::from_method<Emulation, &Emulation::watchDog>(this), 0 }, 1000 );
-//		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
+		watchDog(0);
 	}
 
 	void getVelocity ()
@@ -551,27 +551,37 @@ public:
 				if (period > 150) // Чтобы не повесить систему слишком частым заходом
 					engine.setPeriod ( period );
 			}
+			if ( inverseDirection )
+				changeDirection();
 		}
 		else
 			disable ();
 
 		getMessage = true;
 	}
-	void getCanVelocity (uint16_t)
+	void getCanVelocity (uint16_t pointerToData)
 	{
-		uint8_t newVelocity = canDat.get<CanRx::IPD_EMULATION>()[0];
+		struct Request
+		{
+			uint16_t velocity	:9;
+			uint16_t			:6;
+			uint16_t inverseDir	:1;
+		};
+		Request& request = *((Request*) pointerToData);
 
-		if ( newVelocity > 0 )
+		if ( request.velocity > 0 )
 		{
 			enable();
-			if ( newVelocity != currentVelocity )
+			if ( request.velocity != currentVelocity )
 			{
-				currentVelocity = newVelocity;
+				currentVelocity = request.velocity;
 
-				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
+				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / currentVelocity;
 				if (period > 150) // Чтобы не повесить систему слишком частым заходом
 					engine.setPeriod ( period );
 			}
+			if ( request.inverseDir != inverseDirection )
+				changeDirection();
 		}
 		else
 			disable ();
@@ -593,12 +603,12 @@ private:
 	{
 		if (parity)
 		{
-			toggle (1);
+			toggle (0);
 			toggle (2);
 		}
 		else
 		{
-			toggle (0);
+			toggle (1);
 			toggle (3);
 		}
 		parity = !parity;
@@ -608,10 +618,24 @@ private:
 		dps.accessusPortus = (Port Register::*) (&Register::general0);
 		engine.enable();
 	}
+
 	void disable ()
 	{
 		dps.accessusPortus = &Register::portC;
 		engine.disable();
+
+		// Обновляем позицию датчиков
+		uint32_t tmp;
+		if ( eeprom.club.property.configuration.read (tmp) )
+		{
+			Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
+
+			reg.general0 = 0;
+			if ( conf.dps0Position == EepromData::DpsPosition::Right )
+				reg.general0 |= 0b0001;
+			if ( conf.dps1Position == EepromData::DpsPosition::Right )
+				reg.general0 |= 0b0100;
+		}
 	}
 	void toggle (const uint8_t& n)
 	{
@@ -622,9 +646,16 @@ private:
 	}
 
 	AlarmAdjust<Alarm1A> engine;
-	uint8_t currentVelocity;
+	uint16_t currentVelocity;
 	volatile bool getMessage;
 	bool parity;
+
+	bool inverseDirection;
+	void changeDirection ()
+	{
+		inverseDirection = !inverseDirection;
+		parity = !parity;
+	}
 };
 Emulation emulation;
 
@@ -720,6 +751,7 @@ int main ()
 	}
 //	asm volatile ("nop"); // !!! 126 version hack !!!
 //	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
+//	asm volatile ("nop");
 //	asm volatile ("nop");
 
 	data.interruptHandler<DpsCommand> () = InterruptHandler::from_function<&commandParser>();
