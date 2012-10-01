@@ -837,7 +837,7 @@ int main ()
 		if (sum != 0) // В id.controlSumm хранится дополнение до 0
 			reboot ();
 	}
-	asm volatile ("nop"); // !!! 126 version hack !!!
+//	asm volatile ("nop"); // !!! 126 version hack !!!
 //	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 //	asm volatile ("nop");
 //	asm volatile ("nop");

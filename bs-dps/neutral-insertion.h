@@ -38,28 +38,33 @@ public:
 	{
 		const uint8_t (&data) [8] = canDat.template get <CanRx::MM_NEUTRAL> ();
 
-		uint8_t inputType = data[1] & 0b11;
-		if ( inputType == 0 )
-			type = Type::NeutralInsertion;
-		else if ( inputType == 1 )
-			type = Type::SystemChange;
-		else
-			return;
+		uint16_t getCoord = uint16_t (data[3]) + uint16_t (data[2]) * 256;
+		int16_t distance = getCoord - uint16_t(dps.spatiumMeters);
+		if ( distance > 0 && distance < 1500 )
+		{
+			coord = getCoord;
+			length = trainLengthCalc() + data[5] + uint16_t(data[4] & 0x1F) * 256; // длина поезда + длина вставки
 
-		length = trainLengthCalc() + data[5] + uint16_t(data[4] & 0x1F) * 256; // длина поезда + длина вставки
-		coord = uint16_t (data[3]) + uint16_t (data[2]) * 256;
+			uint8_t inputType = data[1] & 0b11;
+			if ( inputType == 0 )
+				type = Type::NeutralInsertion;
+			else if ( inputType == 1 )
+				type = Type::SystemChange;
+			else
+				return;
+		}
 	}
 private:
 	void sendData (uint16_t)
 	{
-		Complex<uint16_t> outDistance = 0;
 		if ( type != Type::NoTarget )
 		{
 			int16_t distance = coord - uint16_t(dps.spatiumMeters);
 			if ( distance <= -length )
 				type = Type::NoTarget;
 
-			if ( distance > 0 && distance < 1500 )
+			Complex<uint16_t> outDistance = 0;
+			if ( distance > 0 )
 				outDistance = distance;
 
 			uint8_t data[3] = { (uint8_t)type, outDistance[0], outDistance[1] };
