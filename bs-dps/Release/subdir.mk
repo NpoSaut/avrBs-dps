@@ -17,7 +17,7 @@ CPP_DEPS += \
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: AVR C++ Compiler'
-	avr-g++ -I"D:\git\avr-cpp-libs\avr-cpp-libs\my" -I"D:\git\avr-cpp-libs\avr-cpp-libs\foreign" -Wall -O3 -fpack-struct -fshort-enums -ffunction-sections -fno-rtti -Wno-pmf-conversions -funsigned-char -funsigned-bitfields -fno-exceptions -fno-threadsafe-statics -std=c++0x -fconstexpr-depth=32768 -mmcu=at90can128 -DF_CPU=12000000UL -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -c -o"$@" "$<"
+	avr-g++ -I"D:\git\avr-cpp-libs\avr-cpp-libs\my" -I"D:\git\avr-cpp-libs\avr-cpp-libs\foreign" -Wall -O2 -fpack-struct -fshort-enums -ffunction-sections -fno-rtti -Wno-pmf-conversions -funsigned-char -funsigned-bitfields -fno-exceptions -fno-threadsafe-statics -std=c++0x -fconstexpr-depth=32768 -mmcu=at90can128 -DF_CPU=12000000UL -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -c -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
