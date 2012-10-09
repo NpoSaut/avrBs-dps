@@ -59,7 +59,7 @@ enum CanRx : uint16_t
 	 SYS_DIAGNOSTICS = 			((uint16_t)0x468	<< 5) + 7, // 8D07
 	 AUX_RESOURCE_MCO_A =		((uint16_t)0x440	<< 5) + 5, // 8805
 	 AUX_RESOURCE_MCO_B =		((uint16_t)0x450	<< 5) + 5, // 8A05
-	 IPD_EMULATION =			((uint16_t)0x764	<< 5) + 1, // EC81
+	 IPD_EMULATION =			((uint16_t)0x764	<< 5) + 2, // EC82
 	 PROGRAM_MASTER_CTRL = 		((uint16_t)0x7E0	<< 5) + 8, // FC08
 	 PROGRAM_MASTER_DATA = 		((uint16_t)0x7E2	<< 5) + 8  // FC48
 };

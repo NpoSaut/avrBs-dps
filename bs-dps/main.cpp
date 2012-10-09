@@ -532,13 +532,14 @@ public:
 		: engine ( 0x5555, InterruptHandler::from_method<Emulation, &Emulation::makeAStep>(this) ), parity (false), inverseDirection (false)
 //		: engine ( 0x5555, InterruptHandler(this, &Emulation::makeAStep) )
 	{
-		scheduler.runIn( Command{ SoftIntHandler::from_method<Emulation, &Emulation::watchDog>(this), 0 }, 1000 );
+		getConstants(0);
 		watchDog(0);
 	}
 
 	void getVelocity ()
 	{
 		uint8_t newVelocity = _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1];
+
 		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) &&  // Команда на эмуляцию
 				newVelocity > 0 )
 		{
@@ -580,8 +581,8 @@ public:
 				if (period > 150) // Чтобы не повесить систему слишком частым заходом
 					engine.setPeriod ( period );
 			}
-			if ( request.inverseDir != inverseDirection )
-				changeDirection();
+//			if ( request.inverseDir != inverseDirection )
+//				changeDirection();
 		}
 		else
 			disable ();
@@ -613,30 +614,43 @@ private:
 		}
 		parity = !parity;
 	}
+	void getConstants (uint16_t )
+	{
+		scheduler.runIn(
+				Command{ SoftIntHandler::from_method<Emulation, &Emulation::getConstants>(this), 0},
+				500 );
+
+			// Обновляем позицию датчиков
+			uint32_t tmp;
+			if ( eeprom.club.property.configuration.read (tmp) )
+			{
+				Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
+
+				if ( !engine.isEnable() )
+				{
+					reg.general0 = 0;
+					if ( conf.dps0Position == EepromData::DpsPosition::Right )
+						reg.general0 |= 0b0001;
+					if ( conf.dps1Position == EepromData::DpsPosition::Right )
+						reg.general0 |= 0b0100;
+
+					inverseDirection = false;
+					parity = false;
+				}
+			}
+	}
+
 	void enable ()
 	{
 		dps.accessusPortus = (Port Register::*) (&Register::general0);
 		engine.enable();
 	}
-
 	void disable ()
 	{
 		dps.accessusPortus = &Register::portC;
 		engine.disable();
-
-		// Обновляем позицию датчиков
-		uint32_t tmp;
-		if ( eeprom.club.property.configuration.read (tmp) )
-		{
-			Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
-
-			reg.general0 = 0;
-			if ( conf.dps0Position == EepromData::DpsPosition::Right )
-				reg.general0 |= 0b0001;
-			if ( conf.dps1Position == EepromData::DpsPosition::Right )
-				reg.general0 |= 0b0100;
-		}
 	}
+
 	void toggle (const uint8_t& n)
 	{
 		if ( reg.general0 & (1<<n) )
@@ -749,7 +763,7 @@ int main ()
 		if (sum != 0) // В id.controlSumm хранится дополнение до 0
 			reboot ();
 	}
-//	asm volatile ("nop"); // !!! 126 version hack !!!
+	asm volatile ("nop"); // !!! 126 version hack !!!
 //	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 //	asm volatile ("nop");
 //	asm volatile ("nop");
