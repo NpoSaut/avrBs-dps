@@ -65,7 +65,7 @@ public:
 			// d: 1600 - 800  => d*65536*Pi помещается в uint32_t
 			// Pi * 65536 = 205887,416172544
 		  longitudoImpulsio ( (uint32_t(diametros) * 205887) / 4200 ),
-		  positio (positio), lanternaOperor (lanternaOperor_), tractus (false),
+		  positio (positio), lanternaOperor (lanternaOperor_), tractus (false), versusInversio (false),
 		  celeritas (0), acceleratio (0), acceleratioColum (0),
 		  impulsio ({0,0}), impulsioLanterna ({0,0}), tempusPunctum ({0,0}),
 		  affectus (0), versusRotatio ({!positio, !positio}), causarius (false), commoratio (true),
