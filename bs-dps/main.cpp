@@ -38,19 +38,14 @@
 void Init (void) __attribute__ ((naked)) __attribute__ ((section (".init5")));
 void Init (void)
 {
-	// Светодиоды.
-	reg.portC.pin4.out();
-	reg.portC.pin5.out();
-	reg.portD.pin7.out();
-	reg.portC.pin4 = true;
-	reg.portC.pin5 = true;
-	reg.portD.pin7 = true;
+	// Светодиоды
+	reg.portG.pin3.out();
+	reg.portG.pin4.out();
+	reg.portG.pin3 = true;
+	reg.portG.pin4 = true;
 
 	// Watchdog
 	wdt_enable (WDTO_500MS);
-
-	// Кнопка сброса
-	reg.portB.pin5.in();
 }
 
 // ----------------------------------- Системные часы и планировщик -----------------------------►
@@ -142,46 +137,50 @@ CanDatType canDat;
 
 // -------------------------------------------- RS-485 ------------------------------------------►
 
-using namespace Saut;
+//using namespace Saut;
+//
+//enum {		   					// adr, intput, port
+//	// Входящие
+//	DpsCommand 			= SautPacketHead (1, true, 0),
+//	Dps0 				= SautPacketHead (1, true, 0),
+//	DpsBandMeasLenght 	= SautPacketHead (1, true, 1),
+//	Dps1 				= SautPacketHead (1, true, 1),
+//	Dps2 				= SautPacketHead (1, true, 2),
+//	Dps3 				= SautPacketHead (1, true, 3),
+//	Club0				= SautPacketHead (10, true, 0),
+//	BprQuery			= SautPacketHead (13, false, 0),
+//	BprVelocity			= SautPacketHead (13, false, 3),
+//	// Исходящие
+//	DpsOut0 			= SautPacketHead (1, false, 0),
+//	DpsOut1 			= SautPacketHead (1, false, 1),
+//	DpsOut2 			= SautPacketHead (1, false, 2),
+//	DpsOut3 			= SautPacketHead (1, false, 3),
+//	ClubOut0			= SautPacketHead (10, false, 0),
+//	ClubOut1			= SautPacketHead (10, false, 1)
+//};
+//
+//typedef Dat <	INT_TYPELIST_7 (	// Данные для приёма
+//						Dps0, Dps1, Dps2, Dps3, Club0, BprQuery, BprVelocity
+//								),
+//				INT_TYPELIST_6 (	// Данные для передачи
+//						DpsOut0, DpsOut1, DpsOut2, DpsOut3, ClubOut0, ClubOut1
+//								),
+//				INT_TYPELIST_3 (	// Данные, по приходу которых вызываются прерывания
+//						Dps0, Club0, BprVelocity
+//								)
+//			> DatType;
+//DatType	data;
+//
+//typedef Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
+//				 &Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
+//				 1,
+//				 DatType, data
+//			  > ComType;
+//ComType com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
 
-enum {		   					// adr, intput, port
-	// Входящие
-	DpsCommand 			= SautPacketHead (1, true, 0),
-	Dps0 				= SautPacketHead (1, true, 0),
-	DpsBandMeasLenght 	= SautPacketHead (1, true, 1),
-	Dps1 				= SautPacketHead (1, true, 1),
-	Dps2 				= SautPacketHead (1, true, 2),
-	Dps3 				= SautPacketHead (1, true, 3),
-	Club0				= SautPacketHead (10, true, 0),
-	BprQuery			= SautPacketHead (13, false, 0),
-	BprVelocity			= SautPacketHead (13, false, 3),
-	// Исходящие
-	DpsOut0 			= SautPacketHead (1, false, 0),
-	DpsOut1 			= SautPacketHead (1, false, 1),
-	DpsOut2 			= SautPacketHead (1, false, 2),
-	DpsOut3 			= SautPacketHead (1, false, 3),
-	ClubOut0			= SautPacketHead (10, false, 0),
-	ClubOut1			= SautPacketHead (10, false, 1)
-};
-
-typedef Dat <	INT_TYPELIST_7 (	// Данные для приёма
-						Dps0, Dps1, Dps2, Dps3, Club0, BprQuery, BprVelocity
-								),
-				INT_TYPELIST_6 (	// Данные для передачи
-						DpsOut0, DpsOut1, DpsOut2, DpsOut3, ClubOut0, ClubOut1
-								),
-				INT_TYPELIST_3 (	// Данные, по приходу которых вызываются прерывания
-						Dps0, Club0, BprVelocity
-								)
-			> DatType;
-DatType	data;
-
-typedef Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
-				 &Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
-				 1,
-				 DatType, data
-			  > ComType;
-ComType com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
+uint8_t sautDecimeters;
+Safe<uint16_t> sautVelocity;
+Safe<uint16_t> sautAcceleratio;
 
 
 // ---------------------------------- SYS_DIAGNOSTICS / AUX_RESOURCE ----------------------------►
@@ -262,14 +261,14 @@ void sysDiagnostics (uint16_t a)
 								};
 			if (unit == Unit::IPD)
 			{
-				if (reg.portB.pin7 == 0)
+				if (isSelfComplectA ())
 					canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
 				else
 					canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet);
 			}
 			else if (unit == Unit::BS_DPS)
 			{
-				if (reg.portB.pin7 == 0)
+				if (isSelfComplectA ())
 					canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
 				else
 					canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
@@ -283,7 +282,7 @@ void sysDiagnostics (uint16_t a)
 //			eeprom_update_byte( adr+2, canDat.get<CanRx::SYS_DIAGNOSTICS>() [3] );
 //			eeprom_update_byte( adr+3, canDat.get<CanRx::SYS_DIAGNOSTICS>() [2] );
 //		}
-//		else if ( request == Request::DIST_TRAVEL_READ_A && reg.portB.pin7 == 0 )
+//		else if ( request == Request::DIST_TRAVEL_READ_A && isSelfComplectA () )
 //		{
 //			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
 //			uint8_t packet[5] = {
@@ -296,7 +295,7 @@ void sysDiagnostics (uint16_t a)
 //
 //			canDat.send<CanTx::AUX_RESOURCE_IPD_A> (packet);
 //		}
-//		else if ( request == Request::DIST_TRAVEL_READ_B && reg.portB.pin7 != 0 )
+//		else if ( request == Request::DIST_TRAVEL_READ_B && !isSelfComplectA () )
 //		{
 //			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
 //			uint8_t packet[5] = {
@@ -318,7 +317,7 @@ void sysDiagnostics (uint16_t a)
 					0,
 					0
 								};
-			if (reg.portB.pin7 == 0)
+			if (isSelfComplectA ())
 				canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
 			else
 				canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
@@ -326,127 +325,32 @@ void sysDiagnostics (uint16_t a)
 	}
 }
 
-
 // ---------------------------------------------- КПТ -------------------------------------------►
 
-typedef Kpt<ClockType, clock, SchedulerType, scheduler, CanDatType, canDat > KptType;
-
-KptType kpt ( _cast( Complex<uint16_t>, data.member<ClubOut1>() )[0], _cast( Complex<uint16_t>, data.member<ClubOut1>() )[1] );
-
-void kptRiseA (uint16_t)
-{
-	if (reg.portB.pin7 == 0) // первый полукомплект
-		kpt.rise();
-}
-
-void kptRiseB (uint16_t)
-{
-	if (reg.portB.pin7 == 1) // второй полукомплект
-		kpt.rise();
-}
-
-void kptFallA (uint16_t)
-{
-	if (reg.portB.pin7 == 0) // первый полукомплект
-		kpt.fall();
-}
-
-void kptFallB (uint16_t)
-{
-	if (reg.portB.pin7 == 1) // второй полукомплект
-		kpt.fall();
-}
-
-void kptRiseTimeA (uint16_t dataPointer)
-{
-	if (reg.portB.pin7 == 0) // первый полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.rise (data[0]);
-	}
-}
-
-void kptRiseTimeB (uint16_t dataPointer)
-{
-	if (reg.portB.pin7 == 1) // второй полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.rise (data[0]);
-	}
-}
-
-void kptFallTimeA (uint16_t dataPointer)
-{
-	if (reg.portB.pin7 == 0) // первый полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.fall (data[0]);
-	}
-}
-
-void kptFallTimeB (uint16_t dataPointer)
-{
-	if (reg.portB.pin7 == 1) // второй полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.fall (data[0]);
-	}
-}
-
-void kptCommandParse ()
-{
-	uint8_t command = _cast( Complex<uint16_t>, data.member<Club0>() )[1];
-
-	if ( (command & (1 << 0)) && (command & (1 << 3)) )
-		kpt.setActive ();
-	else
-		kpt.setPassive ();
-}
+InterruptHandler kptOdometerPluPlusHandler;
 
 // ---------------------------------------------- ДПС -------------------------------------------►
 
 typedef
-CeleritasSpatiumDimetior  < &Register::portC, 4, 5, &Register::portB, 7,
+CeleritasSpatiumDimetior  < &Register::portG, 3, 4, &Register::portA, 0,
 							CanDatType, canDat,
 							ClockType, clock,
 							SchedulerType, scheduler >
 DpsType;
 
 DpsType	dps ( 	&Register::portC,
-				com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
-				InterruptHandler::from_method <KptType, &KptType::lisPlusPlus> (&kpt),
-				InterruptHandler::from_method <KptType, &KptType::correctKptDistancePlusPlus> (&kpt) );
+				sautDecimeters, sautVelocity, sautAcceleratio,
+				kptOdometerPluPlusHandler,
+				kptOdometerPluPlusHandler );
 
 
 // --------------------------------------------- mcoState ---------------------------------------►
 
-void sysKeyRbRelease (uint16_t)
-{
-	ATOMIC data.member<ClubOut0>() &= ~(1 << 15);
-}
 
 void mcoState (uint16_t pointer)
 {
 	typedef const uint8_t Message[8];
 	Message& message = *( (Message *)(pointer) );
-
-
-	// Передача сигналов КЛУБ
-	uint8_t signals = _cast( Complex<uint16_t>, data.member<ClubOut0>() )[1] & 0x80; // Сохраняем текущее значение РБ
-	static uint8_t convertAls[16] = {0x10,0x08,0x04,0x02,0x01,0x08,0x00,0x00,0x00,0x08,0x04,0x02,0x01,0x01,0x01,0x01};
-	signals |= convertAls[ message[5]&0xF ] | ( message[5] & (1 << 5) ); // Огни АЛС и ЭПК
-	if ( message[5] & ((1 << 6) | (1 << 7)) ) // РБ или РБС
-	{
-		signals |= (1 << 7); // нажимаем РБ
-		scheduler.runIn(
-					Command{ SoftIntHandler::from_function<&sysKeyRbRelease>(), 0 },
-					1000 );
-	}
-	_cast( Complex<uint16_t>, data.member<ClubOut0>() )[1] = signals;
 
 	// Определение, есть ли тяга
 	if ( message[0] & (1 << 5) )
@@ -477,13 +381,13 @@ void mcoState (uint16_t pointer)
 
 void mcoStateA (uint16_t pointer)
 {
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 		mcoState (pointer);
 }
 
 void mcoStateB (uint16_t pointer)
 {
-	if (reg.portB.pin7 == 1) // второй полукомплект
+	if (!isSelfComplectA ()) // второй полукомплект
 		mcoState (pointer);
 }
 
@@ -503,13 +407,13 @@ void mcoAuxResControl (uint16_t pointer)
 
 void mcoAuxResA (uint16_t pointer)
 {
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 		mcoAuxResControl (pointer);
 }
 
 void mcoAuxResB (uint16_t pointer)
 {
-	if (reg.portB.pin7 == 1) // второй полукомплект
+	if (!isSelfComplectA ()) // второй полукомплект
 		mcoAuxResControl (pointer);
 }
 
@@ -536,30 +440,6 @@ public:
 		watchDog(0);
 	}
 
-	void getVelocity ()
-	{
-		uint8_t newVelocity = _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1];
-
-		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) &&  // Команда на эмуляцию
-				newVelocity > 0 )
-		{
-			enable();
-			if ( newVelocity != currentVelocity )
-			{
-				currentVelocity = newVelocity;
-
-				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
-				if (period > 150) // Чтобы не повесить систему слишком частым заходом
-					engine.setPeriod ( period );
-			}
-			if ( inverseDirection )
-				changeDirection();
-		}
-		else
-			disable ();
-
-		getMessage = true;
-	}
 	void getCanVelocity (uint16_t pointerToData)
 	{
 		struct Request
@@ -675,73 +555,12 @@ Emulation emulation;
 
 // ---------------------------------------- Программирование ------------------------------------►
 
-Programming programming (
-	data.member<Dps0>(),	data.member<Dps1>(),	data.member<Dps2>(),	data.member<Dps3>(),
-	data.member<DpsOut0>(),	data.member<DpsOut1>(),	data.member<DpsOut2>(),	data.member<DpsOut3>() );
-
 typedef ProgrammingCan <CanDatType, canDat, CanTx::PROGRAM_SLAVE_CTRL, CanTx::PROGRAM_SLAVE_DATA > ProgrammingCanType;
 ProgrammingCanType programmingCan (	Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
 										Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps),
-										reg.portB.pin7 == 0
+										isSelfComplectA ()
 									);
 
-// ---------------------------------- Парсер команд по линии связи ------------------------------►
-
-void commandParser ()
-{
-	struct Command
-	{
-		uint8_t							:4;
-		uint8_t	highSpeed				:1;
-		uint8_t	eepromRead				:1;
-		uint8_t	idRead					:1;
-		uint8_t	block3Byte				:1;
-	};
-	Bitfield<Command> command;
-
-//	command = uint8_t(get / 256);
-	command = uint8_t(data.member<DpsCommand>() / 256);
-
-	if (command.block3Byte)
-		com.block3Byte = 1;
-
-	if (!command.idRead && !command.eepromRead)	// стандартный режим работы ДПС
-	{
-		data.member<DpsOut2>() = dps.diametros(0); // выводим диаметры бандажа
-		data.member<DpsOut3>() = dps.diametros(1);
-
-		dps.constituoActivus ();
-	}
-	else
-	{
-		dps.constituoPassivus ();
-
-		if (command.idRead)
-		{
-			data.member<DpsOut0>() = ( (uint16_t) pgm_read_byte(&id.version) << 8 ) | pgm_read_byte(&id.year);
-			data.member<DpsOut1>() = ( (uint16_t) pgm_read_byte(&id.modif)   << 8 ) | pgm_read_byte(&id.manth);
-			data.member<DpsOut2>() = ( (uint16_t) pgm_read_byte(&id.numberH) << 8 ) | ( (uint16_t) pgm_read_byte(&id.numberL) );
-			data.member<DpsOut3>() = ( (uint16_t) pgm_read_byte(&id.parametersSummH)  << 8 ) | ( (uint16_t) pgm_read_byte(&id.parametersSummL) );
-		}
-
-		if (command.eepromRead)
-		{
-			uint8_t adr = (data.member<DpsCommand>() & 0x000F) * 8;// Адрес из линии RS-485 * 8
-			data.member<DpsOut0>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+1], mph.sautConvert.plainMap[adr+0] };
-			data.member<DpsOut1>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+3], mph.sautConvert.plainMap[adr+2] };
-			data.member<DpsOut2>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+5], mph.sautConvert.plainMap[adr+4] };
-			data.member<DpsOut3>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+7], mph.sautConvert.plainMap[adr+6] };
-		}
-	}
-
-	if (data.member<DpsCommand>() == 0x0efe)			// Переход в режим программирования
-	{
-		dps.constituoPassivus ();
-
-		programming.enterProgramMode();
-		data.interruptHandler<Dps0> () = InterruptHandler::from_method <Programming, &Programming::comParser> (&programming);
-	}
-}
 
 void unsetResetFlag (uint16_t)
 {
@@ -768,9 +587,6 @@ int main ()
 //	asm volatile ("nop");
 //	asm volatile ("nop");
 
-	data.interruptHandler<DpsCommand> () = InterruptHandler::from_function<&commandParser>();
-	data.interruptHandler<Club0> () = InterruptHandler::from_function<&kptCommandParse>();
-	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getVelocity> (&emulation);
 	canDat.rxHandler<CanRx::IPD_EMULATION>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
 
 	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);
@@ -779,7 +595,7 @@ int main ()
 	canDat.rxHandler<CanTx::SYS_DATA_A>() = SoftIntHandler::from_method <MPHType, &MPHType::getLeftDataMessage> (&mph); // Если кто-то ещё ответит, то обновить мои данные
 	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::getQueryMessage> (&mph);
 
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 	{
 		canDat.rxHandler<CanRx::MM_NEUTRAL>() = SoftIntHandler::from_method <NeutralInsertionType, &NeutralInsertionType::getEcData> (&neutralInsertion);
 	}
@@ -792,15 +608,6 @@ int main ()
 	canDat.rxHandler<CanRx::AUX_RESOURCE_MCO_B>() = SoftIntHandler::from_function <&mcoAuxResB>();
 
 	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_method <DpsType, &DpsType::takeEcDataForAdjust> (&dps);
-
-	canDat.rxHandler<CanRx::MP_ALS_ON_A>() = SoftIntHandler::from_function <&kptRiseA>();
-	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_A>() = SoftIntHandler::from_function <&kptRiseTimeA>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_A>() = SoftIntHandler::from_function <&kptFallA>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_A>() = SoftIntHandler::from_function <&kptFallTimeA>();
-	canDat.rxHandler<CanRx::MP_ALS_ON_B>() = SoftIntHandler::from_function <&kptRiseB>();
-	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_B>() = SoftIntHandler::from_function <&kptRiseTimeB>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler::from_function <&kptFallB>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallTimeB>();
 
 	// Программирование по CAN
 	canDat.rxHandler<CanRx::PROGRAM_MASTER_CTRL>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::getCommand> (&programmingCan);
@@ -825,7 +632,7 @@ int main ()
 				0,
 				uint8_t (checkSumm)
 							};
-		if (reg.portB.pin7 == 0)
+		if (isSelfComplectA ())
 		{
 			canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
 			_delay_ms (10);
@@ -843,15 +650,6 @@ int main ()
 
     for (;;)
     {
-    	static bool resetButtonWasFree = false;
-    	resetButtonWasFree |= reg.portB.pin5;
-    	if ( resetButtonWasFree && !reg.portB.pin5 ) // Нажата кнопка сброса (а до этого была отпущена)
-    	{
-    		eeprom.dps0Good = 1;
-    		eeprom.dps1Good = 1;
-    		reboot();
-    	}
-
 //    	static uint16_t ctr = 0;
 //    	if (ctr++ > 2000)
 //    	{
@@ -868,7 +666,7 @@ int main ()
 //					0
 //									};
 //			dispatcher.maxSize = 0;
-//			if (reg.portB.pin7 == 0) // первый полукомплект
+//			if (isSelfComplectA ()) // первый полукомплект
 //				canDat.send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
 //			else
 //				canDat.send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);

@@ -490,10 +490,9 @@ private:
 
 	void corpusVicissim (uint16_t affectus)
 	{
-		uint32_t spatium0 = dimetior[0]->punctum (affectus & 0b11);
-		uint32_t spatium1 = dimetior[1]->punctum (affectus / 4);
+		uint32_t spatium0 = dimetior[0]->punctum (affectus / 2);
 		// накапливать пройденный путь по выбранному датчику
-		uint32_t appendicula = nCapio ? spatium1 : spatium0;
+		uint32_t appendicula = spatium0;
 
 		if (appendicula != 0)
 		{

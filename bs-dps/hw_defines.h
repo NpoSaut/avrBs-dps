@@ -11,42 +11,27 @@
 
 #include <cpp/io.h>
 
+bool isSelfComplectA ()
+{
+	return (reg.portA.pin0 == 0);
+}
 
 template <uint8_t n>
 inline void ldown ()
 {
-	reg.portC.pin<n+4>() = true;
-//	switch (n)
-//	{
-//		case 0:
-//			portC.pin4 = true;
-//			break;
-//		case 1:
-//			portC.pin5 = true;
-//			break;
-//	}
+//	reg.portC.pin<n+4>() = true;
 }
 
 template <uint8_t n>
 inline void lup ()
 {
-	reg.portC.pin<n+4>() = false;
+//	reg.portC.pin<n+4>() = false;
 }
 
 template <uint8_t n>
 inline void ltoggle ()
 {
-//	PORTC ^= (1 << (n+4));
-	reg.portC.pin<n+4>().toggle ();
-//	switch (n)
-//	{
-//		case 0:
-//			portC.pin4.toggle();
-//			break;
-//		case 1:
-//			portC.pin5.toggle();
-//			break;
-//	}
+//	reg.portC.pin<n+4>().toggle ();
 }
 
 //void lam (uint8_t n) __attribute__ ((noinline));

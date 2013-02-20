@@ -77,7 +77,7 @@ private:
 	typedef ProgSpi::
 	ProgSpiSimple  < &Register::spiStatusControl, &Register::spiData,
 	 	 	 	 	 &Register::portB, 0, 1, 2, 3,
-	 	 	 	 	 &Register::portB, 4
+	 	 	 	 	 &Register::portD, 0
 					>
 	Controller;
 	Controller controller;
@@ -408,7 +408,7 @@ private:
 	ProgSpi::
 	ProgSpiSimple  < &Register::spiStatusControl, &Register::spiData,
 	 	 	 	 	 &Register::portB, 0, 1, 2, 3,
-	 	 	 	 	 &Register::portB, 4
+	 	 	 	 	 &Register::portD, 0
 					> neighbour;
 
 	Safe<uint16_t>& inPort0;
