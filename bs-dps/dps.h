@@ -331,8 +331,8 @@ public:
 
 //		dimetior[0] = new DimetiorType( 0 );
 //		dimetior[1] = new DimetiorType( 0 );
-		dimetior[0] = new DimetiorType( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
-		dimetior[1] = new DimetiorType( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
+		dimetior[0] = new DimetiorType( 1 );
+		dimetior[1] = new DimetiorType( 0 );
 		accipioConstans (0);
 
 		(reg.*accessusPortus).in ();
@@ -652,18 +652,29 @@ private:
 				eeprom.dps1Good = 0;
 
 			// Индикация неисправности на стоянке
-			if ( dimetior[nCapio]->sicinCommoratio() )
+//			if ( dimetior[nCapio]->sicinCommoratio() )
+//			{
+//				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
+//				{
+//					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom.dps0Good;
+//					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom.dps0Good;
+//				}
+//				else
+//				{
+//					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom.dps1Good;
+//					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom.dps1Good;
+//				}
+//			}
+			// На стоянке зажигаем
+			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
 			{
-				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
-				{
-					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom.dps0Good;
-					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom.dps0Good;
-				}
-				else
-				{
-					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom.dps1Good;
-					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom.dps1Good;
-				}
+				(reg.*lanternaPortus).pin<lanterna0>() = 1;
+				(reg.*lanternaPortus).pin<lanterna1>() = 1;
+			}
+			else
+			{
+				(reg.*lanternaPortus).pin<lanterna0>() = 0;
+				(reg.*lanternaPortus).pin<lanterna1>() = 0;
 			}
 
 			// Вывод данных в линию связи

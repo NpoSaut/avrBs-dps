@@ -31,7 +31,7 @@
 #include "kpt.h"
 #include "mph.h"
 #include "neutral-insertion.h"
-
+#include "DiscreteInput.h"
 
 
 
@@ -566,6 +566,22 @@ void unsetResetFlag (uint16_t)
 {
 	dps.repeto = false;
 }
+
+// ----------------------------------- Ввод дискретных сигналов ---------------------------------►
+
+SoftIntHandler discreteInputA, discreteInputB;
+void pushHandler (uint16_t num)
+{
+	canDat.send<PROGRAM_SLAVE_DATA> ({uint8_t(num), uint8_t(num/256), 1, 0, 0, 0, 0, 0});
+}
+
+void releaseHandler (uint16_t num)
+{
+	canDat.send<PROGRAM_SLAVE_CTRL> ({uint8_t(num), uint8_t(num/256), 2, 0, 0, 0, 0, 0});
+}
+
+typedef DiscreteInput<ClockType, clock> DiscreteInputType;
+DiscreteInputType discreteInput ( !isSelfComplectA(), SoftIntHandler::from_function<&pushHandler>(), SoftIntHandler::from_function<&releaseHandler>() );
 
 // --------------------------------------------- main -------------------------------------------►
 

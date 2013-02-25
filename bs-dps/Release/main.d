@@ -29,7 +29,7 @@ main.d: ../main.cpp D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\foreign/cpp/loki/static_check.h ../id.h \
  ../programming.h ../ProgSpi.h ../CanDat.h ../dps.h ../mph.h \
  D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/eeprom.h ../ec-adjust.h \
- ../eeprom.h ../kpt.h ../neutral-insertion.h
+ ../eeprom.h ../kpt.h ../neutral-insertion.h ../DiscreteInput.h
 
 D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/io.h:
 
@@ -116,3 +116,5 @@ D:\git\avr-cpp-libs\avr-cpp-libs\my/cpp/eeprom.h:
 ../kpt.h:
 
 ../neutral-insertion.h:
+
+../DiscreteInput.h:
