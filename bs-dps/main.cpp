@@ -70,7 +70,8 @@ typedef INT_TYPELIST_12 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 						 CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
 						 CanTx::MY_KPT_A, CanTx::MY_KPT_B,
 						 CanTx::IPD_PARAM_A, CanTx::IPD_PARAM_B ) AUX_RESOURCE_SYS_DATA_IPD_PARAM;
-typedef INT_TYPELIST_2 	(CanTx::PROGRAM_SLAVE_CTRL, CanTx::PROGRAM_SLAVE_DATA) PROGRAM_SLAVE;
+//typedef INT_TYPELIST_2 	(CanTx::PROGRAM_SLAVE_CTRL, CanTx::PROGRAM_SLAVE_DATA) PROGRAM_SLAVE;
+typedef INT_TYPELIST_2 	(CanTx::VDS_STATE_A, CanTx::VDS_STATE_B) VDS_SATE;
 
 typedef INT_TYPELIST_5 (CanRx::MCO_STATE_A, CanRx::MCO_STATE_B,
 						CanRx::MCO_LIMITS_A, CanRx::MCO_LIMITS_B,
@@ -80,26 +81,27 @@ typedef INT_TYPELIST_8 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_O
 typedef INT_TYPELIST_2 (CanRx::MM_DATA, CanRx::MM_NEUTRAL) MM;
 typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA_A) INPUT;
 typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
-typedef INT_TYPELIST_2 (CanRx::PROGRAM_MASTER_CTRL, CanRx::PROGRAM_MASTER_DATA) PROGRAM_MASTER;
+//typedef INT_TYPELIST_2 (CanRx::PROGRAM_MASTER_CTRL, CanRx::PROGRAM_MASTER_DATA) PROGRAM_MASTER;
 
-typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов для отправки
+typedef CanDat < LOKI_TYPELIST_8(					// Список дескрипторов для отправки
 						IPD_STATE,
 						SAUT_INFO,
 						SYS_DATA_STATE_IPD_NEUTRAL,
 						SYS_DATA_STATE2,
 						MPH_STATE,
 						AUX_RESOURCE_SYS_DATA_IPD_PARAM,
-						PROGRAM_SLAVE
+						VDS_SATE,
+						Int2Type <CanTx::SYS_KEY>
 								),
-				 LOKI_TYPELIST_8(
+				 LOKI_TYPELIST_7(
 						 MCO,
 						 Int2Type< CanRx::SYS_DATA_QUERY >,
 						 MP_ALS,
 						 MM,
 						 INPUT,
 						 DIAGNOSTICS,
-						 Int2Type< CanRx::IPD_EMULATION >,
-						 PROGRAM_MASTER
+						 Int2Type< CanRx::IPD_EMULATION >
+//						 PROGRAM_MASTER
 						 	 	 ),
 				 LOKI_TYPELIST_23(
 						 Int2Type< CanRx::INPUT_DATA >,
@@ -122,9 +124,9 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 						 Int2Type< CanRx::MP_ALS_ON_TIME_B >,
 						 Int2Type< CanRx::MP_ALS_OFF_TIME_B >,
 						 Int2Type< CanRx::MM_NEUTRAL >,
-						 Int2Type< CanRx::IPD_EMULATION>,
-						 Int2Type< CanRx::PROGRAM_MASTER_CTRL>,
-						 Int2Type< CanRx::PROGRAM_MASTER_DATA>
+						 Int2Type< CanRx::IPD_EMULATION >,
+						 Int2Type< CanRx::PROGRAM_MASTER_CTRL >,
+						 Int2Type< CanRx::PROGRAM_MASTER_DATA >
 								),
 					128,
 					LOKI_TYPELIST_2(
@@ -343,6 +345,10 @@ DpsType	dps ( 	&Register::portC,
 				kptOdometerPluPlusHandler,
 				kptOdometerPluPlusHandler );
 
+void unsetResetFlag (uint16_t)
+{
+	dps.repeto = false;
+}
 
 // --------------------------------------------- mcoState ---------------------------------------►
 
@@ -369,7 +375,7 @@ void mcoState (uint16_t pointer)
 	lastTime = time;
 
 	// Контроль выхода из конфигурации
-	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) &&	// выход БС-ДПС или ИПД
+	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) && //message[7] & (1 << ?) && 	// выход БС-ДПС или ИПД или ВДС
 			clock.getTime() > 7000 && 	// проработали больше 7 секунд
 			dps.sicinActivus() && // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
 			!dps.sicinCausarius() ) // если оба датчика неисправны, то перезагрузку не делать
@@ -555,33 +561,68 @@ Emulation emulation;
 
 // ---------------------------------------- Программирование ------------------------------------►
 
-typedef ProgrammingCan <CanDatType, canDat, CanTx::PROGRAM_SLAVE_CTRL, CanTx::PROGRAM_SLAVE_DATA > ProgrammingCanType;
-ProgrammingCanType programmingCan (	Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
-										Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps),
-										isSelfComplectA ()
-									);
-
-
-void unsetResetFlag (uint16_t)
-{
-	dps.repeto = false;
-}
+//typedef ProgrammingCan <CanDatType, canDat, CanTx::PROGRAM_SLAVE_CTRL, CanTx::PROGRAM_SLAVE_DATA > ProgrammingCanType;
+//ProgrammingCanType programmingCan (	Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
+//										Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps),
+//										isSelfComplectA ()
+//									);
 
 // ----------------------------------- Ввод дискретных сигналов ---------------------------------►
 
 SoftIntHandler discreteInputA, discreteInputB;
 void pushHandler (uint16_t num)
 {
-	canDat.send<PROGRAM_SLAVE_DATA> ({uint8_t(num), uint8_t(num/256), 1, 0, 0, 0, 0, 0});
+	if ( num == 8 ) // РБ
+		canDat.send<CanTx::SYS_KEY> ({ (1 << 5) | 0x13 });
+	else if ( num == 9 ) // РБC
+		canDat.send<CanTx::SYS_KEY> ({ (1 << 5) | 0x1B });
 }
 
 void releaseHandler (uint16_t num)
 {
-	canDat.send<PROGRAM_SLAVE_CTRL> ({uint8_t(num), uint8_t(num/256), 2, 0, 0, 0, 0, 0});
+	if ( num == 8 ) // РБ
+		canDat.send<CanTx::SYS_KEY> ({ (2 << 5) | 0x13 });
+	else if ( num == 9 ) // РБC
+		canDat.send<CanTx::SYS_KEY> ({ (2 << 5) | 0x1B });
 }
 
 typedef DiscreteInput<ClockType, clock> DiscreteInputType;
 DiscreteInputType discreteInput ( !isSelfComplectA(), SoftIntHandler::from_function<&pushHandler>(), SoftIntHandler::from_function<&releaseHandler>() );
+
+void inputSignalStateOut (uint16_t )
+{
+	struct OutMessageFields
+	{
+		uint8_t pnevmoMode				:1;
+		uint8_t tifon					:1;
+		uint8_t siren					:1;
+		uint8_t emergencyStop			:1;
+		uint8_t vigilanceButton			:1;
+		uint8_t engineWork				:1;
+		uint8_t forwardTransmission 	:1;
+		uint8_t backwardTransmission	:1;
+	};
+	typedef Bitfield<OutMessageFields> OutMessage;
+	OutMessage outMessage;
+
+	DiscreteInputType::Inputs state = discreteInput.getState();
+
+	outMessage.pnevmoMode = !state.in2; // Пневмо ход, если нет ЖД хода
+	outMessage.tifon = state.in7;
+	outMessage.siren = 0; // Сирена заведена на 27 вход ячейки, но она не заведена на процессор
+	outMessage.emergencyStop = 0; // Аварйная остановка заведена на 26 вход ячейки, но не заведена на процессор
+	outMessage.vigilanceButton = state.in8;
+	outMessage.engineWork = !state.in6; // работа двигателя как инверсия сигнала "остановка двигателя"
+	outMessage.forwardTransmission = state.in5;
+	outMessage.backwardTransmission = state.in4;
+
+	if ( isSelfComplectA() )
+		canDat.send<CanTx::VDS_STATE_A> ({0, uint8_t(outMessage)});
+	else
+		canDat.send<CanTx::VDS_STATE_B> ({0, uint8_t(outMessage)});
+
+	scheduler.runIn( Command {SoftIntHandler::from_function<&inputSignalStateOut>(), 0}, 500 );
+}
 
 // --------------------------------------------- main -------------------------------------------►
 
@@ -625,10 +666,13 @@ int main ()
 
 	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_method <DpsType, &DpsType::takeEcDataForAdjust> (&dps);
 
-	// Программирование по CAN
-	canDat.rxHandler<CanRx::PROGRAM_MASTER_CTRL>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::getCommand> (&programmingCan);
-	canDat.rxHandler<CanRx::PROGRAM_MASTER_DATA>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::getData> (&programmingCan);
-	canDat.txHandler<CanTx::PROGRAM_SLAVE_DATA>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::sendData> (&programmingCan);
+//	// Программирование по CAN
+//	canDat.rxHandler<CanRx::PROGRAM_MASTER_CTRL>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::getCommand> (&programmingCan);
+//	canDat.rxHandler<CanRx::PROGRAM_MASTER_DATA>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::getData> (&programmingCan);
+//	canDat.txHandler<CanTx::PROGRAM_SLAVE_DATA>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::sendData> (&programmingCan);
+
+	// ВДС
+	inputSignalStateOut(0);
 
 		dps.constituoActivus();
 
