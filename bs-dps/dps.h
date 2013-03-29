@@ -525,84 +525,7 @@ private:
 		if (activus)
 		{
 			// Анализ показаний датчиков, выбор ДПС, установка неисправности
-			uint8_t nMax = (dimetior[0]->accipioCeleritas() + 64) < dimetior[1]->accipioCeleritas();// +64 чтобы предотвратить постоянное переключение
-
-			causarius[0].vicis = dimetior[0]->sicinCausarius();
-			causarius[1].vicis = dimetior[1]->sicinCausarius();
-
-			if ( !dimetior[0]->sicinCausarius() && !dimetior[1]->sicinCausarius() )
-			{
-				if ( dimetior[nMax]->accipioCeleritas() > 1280 &&
-						abs( dimetior[nMax]->accipioCeleritas() - dimetior[!nMax]->accipioCeleritas() )
-						> dimetior[nMax]->accipioCeleritas()/4 ) // Если разброс большой (и больше 10км/ч)
-				{
-					if (tempusDifferens == maxTempusDifferens) // довольно давно
-					causarius[!nMax].celeritas = true;
-					else
-					tempusDifferens ++;
-				}
-				else
-				{
-					tempusDifferens = 0;
-
-					if ( !dimetior[nCapio]->sicinCommoratio() )
-					tempusRestitutioValidus ++;
-				}
-			}
-
-			if ( !causarius[0] && !causarius[1] )
-			{
-				bool potentiaCapio = tractus ^ nMax;
-				if ( !dimetior[potentiaCapio]->sicinCommoratio() )
-				nCapio = potentiaCapio;
-				else
-				nCapio = !potentiaCapio;
-
-				tempusRestitutioValidus = 0; // Время начинать считать с момента возникновения неисправности
-			}
-			else
-			{
-				if ( causarius[0] && !causarius[1] ) // не работает один из каналов
-				nCapio = 1;// выбираем рабочий
-				else if ( !causarius[0] && causarius[1] )
-				nCapio = 0;
-				else if ( causarius[0] && causarius[1] )
-				nCapio = nMax;
-
-				if ( tempusRestitutioValidus == maxTempusRestitutioValidus )// раз в несколько секунд сбрасывать неисправность
-				{
-					causarius[0].celeritas = false;
-					causarius[1].celeritas = false;
-				}
-			}
-
-			// Контроль обрыва обоих ДПС
-			bool duplarisTractus;
-			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
-				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_A> ()[7] & 0b11) == 0b11 );// признак двойной тяги
-			else
-				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11) == 0b11 );// признак двойной тяги
-
-			if ( tractus && !duplarisTractus )// При тяге
-			{
-				if ( dimetior[nCapio]->sicinCommoratio() ) // стоим
-				{
-					if ( tempusTractusCommoratio >= 70*2 ) // В течении времени 70 сек.
-					{
-						causarius[0].conjuctio = true;
-						causarius[1].conjuctio = true;
-					}
-					else
-					tempusTractusCommoratio ++;
-				}
-				else
-				tempusTractusCommoratio = 0;
-			}
-			else
-			{
-				if ( tempusTractusCommoratio > 0 )
-				tempusTractusCommoratio --;
-			}
+			nCapio = 0;
 
 			// Выставление флагов
 			struct Mappa
@@ -621,8 +544,8 @@ private:
 			mappa.repeto = repeto;
 			mappa.versus0 = dimetior[0]->accipioVersus();
 			mappa.versus1 = dimetior[1]->accipioVersus();
-			mappa.commoratio = dimetior[nCapio]->sicinCommoratio();
-			mappa.dimetior = nCapio;
+			mappa.commoratio = dimetior[0]->sicinCommoratio();
+			mappa.dimetior = 0;
 			// Неисправность != недостоверность
 			// Неисправность - это недостверность при достаточно большой скорости
 			// Потому что при смене направления и дребезге на стоянке возникает недостоверность
@@ -680,8 +603,7 @@ private:
 			// Вывод данных в линию связи
 			acceleratioEtAffectus <<= (uint16_t(dimetior[nCapio]->accipioAcceleratio()) * 256) | mappa;
 
-			uint16_t sigCel = signCeleritas( dimetior[nCapio]->accipioCeleritas() );
-			celeritasProdo <<= sigCel;
+			uint16_t sigCel = signCeleritas( dimetior[0]->accipioCeleritas() );
 
 			// Вывод данных в CAN
 			if ( clock.getTime() > 1500 )// Запустит вывод сообщений через 1,5 секунды. За это время я подхвачу пройденный путь от ЭК.
@@ -693,7 +615,7 @@ private:
 				{
 					uint8_t(sigCel >> 8),
 					uint8_t(sigCel),
-					dimetior[nCapio]->accipioAcceleratio(),
+					dimetior[0]->accipioAcceleratio(),
 					diam0[1],
 					diam0[0],
 					diam1[1],
@@ -705,14 +627,11 @@ private:
 
 				// Округление скорости с гистерезисом
 				Complex<uint16_t> rotCel;
-				rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
-
-				// Подстройка под ЭК
-				ecAdjust.adjust (spatiumMeters);
+				rotCel = rotundatioCeleritas( dimetior[0]->accipioCeleritas() );
 
 				uint8_t ipdState[8] =
 				{
-					(mappa.validus0 == false && mappa.validus1 == false) ? (uint8_t)2 : (uint8_t)0,
+				    (uint8_t)0,
 					uint8_t( (versus() * 128)
 							| ((dimetior[nCapio]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
 							| (!dimetior[nCapio]->sicinCommoratio() << 2)
