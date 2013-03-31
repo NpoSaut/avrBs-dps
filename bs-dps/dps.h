@@ -311,7 +311,7 @@ public:
 			Safe<uint16_t>& acceleratioEtAffectus, InterruptHandler odometer16dm0PlusPlus,
 			InterruptHandler odometer16dm1PlusPlus) :
 			accessusPortus (accessusPortus), spatiumMeters (0), odometer16dmPlusPlus (
-			{ odometer16dm0PlusPlus, odometer16dm1PlusPlus }), tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
+			{ odometer16dm0PlusPlus, odometer16dm1PlusPlus }), tractus (false), versus(0), railWayRotae(0), repeto (true), // после перезагрузки -- флаг перезагрузки
 			ecAdjust (
 					Delegate<uint16_t ()>::from_method<CeleritasSpatiumDimetior,
 							&CeleritasSpatiumDimetior::accipioCeleritas> (this)
@@ -399,9 +399,24 @@ public:
 	}
 
 	// Напрвление движения. 0 - вперёд
-	const uint8_t versus () const
+	const uint8_t accipioVersus () const
 	{
-		return dimetior[nCapio]->accipioVersus();
+		return railWayRotae ? !versus : versus;
+	}
+	void constituoVersus (uint8_t versus)
+	{
+		CeleritasSpatiumDimetior::versus = versus;
+	}
+
+
+	// Ж/Д ход
+	const bool accipioRailWayRotae() const
+	{
+		return railWayRotae;
+	}
+	void constituoRailWayRotae(bool railWayRotae)
+	{
+		CeleritasSpatiumDimetior::railWayRotae = railWayRotae;
 	}
 
 	// диаметр бандажа
@@ -448,6 +463,8 @@ private:
 	EcAdjustType ecAdjust;
 
 	bool tractus;// 0 - выбег или торможение, 1 - тяга
+	uint8_t versus;
+	bool railWayRotae; // В ж/д режиме увеличивается диаметр бандажа и инвертируется направление движения
 
 	uint8_t& spatium;
 	Safe<uint16_t>& celeritasProdo;
@@ -511,7 +528,7 @@ private:
 			if ( uint8_t(spatiumDecimeters65536 >> 16) == spatiumDecimetersMultiple10 ) // посчитать в метрах
 			{
 				spatiumDecimetersMultiple10 += 10;
-				if ( versus() == 0 )
+				if ( accipioVersus() == 0 )
 				spatiumMeters ++;
 				else
 				spatiumMeters --;
@@ -542,8 +559,8 @@ private:
 			Bitfield<Mappa> mappa;
 
 			mappa.repeto = repeto;
-			mappa.versus0 = dimetior[0]->accipioVersus();
-			mappa.versus1 = dimetior[1]->accipioVersus();
+			mappa.versus0 = accipioVersus();
+			mappa.versus1 = accipioVersus();
 			mappa.commoratio = dimetior[0]->sicinCommoratio();
 			mappa.dimetior = 0;
 			// Неисправность != недостоверность
@@ -632,7 +649,7 @@ private:
 				uint8_t ipdState[8] =
 				{
 				    (uint8_t)0,
-					uint8_t( (versus() * 128)
+					uint8_t( (accipioVersus() * 128)
 							| ((dimetior[nCapio]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
 							| (!dimetior[nCapio]->sicinCommoratio() << 2)
 							| uint8_t( rotCel[1] & 0x1) ),// направление + наличие импульсов ДПС + старший бит скорости в км/ч
@@ -711,10 +728,10 @@ private:
 			}
 
 			if ( eeprom.club.property.diameter0.read (tmp) )
-				dimetior[0]->constituoDiametros (tmp);
+				dimetior[0]->constituoDiametros ( railWayRotae ? tmp*2 : tmp );
 
 			if ( eeprom.club.property.diameter1.read (tmp) )
-				dimetior[1]->constituoDiametros (tmp);
+				dimetior[1]->constituoDiametros ( railWayRotae ? tmp*2 : tmp );
 	}
 
 	void dpsFaultProduco (uint16_t dpsFault)

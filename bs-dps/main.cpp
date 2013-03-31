@@ -572,18 +572,36 @@ Emulation emulation;
 SoftIntHandler discreteInputA, discreteInputB;
 void pushHandler (uint16_t num)
 {
-	if ( num == 8 ) // РБ
-		canDat.send<CanTx::SYS_KEY> ({ (1 << 5) | 0x13 });
-	else if ( num == 9 ) // РБC
-		canDat.send<CanTx::SYS_KEY> ({ (1 << 5) | 0x1B });
+//	if ( num == 8 ) // РБ
+//		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x13 });
+//	else if ( num == 9 ) // РБC
+//		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x1B });
+
+	if ( num == 2 ) // Ж/Д ход
+	{
+		dps.constituoRailWayRotae(true);
+	}
+	if ( num == 5 ) // Вперёд
+	{
+		dps.constituoVersus (0);
+	}
+	if ( num == 4 ) // Назад
+	{
+		dps.constituoVersus (1);
+	}
 }
 
 void releaseHandler (uint16_t num)
 {
-	if ( num == 8 ) // РБ
-		canDat.send<CanTx::SYS_KEY> ({ (2 << 5) | 0x13 });
-	else if ( num == 9 ) // РБC
-		canDat.send<CanTx::SYS_KEY> ({ (2 << 5) | 0x1B });
+//	if ( num == 8 ) // РБ
+//		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x13 });
+//	else if ( num == 9 ) // РБC
+//		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x1B });
+
+	if ( num == 2 ) // Ж/Д ход
+	{
+		dps.constituoRailWayRotae(false);
+	}
 }
 
 typedef DiscreteInput<ClockType, clock> DiscreteInputType;
@@ -593,33 +611,39 @@ void inputSignalStateOut (uint16_t )
 {
 	struct OutMessageFields
 	{
-		uint8_t pnevmoMode				:1;
-		uint8_t tifon					:1;
-		uint8_t siren					:1;
-		uint8_t emergencyStop			:1;
-		uint8_t vigilanceButton			:1;
-		uint8_t engineWork				:1;
-		uint8_t forwardTransmission 	:1;
-		uint8_t backwardTransmission	:1;
+		uint16_t railwayMode			:1;
+		uint16_t tifon					:1;
+		uint16_t siren					:1;
+		uint16_t emergencyStop			:1;
+		uint16_t vigilanceButton		:1;
+		uint16_t engineWork				:1;
+		uint16_t forwardTransmission 	:1;
+		uint16_t backwardTransmission	:1;
+		uint16_t tractionDisable		:1;
+		uint16_t						:1;
+		uint16_t epkKey					:1;
+		uint16_t 						:5;
 	};
 	typedef Bitfield<OutMessageFields> OutMessage;
 	OutMessage outMessage;
 
 	DiscreteInputType::Inputs state = discreteInput.getState();
 
-	outMessage.pnevmoMode = !state.in2; // Пневмо ход, если нет ЖД хода
+	outMessage.railwayMode = state.in2;
 	outMessage.tifon = state.in7;
 	outMessage.siren = 0; // Сирена заведена на 27 вход ячейки, но она не заведена на процессор
-	outMessage.emergencyStop = 0; // Аварйная остановка заведена на 26 вход ячейки, но не заведена на процессор
+	outMessage.emergencyStop = state.in6;
 	outMessage.vigilanceButton = state.in8;
 	outMessage.engineWork = !state.in6; // работа двигателя как инверсия сигнала "остановка двигателя"
 	outMessage.forwardTransmission = state.in5;
 	outMessage.backwardTransmission = state.in4;
+	outMessage.tractionDisable = (state.in5 == 0) && (state.in4 == 0);
+	outMessage.epkKey = 1;
 
 	if ( isSelfComplectA() )
-		canDat.send<CanTx::VDS_STATE_A> ({0, uint8_t(outMessage)});
+		canDat.send<CanTx::VDS_STATE_A> ({uint8_t(outMessage/256), uint8_t(outMessage)});
 	else
-		canDat.send<CanTx::VDS_STATE_B> ({0, uint8_t(outMessage)});
+		canDat.send<CanTx::VDS_STATE_B> ({uint8_t(outMessage/256), uint8_t(outMessage)});
 
 	scheduler.runIn( Command {SoftIntHandler::from_function<&inputSignalStateOut>(), 0}, 500 );
 }
@@ -628,6 +652,12 @@ void inputSignalStateOut (uint16_t )
 
 int main ()
 {
+	// Так как отключен модуль программирования соседа подтянем его reset
+	reg.portD.pin0.inPulled();
+	reg.portB.pin1.inPulled();
+	reg.portB.pin2.inPulled();
+	reg.portB.pin3.inPulled();
+
 	// Контроль контрольной суммы
 	if ( !(pgm_read_word (&id.size) == 0 && pgm_read_word (&id.controlSumm) == 0) ) // Если значения подставлены при программировании
 	{
@@ -639,6 +669,7 @@ int main ()
 		if (sum != 0) // В id.controlSumm хранится дополнение до 0
 			reboot ();
 	}
+
 	asm volatile ("nop"); // !!! 126 version hack !!!
 //	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 //	asm volatile ("nop");
