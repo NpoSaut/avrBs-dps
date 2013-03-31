@@ -544,6 +544,34 @@ private:
 			// Анализ показаний датчиков, выбор ДПС, установка неисправности
 			nCapio = 0;
 
+			// Контроль обрыва обоих ДПС
+			bool duplarisTractus;
+			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
+				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_A> ()[7] & 0b11) == 0b11 );// признак двойной тяги
+			else
+				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11) == 0b11 );// признак двойной тяги
+
+			if ( tractus && !duplarisTractus )// При тяге
+			{
+				if ( dimetior[nCapio]->sicinCommoratio() ) // стоим
+				{
+					if ( tempusTractusCommoratio >= 70*2 ) // В течении времени 70 сек.
+					{
+						causarius[0].conjuctio = true;
+						causarius[1].conjuctio = true;
+					}
+					else
+					tempusTractusCommoratio ++;
+				}
+				else
+				tempusTractusCommoratio = 0;
+			}
+			else
+			{
+				if ( tempusTractusCommoratio > 0 )
+				tempusTractusCommoratio --;
+			}
+
 			// Выставление флагов
 			struct Mappa
 			{
@@ -580,16 +608,16 @@ private:
 					|| causarius[0].celeritas
 					|| causarius[0].conjuctio
 			);
-			mappa.validus1 = !( firmusCausarius[1]
+			mappa.validus1 = !( firmusCausarius[0] // 0 вместо 1 -- злобный хак!
 					|| causarius[1].celeritas
 					|| causarius[1].conjuctio
 			);
 
-			// Сохранение неисправности в eeprom
-			if (!mappa.validus0)
-				eeprom.dps0Good = 0;
-			if (!mappa.validus1)
-				eeprom.dps1Good = 0;
+//			// Сохранение неисправности в eeprom
+//			if (!mappa.validus0)
+//				eeprom.dps0Good = 0;
+//			if (!mappa.validus1)
+//				eeprom.dps1Good = 0;
 
 			// Индикация неисправности на стоянке
 //			if ( dimetior[nCapio]->sicinCommoratio() )
@@ -648,7 +676,7 @@ private:
 
 				uint8_t ipdState[8] =
 				{
-				    (uint8_t)0,
+					(mappa.validus0 == false && mappa.validus1 == false) ? (uint8_t)2 : (uint8_t)0,
 					uint8_t( (accipioVersus() * 128)
 							| ((dimetior[nCapio]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
 							| (!dimetior[nCapio]->sicinCommoratio() << 2)
