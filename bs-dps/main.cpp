@@ -638,7 +638,7 @@ void inputSignalStateOut (uint16_t )
 	outMessage.forwardTransmission = state.in5;
 	outMessage.backwardTransmission = state.in4;
 	outMessage.tractionDisable = (state.in5 == 0) && (state.in4 == 0);
-	outMessage.epkKey = state.in10;
+	outMessage.epkKey = 1;
 
 	if ( isSelfComplectA() )
 		canDat.send<CanTx::VDS_STATE_A> ({uint8_t(outMessage/256), uint8_t(outMessage)});
