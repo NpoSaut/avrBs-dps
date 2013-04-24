@@ -68,6 +68,7 @@ public:
 //		}
 
 		constituoDiametros (1250);
+		constituoCogs (42);
 		positio = EepromData::DpsPosition::Left;
 	}
 
@@ -197,6 +198,7 @@ public:
 		return causarius;
 	}
 
+	// Диаметр
 	uint16_t accipioDiametros () const
 	{
 		return diametros;
@@ -207,10 +209,28 @@ public:
 		{
 			Dimetior::diametros = diametros;
 			// Расчитываем длину имульса (в единицах: дм/65536)
-			// L = Pi * d(мм) /42 / 100 * 65536
-			// d: 1600 - 800  => d*65536*Pi помещается в uint32_t
+			// L = Pi * d(мм) / cogs / 100 * 65536
+			// d: 2966 - 200  => d*65536*Pi помещается в uint32_t
 			// Pi * 65536 = 205887,416172544
-			longitudoImpulsio = (uint32_t (diametros) * 205887) / 4200;
+			longitudoImpulsio = (uint32_t (diametros) * 205887) / ( cogs * 100);
+		}
+	}
+
+	// Число импульсов на оборот колеса
+	uint16_t accipioCogs () const
+	{
+		return cogs;
+	}
+	void constituoCogs (const uint16_t& cogs)
+	{
+		if (Dimetior::cogs != cogs)
+		{
+			Dimetior::cogs = cogs;
+			// Расчитываем длину имульса (в единицах: дм/65536)
+			// L = Pi * d(мм) / cogs / 100 * 65536
+			// d: 2966 - 200  => d*65536*Pi помещается в uint32_t
+			// Pi * 65536 = 205887,416172544
+			longitudoImpulsio = (uint32_t (diametros) * 205887) / ( cogs * 100);
 		}
 	}
 
@@ -236,6 +256,7 @@ private:
 
 	uint32_t longitudoImpulsio; // Длина, которую колесо проходит за один импульс (в единицах: дм/65536)
 	uint16_t diametros; // Диаметр
+	uint16_t cogs; // Число импульсов на оборот колеса
 	uint16_t celeritas; // Скорость по показаниям канала
 	int16_t acceleratio; // Ускорение по показаниям канала
 	int16_t acceleratioColum; // Промежуточные коэф-ты в фильтре ускорения
@@ -276,7 +297,7 @@ private:
 //		// конец --- для отладки -- УБРАТЬ
 
 		// Считаем скорость
-		uint16_t celeritasNovus = (((34468 * uint32_t (diametros)) / period) * (impulsio[can] - 1))
+		uint16_t celeritasNovus = (((uint32_t (diametros) * 1447656) / period / cogs) * (impulsio[can] - 1))
 				/ tempusPunctum[can];
 
 		// Считаем ускорение
@@ -777,6 +798,13 @@ private:
 
 			if ( eeprom.club.property.diameter1.read (tmp) )
 				dimetior[1]->constituoDiametros ( railWayRotae ? tmp*2 : tmp );
+
+
+			if ( eeprom.club.property.dpsDentos.read (tmp) )
+			{
+				dimetior[0]->constituoCogs (tmp);
+				dimetior[1]->constituoCogs (tmp);
+			}
 	}
 
 	void dpsFaultProduco (uint16_t dpsFault)
