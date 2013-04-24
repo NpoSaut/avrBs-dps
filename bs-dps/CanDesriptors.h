@@ -31,8 +31,8 @@ enum CanTx : uint16_t
 	 AUX_RESOURCE_IPD_B = 	((uint16_t)0x4D0	<< 5) + 5, // 9A05
 	 AUX_RESOURCE_BS_A = 	((uint16_t)0x633	<< 5) + 5, // C665
 	 AUX_RESOURCE_BS_B = 	((uint16_t)0x634	<< 5) + 5, // C685
-	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 1, // 9983
-	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 3, // 99A3
+	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 4, // 9984
+	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 4, // 99A4
 	 MY_KPT_A = 			((uint16_t)0x4CE	<< 5) + 1, // 99C1
 	 MY_KPT_B = 			((uint16_t)0x4CF	<< 5) + 1, // 99E1
 	 PROGRAM_SLAVE_CTRL = 	((uint16_t)0x7E1	<< 5) + 8, // FC28

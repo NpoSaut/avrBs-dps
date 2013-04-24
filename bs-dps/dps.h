@@ -56,10 +56,9 @@ template<Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, u
 class Dimetior {
 public:
 	Dimetior (bool lanternaOperor) :
-			lanternaOperor (lanternaOperor), tractus (false), celeritas (0), acceleratio (0), acceleratioColum (0), impulsio (
-			{ 0, 0 }), impulsioLanterna (
-			{ 0, 0 }), tempusPunctum (
-			{ 0, 0 }), affectus (0), versusRotatio (
+			lanternaOperor (lanternaOperor), tractus (false), celeritas (0), acceleratio (0), acceleratioColum (0),
+			impulsio ({ 0, 0 }), impulsioLanterna ({ 0, 0 }), impulsioDebug ({0,0}), tempusPunctum ({ 0, 0 }),
+			affectus (0), versusRotatio (
 			{ !positio, !positio }), causarius (false), commoratio (true)
 	{
 //		if (lanternaOperor)
@@ -91,6 +90,7 @@ public:
 
 			impulsio[canalis]++;
 			impulsioLanterna[canalis]++;
+			impulsioDebug[canalis]++;
 
 			if (impulsio[canalis] == 1)
 				tempusPunctum[canalis] = 0; // Начинаем считать время с 1-го импульса
@@ -214,6 +214,11 @@ public:
 		}
 	}
 
+	uint16_t accipioImpulsio (uint8_t canalis) const
+	{
+		return impulsioDebug[canalis];
+	}
+
 	EepromData::DpsPosition positio;
 
 	// --- ДЛЯ ОТЛАДКИ ---
@@ -236,6 +241,7 @@ private:
 	int16_t acceleratioColum; // Промежуточные коэф-ты в фильтре ускорения
 	uint16_t impulsio[2]; // Кол-во импульсов, пришедших по каналу
 	uint8_t impulsioLanterna[2]; // Это кол-во не обнуляется, чтобы корректно моргать лампочками
+	uint16_t impulsioDebug[2];
 	uint16_t tempusPunctum[2];
 	uint8_t affectus; // состояние порта
 	struct VersusRotatio // Напрвление вращения (true - туда, false - обратно)
@@ -695,10 +701,19 @@ private:
 					uint8_t( dimetior[nCapio]->accipioAcceleratio()*2 )
 				};
 
+				uint8_t myDebug[4] =
+						{
+								uint8_t ( dimetior[nCapio]->accipioImpulsio (0) / 256 ),
+								uint8_t ( dimetior[nCapio]->accipioImpulsio (0) ),
+								uint8_t ( dimetior[nCapio]->accipioImpulsio (1) / 256 ),
+								uint8_t ( dimetior[nCapio]->accipioImpulsio (1) )
+						};
+
 				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_A> (myDebug);
 
 					// IPD_DPS_FAULT ---
 					enum class DpsFault : uint8_t
@@ -733,6 +748,7 @@ private:
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_B> (myDebug);
 				}
 			}
 		}

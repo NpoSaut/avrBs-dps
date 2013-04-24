@@ -15,23 +15,23 @@ ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(strip $(C++_DEPS)),)
 -include $(C++_DEPS)
 endif
-ifneq ($(strip $(C_DEPS)),)
--include $(C_DEPS)
-endif
-ifneq ($(strip $(ASM_DEPS)),)
--include $(ASM_DEPS)
-endif
-ifneq ($(strip $(CC_DEPS)),)
--include $(CC_DEPS)
+ifneq ($(strip $(CXX_DEPS)),)
+-include $(CXX_DEPS)
 endif
 ifneq ($(strip $(CPP_DEPS)),)
 -include $(CPP_DEPS)
 endif
+ifneq ($(strip $(C_DEPS)),)
+-include $(C_DEPS)
+endif
 ifneq ($(strip $(S_DEPS)),)
 -include $(S_DEPS)
 endif
-ifneq ($(strip $(CXX_DEPS)),)
--include $(CXX_DEPS)
+ifneq ($(strip $(CC_DEPS)),)
+-include $(CC_DEPS)
+endif
+ifneq ($(strip $(ASM_DEPS)),)
+-include $(ASM_DEPS)
 endif
 ifneq ($(strip $(C_UPPER_DEPS)),)
 -include $(C_UPPER_DEPS)
@@ -89,13 +89,13 @@ bs-dps.eep: bs-dps.elf
 
 sizedummy: bs-dps.elf
 	@echo 'Invoking: Print Size'
-	-avr-size --format=avr --mcu=at90can128 bs-dps.elf
+	-avr-size --format=berkeley -t bs-dps.elf
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(EEPROM_IMAGE)$(ELFS)$(FLASH_IMAGE)$(LSS)$(S_DEPS)$(CXX_DEPS)$(S_UPPER_DEPS)$(C++_DEPS)$(ASM_DEPS)$(CC_DEPS)$(CPP_DEPS)$(C_UPPER_DEPS)$(SIZEDUMMY) bs-dps.elf
+	-$(RM) $(C_DEPS)$(CPP_DEPS)$(CXX_DEPS)$(C++_DEPS)$(CC_DEPS)$(SIZEDUMMY)$(ASM_DEPS)$(LSS)$(FLASH_IMAGE)$(S_UPPER_DEPS)$(S_DEPS)$(ELFS)$(EEPROM_IMAGE)$(OBJS)$(C_UPPER_DEPS) bs-dps.elf
 	-@echo ' '
 
 post-build:
