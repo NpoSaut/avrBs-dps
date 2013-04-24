@@ -577,14 +577,7 @@ void pushHandler (uint16_t num)
 //	else if ( num == 9 ) // РБC
 //		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x1B });
 
-	if ( num == 2 ) // Ж/Д ход
-	{
-		dps.constituoRailWayRotae(true);
-	}
-	if ( num == 5 ) // Вперёд
-	{
-		dps.constituoVersus (0);
-	}
+
 	if ( num == 4 ) // Назад
 	{
 		dps.constituoVersus (1);
@@ -597,10 +590,9 @@ void releaseHandler (uint16_t num)
 //		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x13 });
 //	else if ( num == 9 ) // РБC
 //		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x1B });
-
-	if ( num == 2 ) // Ж/Д ход
+	if ( num == 4 ) // Вперёд
 	{
-		dps.constituoRailWayRotae(false);
+		dps.constituoVersus (0);
 	}
 }
 
@@ -632,12 +624,12 @@ void inputSignalStateOut (uint16_t )
 	outMessage.railwayMode = state.in2;
 	outMessage.tifon = state.in7;
 	outMessage.siren = 0; // Сирена заведена на 27 вход ячейки, но она не заведена на процессор
-	outMessage.emergencyStop = state.in6;
+	outMessage.emergencyStop = !(state.in6); // инверсия "работа двигателя"
 	outMessage.vigilanceButton = state.in8;
-	outMessage.engineWork = !state.in6; // работа двигателя как инверсия сигнала "остановка двигателя"
-	outMessage.forwardTransmission = state.in5;
+	outMessage.engineWork = state.in6; // работа двигателя
+	outMessage.forwardTransmission = !(state.in4);
 	outMessage.backwardTransmission = state.in4;
-	outMessage.tractionDisable = (state.in5 == 0) && (state.in4 == 0);
+	outMessage.tractionDisable = state.in3;
 	outMessage.epkKey = 1;
 
 	if ( isSelfComplectA() )
