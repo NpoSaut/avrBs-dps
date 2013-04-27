@@ -338,7 +338,7 @@ public:
 			Safe<uint16_t>& acceleratioEtAffectus, InterruptHandler odometer16dm0PlusPlus,
 			InterruptHandler odometer16dm1PlusPlus) :
 			accessusPortus (accessusPortus), spatiumMeters (0), odometer16dmPlusPlus (
-			{ odometer16dm0PlusPlus, odometer16dm1PlusPlus }), tractus (false), versus(0), railWayRotae(0), repeto (true), // после перезагрузки -- флаг перезагрузки
+			{ odometer16dm0PlusPlus, odometer16dm1PlusPlus }), tractus (false), versus(0), railWayRotae(true), repeto (true), // после перезагрузки -- флаг перезагрузки
 			ecAdjust (
 					Delegate<uint16_t ()>::from_method<CeleritasSpatiumDimetior,
 							&CeleritasSpatiumDimetior::accipioCeleritas> (this)
@@ -428,7 +428,7 @@ public:
 	// Напрвление движения. 0 - вперёд
 	const uint8_t accipioVersus () const
 	{
-		return railWayRotae ? !versus : versus;
+		return versus;
 	}
 	void constituoVersus (uint8_t versus)
 	{
@@ -491,7 +491,7 @@ private:
 
 	bool tractus;// 0 - выбег или торможение, 1 - тяга
 	uint8_t versus;
-	bool railWayRotae; // В ж/д режиме увеличивается диаметр бандажа и инвертируется направление движения
+	bool railWayRotae; // Только в ж/д режиме проверка обрыва датчиков
 
 	uint8_t& spatium;
 	Safe<uint16_t>& celeritasProdo;
@@ -794,10 +794,10 @@ private:
 			}
 
 			if ( eeprom.club.property.diameter0.read (tmp) )
-				dimetior[0]->constituoDiametros ( railWayRotae ? tmp*2 : tmp );
+				dimetior[0]->constituoDiametros ( tmp );
 
 			if ( eeprom.club.property.diameter1.read (tmp) )
-				dimetior[1]->constituoDiametros ( railWayRotae ? tmp*2 : tmp );
+				dimetior[1]->constituoDiametros ( tmp );
 
 
 			if ( eeprom.club.property.dpsDentos.read (tmp) )

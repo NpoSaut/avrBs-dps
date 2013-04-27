@@ -583,6 +583,10 @@ void pushHandler (uint16_t num)
 	{
 		dps.constituoVersus (1);
 	}
+	if ( num == 2 ) // Ж/Д режим
+	{
+		dps.constituoRailWayRotae(true);
+	}
 }
 
 void releaseHandler (uint16_t num)
@@ -591,9 +595,14 @@ void releaseHandler (uint16_t num)
 //		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x13 });
 //	else if ( num == 9 ) // РБC
 //		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x1B });
+
 	if ( num == 4 ) // Вперёд
 	{
 		dps.constituoVersus (0);
+	}
+	if ( num == 2 ) // отпускание Ж/Д режима, т.е. транспортный
+	{
+		dps.constituoRailWayRotae(false);
 	}
 }
 
