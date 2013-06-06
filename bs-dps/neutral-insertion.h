@@ -35,7 +35,7 @@ public:
 		Data& data = *((Data*) pointerToData);
 
 		uint16_t getCoord = uint16_t (data[3]) + uint16_t (data[2]) * 256;
-		int16_t distance = getCoord - uint16_t(dps.spatiumMeters);
+		int16_t distance = getCoord - uint16_t(dps.spatiumMetersAdjusted);
 		if ( distance > 0 && distance < 1500 )
 		{
 			coord = getCoord;
@@ -66,7 +66,7 @@ private:
 		Complex<uint16_t> outDistance = 0;
 		if ( type != Type::NoTarget )
 		{
-			int16_t distance = coord - uint16_t(dps.spatiumMeters);
+			int16_t distance = coord - uint16_t(dps.spatiumMetersAdjusted);
 			if ( distance + length <= 0 )
 			{
 				type = Type::NoTarget;
