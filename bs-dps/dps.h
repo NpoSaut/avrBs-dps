@@ -301,7 +301,7 @@ public:
 //								uint8_t (&spatiumClubPage)[3], uint8_t (&celeritasClubPage)[3],
 								uint16_t diametros0, uint16_t diametros1  )
 		: accessusPortus (accessusPortus),
-		  spatiumMeters (0),
+		  spatiumMeters (0), spatiumMetersOrig (0),
 		  odometer16dmPlusPlus({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
 		  tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
 		  ecAdjust( Delegate<uint16_t ()>::from_method <CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioCeleritas> (this),
@@ -399,7 +399,8 @@ public:
 	}
 
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
-	Complex<int32_t> spatiumMeters; // пройденный путь в метрах
+	Complex<int32_t> spatiumMeters; // пройденный путь в метрах (с подстройкой под ЭК)
+	Complex<int32_t> spatiumMetersOrig; // пройденный путь в метрах (без подстройки под ЭК)
 	InterruptHandler odometer16dmPlusPlus[2]; // Делагаты функций, делающийх ++ к одометрам
 
 	bool repeto; // флаг перезагрузки в линию связи
@@ -497,9 +498,15 @@ private:
 			{
 				spatiumDecimetersMultiple10 += 10;
 				if ( versus() == 0 )
+				{
 					spatiumMeters ++;
+					spatiumMetersOrig ++;
+				}
 				else
+				{
 					spatiumMeters --;
+					spatiumMetersOrig --;
+				}
 			}
 		}
 	}
@@ -700,16 +707,25 @@ private:
 									| (firmusCausarius[nCapio] << 0) ),
 							uint8_t( dimetior[nCapio]->accipioAcceleratio()*2 )
 									 };
+				uint8_t origX[3] =
+						{
+								uint8_t (spatiumMetersOrig[0]),
+								uint8_t (spatiumMetersOrig[1]),
+								uint8_t (spatiumMetersOrig[2])
+						};
+
 
 				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_A> (origX);
 				}
 				else
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_B> (origX);
 				}
 			}
 		}
