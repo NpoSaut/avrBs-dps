@@ -79,10 +79,10 @@ private:
 				0,
 				0
 							};
-		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<AUX_RESOURCE_IPD_A> (packet);
-		else
-			canDat.template send<AUX_RESOURCE_IPD_B> (packet);
+//		if (reg.portB.pin7 == 0) // первый полукомплект
+//			canDat.template send<AUX_RESOURCE_IPD_A> (packet);
+//		else
+//			canDat.template send<AUX_RESOURCE_IPD_B> (packet);
 	}
 
 	void watchDog (uint16_t)

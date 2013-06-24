@@ -40,8 +40,10 @@ void Init (void)
 	// Светодиоды.
 	reg.portC.pin4.out();
 	reg.portC.pin5.out();
+	reg.portD.pin7.out();
 	reg.portC.pin4 = true;
 	reg.portC.pin5 = true;
+	reg.portD.pin7 = true;
 
 	// Watchdog
 	wdt_enable (WDTO_500MS);
@@ -60,65 +62,29 @@ SchedulerType scheduler;
 
 // ---------------------------------------------- CAN -------------------------------------------►
 
-typedef INT_TYPELIST_2 (CanTx::IPD_STATE_A,	CanTx::IPD_STATE_B) IPD_STATE;
-typedef INT_TYPELIST_2 (CanTx::SAUT_INFO_A,	CanTx::SAUT_INFO_B) SAUT_INFO;
-typedef INT_TYPELIST_9 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
-						CanTx::AUX_RESOURCE_IPD_A,	CanTx::AUX_RESOURCE_IPD_B,
-						CanTx::SYS_DATA,
-						CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
-						CanTx::MY_KPT_A, CanTx::MY_KPT_B ) AUX_RESOURCE_SYS_DATA;
+typedef INT_TYPELIST_2	(CanTx::SAUT_INFO_A,			CanTx::SAUT_INFO_B) 		 SAUT_INFO;
+typedef INT_TYPELIST_2	(CanRx::MLSB_SAUT_KPT_A,		CanRx::MLSB_SAUT_KPT_B)		 MLSB_SAUT_KPT;
+typedef INT_TYPELIST_2	(CanRx::EKS_KLUB_MCO_STATE_A,	CanRx::EKS_KLUB_MCO_STATE_B) EKS_KLUB_MCO_STATE;
+typedef INT_TYPELIST_2	(CanRx::VDS_STATE_A,			CanRx::VDS_STATE_B)			 VDS_STATE;
 
-typedef INT_TYPELIST_2 (CanRx::MCO_STATE_A, CanRx::MCO_LIMITS_A) MCO_STATE_LIMITS_A;
-typedef INT_TYPELIST_2 (CanRx::MCO_STATE_B, CanRx::MCO_LIMITS_B) MCO_STATE_LIMITS_B;
-typedef INT_TYPELIST_2 (CanRx::SYS_DATA_QUERY, CanRx::SYS_KEY) SYS;
-typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_ON_TIME_A, CanRx::MP_ALS_OFF_TIME_A) MP_ALS_A;
-typedef INT_TYPELIST_4 (CanRx::MP_ALS_ON_B, CanRx::MP_ALS_OFF_B, CanRx::MP_ALS_ON_TIME_B, CanRx::MP_ALS_OFF_TIME_B) MP_ALS_B;
-typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA) INPUT;
-typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
 
-typedef CanDat < LOKI_TYPELIST_5(					// Список дескрипторов для отправки
-						IPD_STATE,
-						SAUT_INFO,
-						Int2Type< CanTx::SYS_DATA_STATE >,
-						Int2Type< CanTx::SYS_DATA_STATE2 >,
-						AUX_RESOURCE_SYS_DATA
+typedef CanDat < LOKI_TYPELIST_1(					// Список дескрипторов для отправки
+						SAUT_INFO
 								),
-				 LOKI_TYPELIST_10(
-						 Int2Type< CanRx::MCO_DATA >,
-						 MCO_STATE_LIMITS_A,
-						 MCO_STATE_LIMITS_B,
-						 SYS,
-						 MP_ALS_A,
-						 MP_ALS_B,
-						 Int2Type< CanRx::IPD_DATE >,
-						 Int2Type< CanRx::MM_DATA >,
-						 INPUT,
-						 DIAGNOSTICS
+				 LOKI_TYPELIST_3(					// Список дескрипторов для приёма
+						 MLSB_SAUT_KPT,
+						 EKS_KLUB_MCO_STATE,
+						 VDS_STATE
 						 	 	 ),
-				 LOKI_TYPELIST_21(
-						 Int2Type< CanRx::INPUT_DATA >,
-						 Int2Type< CanRx::MCO_DATA >,
-						 Int2Type< CanRx::BKSI_DATA >,
-						 Int2Type< CanTx::SYS_DATA >,
-						 Int2Type< CanRx::SYS_DATA_QUERY >,
-						 Int2Type< CanRx::SYS_DIAGNOSTICS >,
-						 Int2Type< CanRx::AUX_RESOURCE_MCO_A >,
-						 Int2Type< CanRx::AUX_RESOURCE_MCO_B >,
-						 Int2Type< CanRx::MCO_STATE_A >,
-						 Int2Type< CanRx::MCO_STATE_B >,
-						 Int2Type< CanRx::IPD_DATE >,
-						 Int2Type< CanRx::MM_DATA >,
-						 Int2Type< CanRx::MP_ALS_ON_A >,
-						 Int2Type< CanRx::MP_ALS_OFF_A >,
-						 Int2Type< CanRx::MP_ALS_ON_B >,
-						 Int2Type< CanRx::MP_ALS_OFF_B >,
-						 Int2Type< CanRx::MP_ALS_ON_TIME_A >,
-						 Int2Type< CanRx::MP_ALS_OFF_TIME_A >,
-						 Int2Type< CanRx::MP_ALS_ON_TIME_B >,
-						 Int2Type< CanRx::MP_ALS_OFF_TIME_B >,
-						 Int2Type< CanRx::SYS_KEY >
+				 LOKI_TYPELIST_6(					// Прерывания при приёме
+						 Int2Type< CanRx::MLSB_SAUT_KPT_A >,
+						 Int2Type< CanRx::MLSB_SAUT_KPT_B >,
+						 Int2Type< CanRx::EKS_KLUB_MCO_STATE_A >,
+						 Int2Type< CanRx::EKS_KLUB_MCO_STATE_B >,
+						 Int2Type< CanRx::VDS_STATE_A >,
+						 Int2Type< CanRx::VDS_STATE_B >
 								),
-				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
+				 250 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
 	CanDatType;
 CanDatType canDat;
 
@@ -197,148 +163,6 @@ void clubSendNextPageInterrupt ()
 
 
 
-// ---------------------------------- SYS_DIAGNOSTICS / AUX_RESOURCE ----------------------------►
-
-void sysDiagnostics (uint16_t a)
-{
-	enum class Unit : uint8_t
-	{
-		MCO = 1,
-		MM,
-		MP_ALS,
-		IPD = 4,
-		MPSU,
-		RK,
-		BIL,
-		SAUT,
-		TCKBM_KCAN,
-		UKTOL,
-		CANGate,
-		BR_UMO = 14,
-		TSKBM_PCAN,
-		BS_DPS = 16,
-		ALS_TKS,
-		EPK
-	};
-	enum class Request : uint8_t
-	{
-		PASSIVE = 1,
-		ACTIVE,
-		TEST_RUN,
-		READ,
-		VERSION,
-		DIST_TRAVEL_WRITE, // IPD
-		ECARD_NUMBER_READ = 10, // MM
-		DIST_TRAVEL_READ_A = 13, // IPD
-		DIST_TRAVEL_READ_B, // IPD
-		BIL_DIAG, // BIL
-		BVU_ALSN_SEND_ON = 33, // ALS_TKS
-		BVU_ALSN_SEND_OFF, // ALS_TKS,
-		ALSN_DIAG_ON, // ALS_TKS
-		ALSN_DIAG_OFF, // ALS_TKS
-		ALS_EN_DIAG_ON, // ALS_TKS
-		ALSN_EN_DIAG_OFF, // ALS_TKS
-		RC_STATE_READ, // RK
-		MCO_ACTIVE_N_READ // MCO
-	};
-	enum class Answer : uint8_t
-	{
-		VERSION = 0,
-		ERROR = 1,
-		WARNING = 2,
-		DATA = 208,
-		BUSY = 251,
-		FAIL,
-		REPEAT,
-		UNKNOWN,
-		OK
-	};
-	Unit unit = (Unit) canDat.get<CanRx::SYS_DIAGNOSTICS>() [0];
-	Request request = (Request) canDat.get<CanRx::SYS_DIAGNOSTICS>() [1];
-
-
-	if (unit == Unit::IPD || unit == Unit::BS_DPS)
-	{
-		if ( request == Request::VERSION  )
-		{
-			uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
-			uint16_t checkSumm = 0;
-			for (uint8_t i = 0; i < idSize; i ++)
-				checkSumm += pgm_read_word ((uint16_t *)&id + i);
-
-			uint8_t packet[5] = {
-					(uint8_t) Answer::VERSION,
-					pgm_read_byte(&id.version),
-					0,
-					0,
-					uint8_t (checkSumm)
-								};
-			if (unit == Unit::IPD)
-			{
-				if (reg.portB.pin7 == 0)
-					canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
-				else
-					canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet);
-			}
-			else if (unit == Unit::BS_DPS)
-			{
-				if (reg.portB.pin7 == 0)
-					canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
-				else
-					canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
-			}
-		}
-		else if ( request == Request::DIST_TRAVEL_WRITE )
-		{
-			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-			eeprom_update_byte( adr  , canDat.get<CanRx::SYS_DIAGNOSTICS>() [5] );
-			eeprom_update_byte( adr+1, canDat.get<CanRx::SYS_DIAGNOSTICS>() [4] );
-			eeprom_update_byte( adr+2, canDat.get<CanRx::SYS_DIAGNOSTICS>() [3] );
-			eeprom_update_byte( adr+3, canDat.get<CanRx::SYS_DIAGNOSTICS>() [2] );
-		}
-		else if ( request == Request::DIST_TRAVEL_READ_A && reg.portB.pin7 == 0 )
-		{
-			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-			uint8_t packet[5] = {
-					(uint8_t) Answer::DATA,
-					eeprom_read_byte (adr+3),
-					eeprom_read_byte (adr+2),
-					eeprom_read_byte (adr+1),
-					eeprom_read_byte (adr)
-								};
-
-			canDat.send<CanTx::AUX_RESOURCE_IPD_A> (packet);
-		}
-		else if ( request == Request::DIST_TRAVEL_READ_B && reg.portB.pin7 != 0 )
-		{
-			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-			uint8_t packet[5] = {
-					(uint8_t) Answer::DATA,
-					eeprom_read_byte (adr+3),
-					eeprom_read_byte (adr+2),
-					eeprom_read_byte (adr+1),
-					eeprom_read_byte (adr)
-								};
-
-			canDat.send<CanTx::AUX_RESOURCE_IPD_B> (packet);
-		}
-		else if ( request == Request::TEST_RUN && unit == Unit::BS_DPS )
-		{
-			uint8_t packet[5] = {
-					(uint8_t) Answer::DATA,
-					0,
-					0,
-					0,
-					0
-								};
-			if (reg.portB.pin7 == 0)
-				canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
-			else
-				canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
-		}
-	}
-}
-
 // ------------------------------------- Рукоятки: CAN -> RS-485 --------------------------------►
 
 //void sysKeyRelease ()
@@ -361,71 +185,7 @@ void sysKeyRbRelease (uint16_t)
 	ATOMIC data.member<ClubOut0>() &= ~(1 << 15);
 }
 
-void sysKey (uint16_t a)
-{
-	enum class Key : uint8_t
-	{
-		RB 		= 0x13,
-		BK		= 0x14,
-		RBS		= 0x1B,
-		RMP		= 0x16,
-		ALARM	= 0x19,
-		F		= 0x1C,
-		PULL_UP	= 0x21,
-		DEPART	= 0x25,
-		OS		= 0x27,
-		K20		= 0x29,
-		RESET_1	= 0x30,
-		RESET_2	= 0x31
-	};
 
-	if ( canDat.get<CanRx::SYS_KEY>()[0] & (1 << 6) ) // нажата кнопка (рукоятка)
-	{
-		switch ( (Key) (canDat.get<CanRx::SYS_KEY>()[0] & 0x3F) )
-		{
-			case Key::K20:
-				ATOMIC data.member<ClubOut2>() |= (1 << 8);
-				scheduler.runIn(
-							Command{ SoftIntHandler::from_function<&sysKeyRelease>(), 8 },
-//							Command{ SoftIntHandler( [](uint16_t a){ATOMIC data.member<ClubOut2>() &= ~(1 << 8); } ), 0},
-							1000 );
-				break;
-			case Key::PULL_UP:
-				ATOMIC data.member<ClubOut2>() |= (1 << 9);
-				scheduler.runIn(
-							Command{ SoftIntHandler::from_function<&sysKeyRelease>(), 9 },
-//							Command{ SoftIntHandler( [](uint16_t a){ATOMIC data.member<ClubOut2>() &= ~(1 << 9); } ), 0},
-							1000 );
-				break;
-			case Key::DEPART:
-				ATOMIC data.member<ClubOut2>() |= (1 << 10);
-				scheduler.runIn(
-							Command{ SoftIntHandler::from_function<&sysKeyRelease>(), 10 },
-//							Command{ SoftIntHandler( [](uint16_t a){ATOMIC data.member<ClubOut2>() &= ~(1 << 10); } ), 0},
-							1000 );
-				break;
-			case Key::OS:
-				ATOMIC data.member<ClubOut2>() |= (1 << 11);
-				scheduler.runIn(
-							Command{ SoftIntHandler::from_function<&sysKeyRelease>(), 11 },
-//							Command{ SoftIntHandler( [](uint16_t a){ATOMIC data.member<ClubOut2>() &= ~(1 << 11); } ), 0},
-							1000 );
-				break;
-		}
-	}
-}
-
-// --------------------------------------------- ipdDate ----------------------------------------►
-
-void ipdDate (uint16_t none)
-{
-	clubPage[2][0] = canDat.get<CanRx::IPD_DATE>()[4];
-	clubPage[2][1] = canDat.get<CanRx::IPD_DATE>()[5];
-	clubPage[2][2] = canDat.get<CanRx::IPD_DATE>()[6];
-	clubPage[4][0] = canDat.get<CanRx::IPD_DATE>()[1];
-	clubPage[4][1] = canDat.get<CanRx::IPD_DATE>()[2];
-	clubPage[4][2] = canDat.get<CanRx::IPD_DATE>()[3];
-}
 
 // ---------------------------------------------- КПТ -------------------------------------------►
 
@@ -567,12 +327,6 @@ void mcoState (uint16_t pointer)
 	}
 	_cast( Complex<uint16_t>, data.member<ClubOut0>() )[1] = signals;
 
-	// Определение, есть ли тяга
-	if ( message[0] & (1 << 5) )
-		dps.constituoNonTractus ();
-	else
-		dps.constituoTractus ();
-
 	// В задней кабине инвертировать направление
 	dps.constituoVersusInversio ( message[3] & (1 << 5) );
 
@@ -582,16 +336,6 @@ void mcoState (uint16_t pointer)
 	if ( time - lastTime > 4000 )
 		reboot();
 	lastTime = time;
-
-	// Контроль выхода из конфигурации
-	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) &&	// выход БС-ДПС или ИПД
-			clock.getTime() > 7000 && 	// проработали больше 7 секунд
-			dps.sicinActivus() && // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
-			!dps.sicinCausarius() ) // если оба датчика неисправны, то перезагрузку не делать
-	{
-		reboot ();
-	}
-
 }
 
 void mcoStateA (uint16_t pointer)
@@ -606,30 +350,29 @@ void mcoStateB (uint16_t pointer)
 		mcoState (pointer);
 }
 
-// Для контроля выхода из конфигурации МПХ
-void mcoAuxResControl (uint16_t pointer)
+// ------------------------------------ Ввод дискретных сигналов --------------------------------►
+
+void vdsState (uint16_t pointer)
 {
-	typedef const uint8_t Message[5];
+	typedef const uint8_t Message[8];
 	Message& message = *( (Message *)(pointer) );
 
-	if ( message[0] == 2 && message[1] == 3 && !(message[2] & (1 << 2)) && // Кодовая комбинация, означающая выход МПХ из конфиграции
-			clock.getTime() > 7000 && 	// проработали больше 7 секунд
-			dps.sicinActivus() ) // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
-	{
-		reboot ();
-	}
+	if ( message[2] & (1 << 2) ) // 1 - контроллер тяги выключен
+		dps.constituoNonTractus ();
+	else
+		dps.constituoTractus ();
 }
 
-void mcoAuxResA (uint16_t pointer)
+void vdsStateA (uint16_t pointer)
 {
 	if (reg.portB.pin7 == 0) // первый полукомплект
-		mcoAuxResControl (pointer);
+		vdsState (pointer);
 }
 
-void mcoAuxResB (uint16_t pointer)
+void vdsStateB (uint16_t pointer)
 {
 	if (reg.portB.pin7 == 1) // второй полукомплект
-		mcoAuxResControl (pointer);
+		vdsState (pointer);
 }
 
 // --------------------------------------- Эмуляция движения ------------------------------------►
@@ -798,9 +541,6 @@ int main ()
 		if (sum != 0) // В id.controlSumm хранится дополнение до 0
 			reboot ();
 	}
-	asm volatile ("nop"); // !!! 126 version hack !!!
-//	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
-//	asm volatile ("nop");
 
 //	data.interruptHandler<DpsCommand> () = InterruptHandler (&commandParser);
 //	data.interruptHandler<Club0> () = InterruptHandler (&kptCommandParse);
@@ -836,71 +576,12 @@ int main ()
 	data.interruptHandler<Club1> () = InterruptHandler::from_function<&clubSendNextPageInterrupt>();
 	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getVelocity> (&emulation);
 
-	// ------------------------------ Хранение постоянных характеристик -----------------------------►
-	if (reg.portB.pin7 == 0) // первый полукомплект
-	{
-		typedef MPH <CanDatType, canDat, SchedulerType, scheduler, ComType, com> MPHType;
-		MPHType mph;
-
-		canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
-		canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
-		canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::writeConfirm> (&mph);
-		canDat.rxHandler<CanTx::SYS_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::write> (&mph); // Если кто-то ещё ответит, то обновить мои данные
-		canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::read> (&mph);
-	}
-
-	canDat.rxHandler<CanRx::SYS_DIAGNOSTICS>() = SoftIntHandler::from_function <&sysDiagnostics>();
-
-	canDat.rxHandler<CanRx::MCO_STATE_A>() = SoftIntHandler::from_function <&mcoStateA>();
-	canDat.rxHandler<CanRx::MCO_STATE_B>() = SoftIntHandler::from_function <&mcoStateB>();
-	canDat.rxHandler<CanRx::AUX_RESOURCE_MCO_A>() = SoftIntHandler::from_function <&mcoAuxResA>();
-	canDat.rxHandler<CanRx::AUX_RESOURCE_MCO_B>() = SoftIntHandler::from_function <&mcoAuxResB>();
-
-	canDat.rxHandler<CanRx::IPD_DATE>() = SoftIntHandler::from_function <&ipdDate>();
-	canDat.rxHandler<CanRx::SYS_KEY>() = SoftIntHandler::from_function <&sysKey>();
-
-	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_method <DpsType, &DpsType::takeEcDataForAdjust> (&dps);
-
-	canDat.rxHandler<CanRx::MP_ALS_ON_A>() = SoftIntHandler::from_function <&kptRiseA>();
-	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_A>() = SoftIntHandler::from_function <&kptRiseTimeA>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_A>() = SoftIntHandler::from_function <&kptFallA>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_A>() = SoftIntHandler::from_function <&kptFallTimeA>();
-	canDat.rxHandler<CanRx::MP_ALS_ON_B>() = SoftIntHandler::from_function <&kptRiseB>();
-	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_B>() = SoftIntHandler::from_function <&kptRiseTimeB>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler::from_function <&kptFallB>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallTimeB>();
+	canDat.rxHandler<CanRx::EKS_KLUB_MCO_STATE_A>() = SoftIntHandler::from_function <&mcoStateA>();
+	canDat.rxHandler<CanRx::EKS_KLUB_MCO_STATE_B>() = SoftIntHandler::from_function <&mcoStateB>();
 
 	dps.constituoActivus();
 
 	sei();
-
-	// После включения выдавать AUX_RESOURCE с версией
-	{
-		uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
-		uint16_t checkSumm = 0;
-		for (uint8_t i = 0; i < idSize; i ++)
-			checkSumm += pgm_read_word ((uint16_t *)&id + i);
-
-		uint8_t packet[5] = {
-				0,
-				pgm_read_byte(&id.version),
-				0,
-				0,
-				uint8_t (checkSumm)
-							};
-		if (reg.portB.pin7 == 0)
-		{
-			canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
-			_delay_ms (10);
-			canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
-		}
-		else
-		{
-			canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet);
-			_delay_ms (10);
-			canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
-		}
-	}
 
 	scheduler.runIn( Command {SoftIntHandler::from_function<&unsetResetFlag>(), 0}, 7000 );
 

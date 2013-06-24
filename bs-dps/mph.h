@@ -63,7 +63,6 @@ public:
 					eeprom_read_byte (adr+1),
 					eeprom_read_byte (adr)
 						};
-		canDat.template send<CanTx::SYS_DATA> (packet);
 	}
 
 private:
@@ -103,7 +102,6 @@ private:
 							 ),
 				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.lengthWagon)
 								};
-		canDat.template send<CanTx::SYS_DATA_STATE> (sysDataState);
 
 		uint8_t sysDataState2[8] = {
 				0, // Результаты выполнения тестов...
@@ -115,7 +113,6 @@ private:
 				scheduler.fill,
 				sautCom.termTime
 								};
-		canDat.template send<CanTx::SYS_DATA_STATE2> (sysDataState2);
 		sautCom.termTime = 0;
 
 	}

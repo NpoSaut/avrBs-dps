@@ -563,11 +563,7 @@ private:
 
 
 			// Контроль обрыва обоих ДПС
-			bool duplarisTractus;
-			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
-				duplarisTractus = ( canDat.template get<CanRx::MCO_LIMITS_A> ()[7] & 0b11 ); // признак двойной тяги
-			else
-				duplarisTractus = ( canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11 ); // признак двойной тяги
+			bool duplarisTractus = false;
 
 			if ( tractus && !duplarisTractus ) // При тяге
 			{
@@ -704,12 +700,10 @@ private:
 				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
-					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
 				}
 				else
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
-					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
 				}
 			}
 		}
