@@ -444,9 +444,6 @@ private:
 	typedef Dimetior< lanternaPortus, lanterna0, lanterna1, minTempusPunctum, maxTempusPunctum, maxCeleritas, 100 > DimetiorType;
 	DimetiorType* dimetior[2];
 
-	typedef EcAdjust < CanType, canDat > EcAdjustType;
-	EcAdjustType ecAdjust;
-
 	bool tractus;// 0 - выбег или торможение, 1 - тяга
 
 	uint8_t& spatium;
@@ -578,11 +575,7 @@ private:
 			}
 
 			// Контроль обрыва обоих ДПС
-			bool duplarisTractus;
-			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
-				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_A> ()[7] & 0b11) == 0b11 );// признак двойной тяги
-			else
-				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11) == 0b11 );// признак двойной тяги
+			bool duplarisTractus = false;
 
 			if ( tractus && !duplarisTractus )// При тяге
 			{
@@ -723,7 +716,6 @@ private:
 				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
-					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
 
 					// IPD_DPS_FAULT ---
 					enum class DpsFault : uint8_t
@@ -757,7 +749,6 @@ private:
 				else
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
-					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
 				}
 			}
 		}
@@ -792,7 +783,6 @@ private:
 	{
 		uint8_t data[2] =
 		{ (uint8_t) dpsFault, 0 };
-		canDat.template send<CanTx::IPD_DPS_FAULT> (data);
 	}
 
 	// Выдаёт скорость в требуемом формате
