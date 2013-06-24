@@ -8,8 +8,8 @@
 
 enum CanTx : uint16_t
 {
-	 SAUT_INFO_A =          ((uint16_t)0x143	<< 5) + 8, // 2867
-	 SAUT_INFO_B =          ((uint16_t)0x163	<< 5) + 8, // 2C67
+	 SAUT_INFO_A =          ((uint16_t)0x148	<< 5) + 8, // 2908
+	 SAUT_INFO_B =          ((uint16_t)0x168	<< 5) + 8, // 2D08
 };
 
 enum CanRx : uint16_t

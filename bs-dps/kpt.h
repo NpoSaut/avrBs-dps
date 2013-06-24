@@ -56,7 +56,7 @@ private:
 	uint8_t periodTime;
 	uint8_t impulseStartTime;
 	uint8_t shortImpNumber;
-	uint8_t lisZeroingPermission;
+	bool lisCountPermission;
 
 	Status statusPrevious;
 	uint8_t repeateCounter;
@@ -85,143 +85,49 @@ private:
 //			canDat.template send<AUX_RESOURCE_IPD_B> (packet);
 	}
 
-	void watchDog (uint16_t)
-	{
-		if ( impulseWatchDog == false ) // не было изменений
-		{
-			if (status.color == Status::Color::RedYellow)
-				status = { 	Status::Color::Red,
-							status.kptImp,
-							false,
-							(Status::Type) ~((uint8_t) status.type)
-						};
-			else if (status.color != Status::Color::Red)
-				status = { 	Status::Color::White,
-							status.kptImp,
-							false,
-							status.type
-						};
-//			canSend ();
-		}
-		else
-			impulseWatchDog = false;
-
-		scheduler.runIn( Command{ SoftIntHandler::from_method <Kpt, &Kpt::watchDog>(this), 0 }, 2000000/Scheduler::discreetMks );
-//		scheduler.runIn( Command{SoftIntHandler (this, &Kpt::watchDog), 0}, 2000000/Scheduler::discreetMks );
-	}
-
 
 public:
 	Kpt (uint8_t& status, uint8_t& lis)
 		: status ( _cast(Status, status) ),
 		  impulseWatchDog (false), periodTime (0), impulseStartTime (0),
-		  shortImpNumber (0), lisZeroingPermission (true), statusPrevious (Kpt::status),
+		  shortImpNumber (0), lisCountPermission (false), statusPrevious (Kpt::status),
 		  repeateCounter (0), lis (lis), correctKptDistance (0)
 	{
 //		static_assert (timeMod < timePrescale/256, "Выбранный таймер не даёт необходимой точности");
 		setPassive ();
-		scheduler.runIn( Command{ SoftIntHandler::from_method <Kpt, &Kpt::watchDog>(this), 0}, 2000000/Scheduler::discreetMks );
 //		scheduler.runIn( Command{ SoftIntHandler (this, &Kpt::watchDog), 0}, 2000000/Scheduler::discreetMks );
 	}
 
-	void fall ()
+	void getCleverInfo (uint16_t correctionDecemeters, bool kptSwitch, uint8_t kptType)
 	{
-		fall( getImpulseTime() );
-	}
-
-	void fall (uint8_t upTime)
-	{
-		// Начало отрицательного импульса
-		impulseWatchDog = true;
-		if ( status.kptImp == 1 )
+		if (kptType == 7)
 		{
-			status.kptImp = 0;
-			periodTime += upTime;
+			status.type = Status::Kpt7;
+			status.correct = 1;
+		}
+		else if (kptType == 5)
+		{
+			status.type = Status::Kpt5;
+			status.correct = 1;
 		}
 		else
 		{
-			canSend (0);
+			status.correct = 0;
 		}
 
-	}
-
-	void rise ()
-	{
-		rise( getImpulseTime() );
-	}
-
-	void rise (uint8_t downTime)
-	{
-		// Конец отрицательного импульса
-		impulseWatchDog = true;
-
-		if ( status.kptImp == 0 )
+		if (active)
 		{
-			status.kptImp = 1;
-			periodTime += downTime;
+			if ( kptSwitch == true )
+				lisCountPermission = true;
 
-
-			if ( downTime > 35) // длинный импульс -- конец периода
-			{
-				if (shortImpNumber == 0) // При отсутствии коротких импульсов (КЖ)
-					periodTime *= 2; // реальный период в 2 раза меньше
-
-				Status statusNew = {Status::Color::White, 1, true, status.type};
-
-				// Цвет светофора
-				statusNew.color = Status::Color (1 << (2-shortImpNumber));
-				if (shortImpNumber >= 3) // Если были ошибки определения цвета
-					statusNew.correct = false;
-				shortImpNumber = 0;
-
-				// Тип КПТ
-				if ( 147 < periodTime && periodTime < 173 ) // 1.6 +- 0.13  -- КПТ-5
-					statusNew.type = Status::Type::Kpt5;
-				else if ( 173 <= periodTime && periodTime < 199 ) // 1.86 +- 0.13  -- КПТ-7
-					statusNew.type = Status::Type::Kpt7;
-				else
-					statusNew.correct = false;
-
-				// Необходимо 2 одинаковых корректно расшифрованных периода
-				if ( _cast(uint8_t, statusNew) == _cast(uint8_t, statusPrevious) )
-				{
-					if ( statusNew.correct )
-					{
-						if ( statusNew.type != status.type ) // Проехали изостык
-						{
-							if ( lisZeroingPermission )
-								lisZeroingPermission = false;
-							else
-								lis = correctKptDistance;
-						}
-
-						correctKptDistance = 0;
-						if ( lisZeroingPermission )
-							lis = 0;
-
-						status = statusNew;
-					}
-				}
-				else
-					status.correct = false;
-				statusPrevious = statusNew;
-
-				periodTime = 0; // Начало нового периода
-	//			canSend ();
-			}
-			else // короткий импульс
-				if (++shortImpNumber == 3) // Трёх коротких имульсов подряд быть не может
-					status.correct = false;
-		}
-		else
-		{
-			canSend(1);
+			if ( lisCountPermission )
+				lis = correctionDecemeters/12;
 		}
 	}
 
 	void lisPlusPlus ()
 	{
-		if ( active )
+		if ( active && lisCountPermission )
 			if (lis < 255)
 				lis ++;
 	}
@@ -240,7 +146,8 @@ public:
 	void setPassive ()
 	{
 		active = false;
-		lisZeroingPermission = true;
+		lisCountPermission = false;
+		lis = 0;
 	}
 
 	uint8_t& lis; // Коррекция изостыка

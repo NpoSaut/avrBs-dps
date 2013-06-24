@@ -193,68 +193,12 @@ typedef Kpt<ClockType, clock, SchedulerType, scheduler, CanDatType, canDat > Kpt
 
 KptType kpt ( _cast( Complex<uint16_t>, data.member<ClubOut1>() )[0], _cast( Complex<uint16_t>, data.member<ClubOut1>() )[1] );
 
-void kptRiseA (uint16_t)
+void mlsbSautKpt (uint16_t pointer)
 {
-	if (reg.portB.pin7 == 0) // первый полукомплект
-		kpt.rise();
-}
+	typedef const uint8_t Message[8];
+	Message& message = *( (Message *)(pointer) );
 
-void kptRiseB (uint16_t)
-{
-	if (reg.portB.pin7 == 1) // второй полукомплект
-		kpt.rise();
-}
-
-void kptFallA (uint16_t)
-{
-	if (reg.portB.pin7 == 0) // первый полукомплект
-		kpt.fall();
-}
-
-void kptFallB (uint16_t)
-{
-	if (reg.portB.pin7 == 1) // второй полукомплект
-		kpt.fall();
-}
-
-void kptRiseTimeA (uint16_t dataPointer)
-{
-	if (reg.portB.pin7 == 0) // первый полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.rise (data[0]);
-	}
-}
-
-void kptRiseTimeB (uint16_t dataPointer)
-{
-	if (reg.portB.pin7 == 1) // второй полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.rise (data[0]);
-	}
-}
-
-void kptFallTimeA (uint16_t dataPointer)
-{
-	if (reg.portB.pin7 == 0) // первый полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.fall (data[0]);
-	}
-}
-
-void kptFallTimeB (uint16_t dataPointer)
-{
-	if (reg.portB.pin7 == 1) // второй полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.fall (data[0]);
-	}
+	kpt.getCleverInfo (message[1] + message[2] * 256, message[0] & (1 << 6), message[0] & 0x3F );
 }
 
 void kptCommandParse ()
@@ -578,6 +522,12 @@ int main ()
 
 	canDat.rxHandler<CanRx::EKS_KLUB_MCO_STATE_A>() = SoftIntHandler::from_function <&mcoStateA>();
 	canDat.rxHandler<CanRx::EKS_KLUB_MCO_STATE_B>() = SoftIntHandler::from_function <&mcoStateB>();
+
+	if (reg.portB.pin7 == 0)
+		canDat.rxHandler<CanRx::MLSB_SAUT_KPT_A>() = SoftIntHandler::from_function <&mlsbSautKpt>();
+	else
+		canDat.rxHandler<CanRx::MLSB_SAUT_KPT_B>() = SoftIntHandler::from_function <&mlsbSautKpt>();
+
 
 	dps.constituoActivus();
 
