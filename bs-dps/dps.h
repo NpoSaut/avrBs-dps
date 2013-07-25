@@ -422,7 +422,7 @@ public:
 	// Напрвление движения. 0 - вперёд
 	const uint8_t accipioVersus () const
 	{
-		return railWayRotae ? !versus : versus;
+		return railWayRotae ? !versus : versus; // Особенность KGT-4RS
 	}
 	void constituoVersus (uint8_t versus)
 	{
@@ -778,10 +778,10 @@ private:
 			}
 
 			if ( eeprom.club.property.diameter0.read (tmp) )
-				dimetior[0]->constituoDiametros ( railWayRotae ? tmp*2 : tmp );
+				dimetior[0]->constituoDiametros ( tmp );
 
 			if ( eeprom.club.property.diameter1.read (tmp) )
-				dimetior[1]->constituoDiametros ( railWayRotae ? tmp*2 : tmp );
+				dimetior[1]->constituoDiametros ( tmp );
 
 
 			if ( eeprom.club.property.dpsDentos.read (tmp) )
