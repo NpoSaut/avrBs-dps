@@ -56,11 +56,10 @@ template<Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, u
 class Dimetior {
 public:
 	Dimetior (bool lanternaOperor) :
-			lanternaOperor (lanternaOperor), tractus (false), celeritas (0), acceleratio (0), acceleratioColum (0), impulsio (
-			{ 0, 0 }), impulsioLanterna (
-			{ 0, 0 }), tempusPunctum (
-			{ 0, 0 }), affectus (0), versusRotatio (
-			{ !positio, !positio }), causarius (false), commoratio (true)
+			lanternaOperor (lanternaOperor), tractus (false), versusInversio (false),
+			celeritas (0), acceleratio (0), acceleratioColum (0),
+			impulsio ({ 0, 0 }), impulsioLanterna ({ 0, 0 }), tempusPunctum ({ 0, 0 }),
+			affectus (0), versusRotatio ({ !positio, !positio }), causarius (false), commoratio (true)
 	{
 //		if (lanternaOperor)
 //		{
