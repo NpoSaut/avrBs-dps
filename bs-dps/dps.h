@@ -37,7 +37,7 @@
 //	основываясь на регулярно поступающих данных о состоянии каналов ДПС
 //		ДПС за оборот колеса диаметром diametros (в мм)
 //		равномерно выдаёт 42 имульса в каждый канал.
-//		�?мпульсы в каналах смещены на пол-импульса, что даёт возможность определять направление вращения
+//		�?мпульсы в каналах смещены на пол-импульса, что даёт возможность определять направление вращения
 //	ВХОД:
 //	- раз в period мкс должна вызываться функция punctum (affectus),
 //		которая в качестве аргумента принимает состояния двух каналов ДПС: 2 младших бита
@@ -56,10 +56,10 @@ template<Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, u
 class Dimetior {
 public:
 	Dimetior (bool lanternaOperor) :
-			lanternaOperor (lanternaOperor), tractus (false), celeritas (0), acceleratio (0), acceleratioColum (0),
-			impulsio ({ 0, 0 }), impulsioLanterna ({ 0, 0 }), impulsioDebug ({0,0}), tempusPunctum ({ 0, 0 }),
-			affectus (0), versusRotatio (
-			{ !positio, !positio }), causarius (false), commoratio (true)
+			lanternaOperor (lanternaOperor), tractus (false), versusInversio (false),
+			celeritas (0), acceleratio (0), acceleratioColum (0),
+			impulsio ({ 0, 0 }), impulsioLanterna ({ 0, 0 }), tempusPunctum ({ 0, 0 }),
+			affectus (0), versusRotatio ({ !positio, !positio }), causarius (false), commoratio (true)
 	{
 //		if (lanternaOperor)
 //		{
@@ -241,7 +241,7 @@ public:
 
 	EepromData::DpsPosition positio;
 
-	// --- ДЛЯ ОТЛАДК�? ---
+	// --- ДЛЯ ОТЛАДК�? ---
 //	uint8_t retroCan; // последний канал, по которому производился расчёт
 //	uint8_t vicisNum; // кол-во переключений между каналами
 	// --- КОНЕЦ ---
@@ -271,7 +271,7 @@ private:
 		uint8_t retro :1; // В прошлый раз (для контроля)
 	};
 	Bitfield<VersusRotatio> versusRotatio;
-	bool causarius; // �?спорченность (недостоверность данных)
+	bool causarius; // �?спорченность (недостоверность данных)
 	bool commoratio; // Остановка
 
 	uint16_t debugImpulsio[2];
@@ -366,7 +366,7 @@ public:
 		(reg.*lanternaPortus).pin<lanterna0>().out ();
 		(reg.*lanternaPortus).pin<lanterna1>().out ();
 
-		// �?нициализация линии связи
+		// �?нициализация линии связи
 		acceleratioEtAffectus <<= 0x74;// оба вперёд и исправны. Флаг перезагрузки
 		celeritasProdo <<= 0;
 
@@ -499,7 +499,7 @@ private:
 
 	uint32_t spatiumDecimeters65536;// пройденный путь в дм/65536
 	uint8_t spatiumDecimetersMultiple10;// путь в дециметрах, кратный 10; для перевода в метры
-	uint8_t spatiumDecimetersMulitple16;// путь в 1,6 м. �?спользуется для ++ одометров
+	uint8_t spatiumDecimetersMulitple16;// путь в 1,6 м. �?спользуется для ++ одометров
 
 	uint16_t retroRotundatioCeleritas;// прошлое округлённое значение скорости. Для нужд округления с гистерезисом.
 
@@ -647,7 +647,7 @@ private:
 //			if (!mappa.validus1)
 //				eeprom.dps1Good = 0;
 
-			// �?ндикация неисправности на стоянке
+			// �?ндикация неисправности на стоянке
 //			if ( dimetior[nCapio]->sicinCommoratio() )
 //			{
 //				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
