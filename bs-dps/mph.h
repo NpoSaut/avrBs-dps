@@ -111,7 +111,7 @@ private:
 				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.configuration),					// младший
 				(uint8_t) eeprom_read_byte ((const uint8_t *) ((uint8_t*)&eeprom.club.typeLoco +1)), 	// старший
 				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.typeLoco),					// младший
-				success,
+				(uint8_t) eeprom_read_byte ((const uint8_t *) &eeprom.club.vMax),
 				scheduler.fill,
 				sautCom.termTime
 								};

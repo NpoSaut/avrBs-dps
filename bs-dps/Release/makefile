@@ -99,7 +99,7 @@ clean:
 	-@echo ' '
 
 post-build:
-	-avr-objcopy -R .eeprom -O binary bs-dps.elf "C:\Program files\Saut\Programs\DPS_CAN.FLA"
+	-avr-objcopy -R .eeprom -O binary bs-dps.elf "C:\Program files\Saut\Programs\DPS_CAN.FLA" & avr-objcopy -R .eeprom -O binary bs-dps.elf "C:\Program files\Saut\Programs\DPS_CAN.FLA"
 	-@echo ' '
 
 secondary-outputs: $(LSS) $(FLASH_IMAGE) $(EEPROM_IMAGE) $(SIZEDUMMY)
