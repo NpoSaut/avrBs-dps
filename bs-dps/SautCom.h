@@ -468,13 +468,6 @@ void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, i
 		{
 			time -= 144;
 			time = (time * 2) / 3; // время задержки в мкс
-
-//			if (time > termTime)
-			if (time > reg.general1)
-			{
-				termTime = time;
-				reg.general1 = termTime;
-			}
 		}
 		else
 		{
