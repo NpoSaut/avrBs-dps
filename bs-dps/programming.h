@@ -183,6 +183,7 @@ void ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::catchInit
 	public:
 		InitMessage () { key = 0x0107; }
 
+		bool isRightKey() { return key == 0x0107; }
 		uint16_t getCellId () const { return (cellIdHiX4 << 4) + cellIdLow; }
 		uint8_t getModificationNumber () const { return modification; }
 		uint8_t getProgramNumber () const { return program;  }
@@ -206,7 +207,8 @@ void ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::catchInit
 	};
 	InitMessage &message = *((InitMessage *) addr);
 
-	if (    ( message.getCellId()				== getCellId()					|| message.getCellId() 		 		== 0 )
+	if (  message.isRightKey()
+		 &&	( message.getCellId()				== getCellId()					|| message.getCellId() 		 		== 0 )
 		 && ( message.getModificationNumber()   == getCellModification()   		|| message.getModificationNumber()  == 0 )
 		 && ( message.getProgramNumber()  		== 1             				|| message.getProgramNumber()  		== 0 )
 		 && ( message.getChannelNumber()  		== getChannel()  				|| message.getChannelNumber()  		== 0 )
@@ -225,7 +227,8 @@ void ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::catchInit
 		}
 		else
 		{
-			message.rawData[1] = 0x14;
+			message.rawData[0] = 0x07;
+			message.rawData[1] = 0x00;
 			message.setCellId( getCellId() );
 			message.setModificationNumber( getCellModification() );
 			message.setProgramNumber( 1 );
