@@ -75,7 +75,6 @@ typedef INT_TYPELIST_12 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 						 CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
 						 CanTx::MY_KPT_A, CanTx::MY_KPT_B,
 						 CanTx::IPD_PARAM_A, CanTx::IPD_PARAM_B ) AUX_RESOURCE_SYS_DATA_IPD_PARAM;
-typedef INT_TYPELIST_2 	(CanTx::PROGRAM_SLAVE_CTRL, CanTx::PROGRAM_SLAVE_DATA) PROGRAM_SLAVE;
 
 typedef INT_TYPELIST_5 (CanRx::MCO_STATE_A, CanRx::MCO_STATE_B,
 						CanRx::MCO_LIMITS_A, CanRx::MCO_LIMITS_B,
@@ -85,7 +84,6 @@ typedef INT_TYPELIST_8 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_O
 typedef INT_TYPELIST_2 (CanRx::MM_DATA, CanRx::MM_NEUTRAL) MM;
 typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA_A) INPUT;
 typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
-typedef INT_TYPELIST_2 (CanRx::PROGRAM_MASTER_CTRL, CanRx::PROGRAM_MASTER_DATA) PROGRAM_MASTER;
 
 typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов для отправки
 						IPD_STATE,
@@ -94,7 +92,7 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 						SYS_DATA_STATE2,
 						MPH_STATE,
 						AUX_RESOURCE_SYS_DATA_IPD_PARAM,
-						PROGRAM_SLAVE
+						Int2Type< CanTx::FU_DEV >
 								),
 				 LOKI_TYPELIST_8(
 						 MCO,
@@ -104,9 +102,9 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 						 INPUT,
 						 DIAGNOSTICS,
 						 Int2Type< CanRx::IPD_EMULATION >,
-						 PROGRAM_MASTER
+						 Int2Type< CanRx::FU_INIT >
 						 	 	 ),
-				 LOKI_TYPELIST_23(
+				 LOKI_TYPELIST_22(
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
@@ -127,15 +125,11 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 						 Int2Type< CanRx::MP_ALS_ON_TIME_B >,
 						 Int2Type< CanRx::MP_ALS_OFF_TIME_B >,
 						 Int2Type< CanRx::MM_NEUTRAL >,
-						 Int2Type< CanRx::IPD_EMULATION>,
-						 Int2Type< CanRx::PROGRAM_MASTER_CTRL>,
-						 Int2Type< CanRx::PROGRAM_MASTER_DATA>
+						 Int2Type< CanRx::IPD_EMULATION >,
+						 Int2Type< CanRx::FU_INIT >
 								),
 					128,
-					LOKI_TYPELIST_2(
-						 Int2Type< CanTx::PROGRAM_SLAVE_CTRL>,
-						 Int2Type< CanTx::PROGRAM_SLAVE_DATA>
-								),
+					NullType,
 				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
 	CanDatType;
 CanDatType canDat;
@@ -183,6 +177,10 @@ typedef Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::
 			  > ComType;
 ComType com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
 
+// ------------------------------- Работа с загрузчиком-программатором --------------------------►
+
+typedef ProgrammingCan <CanDatType, canDat, CanRx::FU_INIT, CanTx::FU_DEV > ProgrammingCanType;
+ProgrammingCanType programmingCan;
 
 // ---------------------------------- SYS_DIAGNOSTICS / AUX_RESOURCE ----------------------------►
 
@@ -248,17 +246,12 @@ void sysDiagnostics (uint16_t a)
 	{
 		if ( request == Request::VERSION  )
 		{
-			uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
-			uint16_t checkSumm = 0;
-			for (uint8_t i = 0; i < idSize; i ++)
-				checkSumm += pgm_read_word ((uint16_t *)&id + i);
-
 			uint8_t packet[5] = {
 					(uint8_t) Answer::VERSION,
-					pgm_read_byte(&id.version),
-					0,
-					0,
-					uint8_t (checkSumm)
+					(uint8_t) programmingCan.getVersion(),
+					(uint8_t) programmingCan.getSubversion(),
+					(uint8_t) (programmingCan.getCheckSum() & 0xFF),
+					(uint8_t) (programmingCan.getCheckSum() >> 8)
 								};
 			if (unit == Unit::IPD)
 			{
@@ -421,6 +414,11 @@ DpsType	dps ( 	&Register::portC,
 				InterruptHandler::from_method <KptType, &KptType::lisPlusPlus> (&kpt),
 				InterruptHandler::from_method <KptType, &KptType::correctKptDistancePlusPlus> (&kpt) );
 
+// ---------------------------- Программирование по линии связи САТУ/RS-485 ---------------------►
+
+Programming programming (
+	data.member<Dps0>(),	data.member<Dps1>(),	data.member<Dps2>(),	data.member<Dps3>(),
+	data.member<DpsOut0>(),	data.member<DpsOut1>(),	data.member<DpsOut2>(),	data.member<DpsOut3>() );
 
 // --------------------------------------------- mcoState ---------------------------------------►
 
@@ -673,18 +671,6 @@ private:
 };
 Emulation emulation;
 
-// ---------------------------------------- Программирование ------------------------------------►
-
-Programming programming (
-	data.member<Dps0>(),	data.member<Dps1>(),	data.member<Dps2>(),	data.member<Dps3>(),
-	data.member<DpsOut0>(),	data.member<DpsOut1>(),	data.member<DpsOut2>(),	data.member<DpsOut3>() );
-
-typedef ProgrammingCan <CanDatType, canDat, CanTx::PROGRAM_SLAVE_CTRL, CanTx::PROGRAM_SLAVE_DATA > ProgrammingCanType;
-ProgrammingCanType programmingCan (	Delegate<void ()>::from_method<DpsType, &DpsType::constituoActivus> (&dps),
-										Delegate<void ()>::from_method<DpsType, &DpsType::constituoPassivus> (&dps),
-										reg.portB.pin7 == 0
-									);
-
 // ---------------------------------- Парсер команд по линии связи ------------------------------►
 
 void commandParser ()
@@ -718,10 +704,16 @@ void commandParser ()
 
 		if (command.idRead)
 		{
-			data.member<DpsOut0>() = ( (uint16_t) pgm_read_byte(&id.version) << 8 ) | pgm_read_byte(&id.year);
-			data.member<DpsOut1>() = ( (uint16_t) pgm_read_byte(&id.modif)   << 8 ) | pgm_read_byte(&id.manth);
-			data.member<DpsOut2>() = ( (uint16_t) pgm_read_byte(&id.numberH) << 8 ) | ( (uint16_t) pgm_read_byte(&id.numberL) );
-			data.member<DpsOut3>() = ( (uint16_t) pgm_read_byte(&id.parametersSummH)  << 8 ) | ( (uint16_t) pgm_read_byte(&id.parametersSummL) );
+			data.member<DpsOut0>() = ( (uint16_t) programmingCan.getVersion() 			<< 8 ) | ( programmingCan.getCellManufactureYear() - 1980 );
+			data.member<DpsOut1>() = ( (uint16_t) programmingCan.getCellModification()  << 8 ) | programmingCan.getCellManufactureMonth();
+			data.member<DpsOut2>() = ( (uint16_t) programmingCan.getCellManufactureNumber()  );
+			data.member<DpsOut3>() = (    uint16_t ( programmingCan.getVersion() & 0xFF )
+										+ uint16_t ( (programmingCan.getCellManufactureYear()-1980) & 0xFF )
+										+ uint16_t ( programmingCan.getCellModification() & 0xFF )
+										+ uint16_t ( programmingCan.getCellManufactureMonth() & 0xFF )
+										+ uint16_t ( (programmingCan.getCellManufactureNumber() >> 8) & 0xFF )
+										+ uint16_t ( programmingCan.getCellManufactureNumber() & 0xFF )
+									 );
 		}
 
 		if (command.eepromRead)
@@ -752,17 +744,6 @@ void unsetResetFlag (uint16_t)
 
 int main ()
 {
-	// Контроль контрольной суммы
-	if ( !(pgm_read_word (&id.size) == 0 && pgm_read_word (&id.controlSumm) == 0) ) // Если значения подставлены при программировании
-	{
-		uint16_t *size = (uint16_t *) (pgm_read_word (&id.size) * 16); // Размер в словах. Максимум 64 кб
-		Complex<uint16_t> sum = 0;
-		for ( uint16_t *i = 0; i < size; i ++ )
-			sum += pgm_read_word (i);
-
-		if (sum != 0) // В id.controlSumm хранится дополнение до 0
-			reboot ();
-	}
 	asm volatile ("nop"); // !!! 126 version hack !!!
 //	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
 //	asm volatile ("nop");
@@ -802,28 +783,18 @@ int main ()
 	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler::from_function <&kptFallB>();
 	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallTimeB>();
 
-	// Программирование по CAN
-	canDat.rxHandler<CanRx::PROGRAM_MASTER_CTRL>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::getCommand> (&programmingCan);
-	canDat.rxHandler<CanRx::PROGRAM_MASTER_DATA>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::getData> (&programmingCan);
-	canDat.txHandler<CanTx::PROGRAM_SLAVE_DATA>() = SoftIntHandler::from_method <ProgrammingCanType, &ProgrammingCanType::sendData> (&programmingCan);
-
 		dps.constituoActivus();
 
 	sei();
 
 	// После включения выдавать AUX_RESOURCE с версией
 	{
-		uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
-		uint16_t checkSumm = 0;
-		for (uint8_t i = 0; i < idSize; i ++)
-			checkSumm += pgm_read_word ((uint16_t *)&id + i);
-
 		uint8_t packet[5] = {
-				0,
-				pgm_read_byte(&id.version),
-				0,
-				0,
-				uint8_t (checkSumm)
+				(uint8_t) 0,
+				(uint8_t) programmingCan.getVersion(),
+				(uint8_t) programmingCan.getSubversion(),
+				(uint8_t) (programmingCan.getCheckSum() & 0xFF),
+				(uint8_t) (programmingCan.getCheckSum() >> 8)
 							};
 		if (reg.portB.pin7 == 0)
 		{

@@ -60,333 +60,190 @@
 
 
 template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
+			uint16_t initDescriptor, uint16_t answerDescriptor >
 class ProgrammingCan
 {
 public:
-	ProgrammingCan (Delegate<void ()> activateSystem, Delegate<void ()> disactivateSystem, uint8_t selfComplect);
+	ProgrammingCan ();
 
-	void getCommand (uint16_t parametersArrayPointer);
+	uint16_t getVersion () const { return version; }
+	uint8_t getSubversion () const { return subversion; }
+	uint16_t getCheckSum () const { return checkSum; }
 
-	void getData (uint16_t dataArrayPointer);
-
-	void sendData (uint16_t);
+	uint8_t getSystemId () const { return systemId; }
+	uint16_t getCellId () const { return cellId; }
+	uint32_t getCellManufactureNumber () const { return cellManufactureNumber; }
+	uint16_t getCellManufactureYear () const { return cellManufactureYear; }
+	uint8_t getCellManufactureMonth () const { return cellManufactureMonth; }
+	uint8_t getChannel () const { return channel; }
+	uint8_t getCellModification () const { return cellModification; }
 
 private:
-	typedef const uint8_t Data[8];
-	typedef ProgSpi::
-	ProgSpiSimple  < &Register::spiStatusControl, &Register::spiData,
-	 	 	 	 	 &Register::portB, 0, 1, 2, 3,
-	 	 	 	 	 &Register::portB, 4
-					>
-	Controller;
-	Controller controller;
+	typedef int32_t (*GetPropertyFunction) (uint8_t key);
+	const GetPropertyFunction getPropertyPointer;
 
-	enum Device : uint8_t
-	{
-		bsDpsA = 1,
-		bsDpsB = 2
-	};
-	enum Action : uint8_t
-	{
-		exit = 0,
-		enter = 1,
-		write = 2,
-		read = 3,
-		erase = 4,
-		ping = 5
-	};
-	enum MemoryType : uint8_t
-	{
-		flash = 0,
-		eeprom = 1,
-		fuse = 2
-	};
-	enum Status : uint8_t
-	{
-		OK = 0,
-		UNKNOWN_ERROR = 1,
-		SIZE_LIMIT = 2,
-		OUT_OF_RANGE = 3,
-		UNKNOWN_MEMORY = 4,
-		NOT_IN_PROG_MODE = 5,
-		UNKNOWN_COMMAND = 15
-	};
-	struct CommandMap
-	{
-		CommandMap () {}
-		CommandMap (Device device, MemoryType memoryType, Action action, uint16_t size = 0, uint32_t startAdr = 0)
-			: device (device), memoryType (memoryType), action (action), size (size), startAdr (startAdr) {}
+	uint16_t version;
+	uint8_t subversion;
+	uint16_t checkSum;
 
-		Device device;
-		MemoryType memoryType	:4;
-		Action action			:4;
-		uint16_t size;
-		uint32_t startAdr;
-	};
-	typedef Bitfield<CommandMap> Command;
-	struct AnswerMap
-	{
-		AnswerMap () {}
-		AnswerMap (Device device, Status status, Action action)
-			: device (device), status (status), action (action) {}
-		AnswerMap (Device device, Status status, Action action, uint16_t crc)
-			: device (device), status (status), action (action), crc (crc) {}
-		AnswerMap (Device device, Status status, Action action, uint32_t memAreaStart, uint32_t memAreaEnd)
-			: device (device), status (status), action (action), memAreaStart (memAreaStart), memAreaEnd (memAreaEnd) {}
+	uint8_t systemId;
+	uint16_t cellId;
+	int32_t cellManufactureNumber;
+	uint16_t cellManufactureYear;
+	uint8_t cellManufactureMonth;
+	uint8_t channel;
+	uint8_t cellModification;
 
-		Device device;
-		Status	status			:4;
-		Action	action			:4;
-		union
-		{
-			uint16_t crc;
-			uint16_t sizeLimit;
-			struct
-			{
-				uint32_t memAreaStart	:24;
-				uint32_t memAreaEnd		:24;
-			};
-		};
-	};
-	typedef Bitfield<AnswerMap> Answer;
-
-	static constexpr uint16_t flashPageSize = 128 * 2;
-	static constexpr uint32_t flashSize = (uint32_t)512 * flashPageSize;
-	static constexpr uint8_t  eepromPageSize = 8;
-	static constexpr uint16_t eepromSize = (uint16_t)512 * eepromPageSize;
-
-	void readDataToBuffer (uint8_t (&data) [8]);
-	bool prepareController ();
-	void send (const Answer&);
-
-	const uint8_t selfComplect;
-	uint16_t counter; // обратный отсчёт байт до конца сеанса
-	uint8_t txData[8]; // отправляемые данные
-	Complex<uint16_t> crc;
-	uint16_t wantedCrc;
-	ProgSpi::MemType memType;
-	enum Active : uint8_t // Активность сессии в данный момент
-	{
-		nothing = 0,
-		writing = 1,
-		reading = 2
-	} active;
-	Delegate<void ()> activateSystem, disactivateSystem;
+	void catchInitProgMessage (uint16_t addr);
+	uint32_t getProperty (uint8_t key) const __attribute__((noinline));
 };
 
 template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
-ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::ProgrammingCan (Delegate<void ()> activateSystem, Delegate<void ()> disactivateSystem, uint8_t selfComplect)
-	: controller (), selfComplect (selfComplect), counter (0), crc (0), wantedCrc (0), active (Active::nothing), activateSystem (activateSystem), disactivateSystem (disactivateSystem)
+			uint16_t initDescriptor, uint16_t answerDescriptor >
+ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::ProgrammingCan ()
+	: getPropertyPointer ( *((GetPropertyFunction *) &reg.general1) )
 {
+	version = getProperty (1);
+	subversion = getProperty (2);
+	checkSum = getProperty (6);
+
+	systemId = getProperty (128);
+	cellId = getProperty (129);
+
+	cellManufactureNumber = getProperty (131);
+//	canDat.template send<answerDescriptor> ({ (uint8_t)(cellManufactureNumber >> 24),
+//										      (uint8_t)(cellManufactureNumber >> 16),
+//											  (uint8_t)(cellManufactureNumber >> 8),
+//											  (uint8_t)(cellManufactureNumber),
+//											   0, 0, 0, 0});
+
+	cellManufactureYear = getProperty (132)/100;
+	cellManufactureMonth = getProperty (132)%100;
+	channel = getProperty (133);
+	cellModification = getProperty (134);
+
+	canDat.template rxHandler<initDescriptor>() =
+			SoftIntHandler::from_method <ProgrammingCan, &ProgrammingCan::catchInitProgMessage> (this);
 }
 
 template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
-void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getCommand (uint16_t parametersArrayPointer)
+			uint16_t initDescriptor, uint16_t answerDescriptor >
+uint32_t ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::getProperty(uint8_t key) const
 {
-	Command& command = *( (Command *)(parametersArrayPointer) );
-
-	if ( (command.device == Device::bsDpsA && selfComplect == 1) ||		// команда на прошивку соседнего полукомплекта
-		 (command.device == Device::bsDpsB && selfComplect == 0)	)
+	union
 	{
-		active = Active::nothing; // Прерываем текущий сеанс
-		activateSystem ();
-		if ( command.action == Action::enter )
+		struct
 		{
-			if ( !prepareController() )
-			{
-				send( AnswerMap{command.device, Status::UNKNOWN_ERROR, command.action} );
-				return;
-			}
-		}
-		else if ( command.action == Action::read ||
-				  command.action == Action::write  )
+			uint16_t low;
+			uint16_t hi;
+		};
+		int32_t full;
+	} res;
+
+	asm (
+			"cli"							"\n\t"
+			"mov r16, %[key]"				"\n\t"
+			"movw r30, %[addr]"				"\n\t"
+			"icall"							"\n\t"
+			"movw %[resL], r16"				"\n\t"
+			"movw %[resH], r18"				"\n\t"
+			"sei"
+				: [resL] "=r" (res.low),
+				  [resH] "=r" (res.hi)
+				: [key] "r" (key),
+				  [addr] "e" (getPropertyPointer)
+				: "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",  "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15",
+				  "r16", "r17", "r18", "r19", "r20", "r21", "r22", "r23", "r24", "r25"//, "r26", "r27"//, "r28", "r29"//, "r30", "r31"
+		);
+
+	return res.full;
+
+}
+
+template <  typename CanDat, CanDat& canDat,
+			uint16_t initDescriptor, uint16_t answerDescriptor >
+void ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::catchInitProgMessage(uint16_t addr)
+{
+	union InitMessage
+	{
+	private:
+		struct
 		{
-			if ( command.memoryType == MemoryType::flash )
-				memType = ProgSpi::MemType::flash;
-			else if ( command.memoryType == MemoryType::eeprom )
-				memType = ProgSpi::MemType::eeprom;
-			else
-			{
-				send( AnswerMap{command.device, Status::UNKNOWN_MEMORY, command.action} );
-				return;
-			}
+			uint16_t key					:16;
+			uint16_t cellIdHiX4				:8;
+			uint16_t modification			:4;
+			uint16_t cellIdLow				:4;
+			uint16_t program				:8;
+			uint16_t manufactureNumberHiX16	:4;
+			uint16_t channel				:4;
+			uint16_t manufactureNumberMid	:8;
+			uint16_t manufactureNumberLow	:8;
+		};
 
-			// Проверки
-			if ( !controller.isInProgState() )
-			{
-				send( AnswerMap{command.device, Status::NOT_IN_PROG_MODE, command.action} );
-				return;
-			}
+	public:
+		InitMessage () { key = 0x0107; }
 
-			if ( command.size > 256 )
-			{
-				send( AnswerMap{command.device, Status::SIZE_LIMIT, command.action, 256} );
-				return;
-			}
+		bool isRightKey() { return key == 0x0107; }
+		uint16_t getCellId () const { return (cellIdHiX4 << 4) + cellIdLow; }
+		uint8_t getModificationNumber () const { return modification; }
+		uint8_t getProgramNumber () const { return program;  }
+		uint8_t getChannelNumber () const { return channel; }
+		uint32_t getManufactureNumber () const { return ((uint32_t)manufactureNumberHiX16 << 16)
+														+ (manufactureNumberMid << 8)
+														+ manufactureNumberLow; }
 
-			if (  command.startAdr + (uint32_t)command.size >
-					( memType == ProgSpi::MemType::flash ? flashSize : eepromSize ) )
-			{
-				send( AnswerMap{command.device, Status::OUT_OF_RANGE, command.action, 0, flashSize} );
-				return;
-			}
+		void setCellId (uint16_t id) { cellIdLow = id; cellIdHiX4 = id/16; }
+		void setModificationNumber (uint8_t num) { modification = num; }
+		void setProgramNumber (uint8_t num) { program = num; }
+		void setChannelNumber (uint8_t num) { channel = num; }
+		void setManufactureNumber (uint32_t num) {  manufactureNumberLow = num;
+													manufactureNumberMid = num >> 8;
+													manufactureNumberHiX16 = num>>16; }
 
-			controller.position = command.startAdr;
-			counter = command.size;
-			crc = 0;
-
-			disactivateSystem ();
-
-			if ( command.action == Action::read )
-			{
-				active = Active::reading;
-				readDataToBuffer (txData);
-				sendData (0);
-			}
-			else
-				active = Active::writing;
-
-			return;
-		}
-		else if ( command.action == Action::erase )
+		struct
 		{
-			if ( controller.isInProgState() )
-			{
-				controller.erase();
-			}
-			else
-			{
-				send( AnswerMap{command.device, Status::NOT_IN_PROG_MODE, command.action} );
-				return;
-			}
-		}
-		else if ( command.action == Action::exit )
+			uint8_t rawData[8];
+		};
+	};
+	InitMessage &message = *((InitMessage *) addr);
+
+	if (  message.isRightKey()
+		 &&	( message.getCellId()				== getCellId()					|| message.getCellId() 		 		== 0 )
+		 && ( message.getModificationNumber()   == getCellModification()   		|| message.getModificationNumber()  == 0 )
+		 && ( message.getProgramNumber()  		== 1             				|| message.getProgramNumber()  		== 0 )
+		 && ( message.getChannelNumber()  		== getChannel()  				|| message.getChannelNumber()  		== 0 )
+		 && ( message.getManufactureNumber() 	== getCellManufactureNumber()   || message.getManufactureNumber() 	== 0 )
+	   )
+	{
+		if ( // Точно совпадает всё
+				( message.getCellId()				== getCellId()					 )
+			 && ( message.getModificationNumber()   == getCellModification()   		 )
+			 && ( message.getProgramNumber()  		== 1             				 )
+			 && ( message.getChannelNumber()  		== getChannel()  				 )
+			 && ( message.getManufactureNumber() 	== getCellManufactureNumber()   )
+			)
 		{
-			if ( controller.isInProgState() )
-			{
-				controller.flush<ProgSpi::MemType::flash>();
-				controller.flush<ProgSpi::MemType::eeprom>();
-			}
-			controller.rebootInWork();
-		}
-		else if ( command.action == Action::ping )
-		{
+			reboot();
 		}
 		else
 		{
-			send( AnswerMap{command.device, Status::UNKNOWN_COMMAND, command.action} );
-			return;
-		}
+			message.rawData[0] = 0x07;
+			message.rawData[1] = 0x00;
+			message.setCellId( getCellId() );
+			message.setModificationNumber( getCellModification() );
+			message.setProgramNumber( 1 );
+			message.setChannelNumber( getChannel() );
+			message.setManufactureNumber( getCellManufactureNumber() );
 
-		// Если выше не ушли по return
-		send( AnswerMap{command.device, Status::OK, command.action} );
-	}
-}
-
-template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
-void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::getData (uint16_t dataArrayPointer)
-{
-	Data& data = *( (Data *)(dataArrayPointer) );
-
-	if ( active == Active::writing )
-	{
-		for (const uint8_t& d : data)
-		{
-			if ( memType == ProgSpi::MemType::flash )
-				controller.write<ProgSpi::MemType::flash>(d);
-			else
-				controller.write<ProgSpi::MemType::eeprom>(d);
-
-			crc = _crc_ccitt_update(crc, d);
-
-			if ( --counter == 0 ) // Конец сеанса
-			{
-				active = Active::nothing;
-				activateSystem ();
-					if ( memType == ProgSpi::MemType::flash )
-						controller.flush<ProgSpi::MemType::flash>();
-					else
-						controller.flush<ProgSpi::MemType::eeprom>();
-
-				send( AnswerMap{
-						selfComplect ? Device::bsDpsB : Device::bsDpsA,
-						Status::OK,
-						Action::write,
-						crc } );
-				break;
-			}
+			canDat.template send <answerDescriptor> (message.rawData);
 		}
 	}
+	return;
 }
 
-template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
-void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::sendData(uint16_t)
-{
-	if ( active == Active::reading )
-	{
-		while ( !canDat.template send<dataDescriptor> (txData) );
-		if ( counter <= 8 ) // Последняя посылка
-		{
-			counter = 0;
-			active = Active::nothing;
-			activateSystem ();
 
-			send( AnswerMap{
-					selfComplect ? Device::bsDpsB : Device::bsDpsA,
-					Status::OK,
-					Action::read,
-					crc } );
-		}
-		else
-		{
-			counter -= 8;
-			readDataToBuffer (txData);
-		}
-	}
-}
 
-template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
-void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::readDataToBuffer(uint8_t (&data) [8])
-{
-		for (uint8_t i = 0; i < 8; i++)
-		{
-			if ( counter > i )
-			{
-				data[i] = ( memType == ProgSpi::MemType::flash ) ?
-							controller.read<ProgSpi::MemType::flash>() :
-							controller.read<ProgSpi::MemType::eeprom>();
-				crc = _crc_ccitt_update(crc, data[i]);
-			}
-			else
-				data[i] = 0;
-		}
-}
-
-template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
-bool ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::prepareController ()
-{
-	if ( controller.isInProgState() )
-		return true;
-	else
-		return controller.rebootInProg();
-}
-
-template <  typename CanDat, CanDat& canDat,
-			uint16_t controlDescriptor, uint16_t dataDescriptor >
-void ProgrammingCan<CanDat, canDat, controlDescriptor, dataDescriptor>::send (const Answer& answer)
-{
-	typedef const uint8_t Data[8];
-	Data& data = _cast(Data, answer);
-
-	while ( !canDat.template send<controlDescriptor> (data) );
-}
+// ----------------------------------------- Программирование по Линии Связи САУТ/RS-485 ----------------------------------
 
 class Programming
 {
