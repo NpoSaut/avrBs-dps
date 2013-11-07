@@ -483,6 +483,7 @@ private:
 	uint16_t retroRotundatioCeleritas;// прошлое округлённое значение скорости. Для нужд округления с гистерезисом.
 
 	bool nCapio;
+	uint8_t nMax; // Датчик с максимальной скоростью
 	uint8_t tempusRestitutioValidus;// время после последнего сброса показаний исправности
 	uint8_t tempusDifferens;// время, в течении которого сохраняется разность показаний ДПС более 25%
 	uint8_t tempusTractusCommoratio;// время, в течении которого стоят оба ДПС в режиме Тяга
@@ -549,7 +550,10 @@ private:
 		if (activus)
 		{
 			// Анализ показаний датчиков, выбор ДПС, установка неисправности
-			uint8_t nMax = (dimetior[0]->accipioCeleritas() + 64) < dimetior[1]->accipioCeleritas();// +64 чтобы предотвратить постоянное переключение
+			nMax =  nMax == 0 ?
+					 ( (dimetior[0]->accipioCeleritas() + 64) <  dimetior[1]->accipioCeleritas() )
+					:(  dimetior[0]->accipioCeleritas() 	  < (dimetior[1]->accipioCeleritas() + 64) );
+			// +64 чтобы предотвратить постоянное переключение
 
 			causarius[0].vicis = dimetior[0]->sicinCausarius();
 			causarius[1].vicis = dimetior[1]->sicinCausarius();
