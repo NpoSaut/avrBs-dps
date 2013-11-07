@@ -86,55 +86,58 @@ public:
 
 		if (affectusCommutatio) // если случился фронт
 		{
-			// номер канала, по которому произошёл подъём
-			uint8_t canalis = affectusCommutatio / 2;
-
-			impulsio[canalis]++;
-			impulsioLanterna[canalis]++;
-
-			if (impulsio[canalis] == 1)
-				tempusPunctum[canalis] = 0; // Начинаем считать время с 1-го импульса
-											// После остановки (оба счётчика = 0) необходимо 2 импульса по одному и 1 по другому,
-											// для того, чтобы вывести скорость
-
 			uint32_t longitudo = 0;
-			if (impulsio[canalis] > impulsio[!canalis]) // Метры идут только по одному каналу. По большему.
-				longitudo = longitudoImpulsio; // при переключении будет небольшая погрешность в большую сторону.
 
-			if (tempusPunctum[canalis] >= minTempusPunctum && // Прошло достаточно времени для точного определения скорости
-					(tractus || impulsio[canalis] >= 4)) // В режиме выбега повышаем порог чувствительности
+			// каналы, по котором произошёл подъём
+			for (uint8_t canalis = affectusCommutatio / 2; canalis < affectusCommutatio; canalis ++)
 			{
-				causarius = (abs(impulsio[canalis] - impulsio[!canalis]) > 1); // Не было нормального чередования
+				impulsio[canalis]++;
+				impulsioLanterna[canalis]++;
 
-				// Определение направления движения
-				uint8_t vr = ((affectus + canalis) / 2) & 1;
-				if (vr == versusRotatio.retro) // Направление "применяется" только после подтверждения
-					versusRotatio.modo = versusRotatio.retro; //  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
-				versusRotatio.retro = vr;
+				if (impulsio[canalis] == 1)
+					tempusPunctum[canalis] = 0; // Начинаем считать время с 1-го импульса
+												// После остановки (оба счётчика = 0) необходимо 2 импульса по одному и 1 по другому,
+												// для того, чтобы вывести скорость
 
-				debugImpulsio[0] = impulsio[0];
-				debugImpulsio[1] = impulsio[1];
 
-				computo (canalis);
+				if (impulsio[canalis] > impulsio[!canalis]) // Метры идут только по одному каналу. По большему.
+					longitudo = longitudoImpulsio; // при переключении будет небольшая погрешность в большую сторону.
 
-				commoratio = false;
-
-				// Для нового расчёта
-				impulsio[canalis] = 1; // Сам начинаю считать время от текущего импульса
-				tempusPunctum[canalis] = 0;
-				impulsio[!canalis] = 0; // А сосед пусть сначала дождётся импульса и тогда начнёт считать время
-				tempusPunctum[!canalis] = 0;
-			}
-
-			// Мигание светодиодами
-			if (lanternaOperor)
-				if (impulsioLanterna[canalis] % 16 == 0) // мигать с периодом 1/16
+				if (tempusPunctum[canalis] >= minTempusPunctum && // Прошло достаточно времени для точного определения скорости
+						(tractus || impulsio[canalis] >= 4)) // В режиме выбега повышаем порог чувствительности
 				{
-					if (canalis)
-						(reg.*lanternaPortus).pin<lanterna1> ().toggle ();
-					else
-						(reg.*lanternaPortus).pin<lanterna0> ().toggle ();
+					causarius = (abs(impulsio[canalis] - impulsio[!canalis]) > 1); // Не было нормального чередования
+
+					// Определение направления движения
+					uint8_t vr = ((affectus + canalis) / 2) & 1;
+					if (vr == versusRotatio.retro) // Направление "применяется" только после подтверждения
+						versusRotatio.modo = versusRotatio.retro; //  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
+					versusRotatio.retro = vr;
+
+					debugImpulsio[0] = impulsio[0];
+					debugImpulsio[1] = impulsio[1];
+
+					computo (canalis);
+
+					commoratio = false;
+
+					// Для нового расчёта
+					impulsio[canalis] = 1; // Сам начинаю считать время от текущего импульса
+					tempusPunctum[canalis] = 0;
+					impulsio[!canalis] = 0; // А сосед пусть сначала дождётся импульса и тогда начнёт считать время
+					tempusPunctum[!canalis] = 0;
 				}
+
+				// Мигание светодиодами
+				if (lanternaOperor)
+					if (impulsioLanterna[canalis] % 16 == 0) // мигать с периодом 1/16
+					{
+						if (canalis)
+							(reg.*lanternaPortus).pin<lanterna1> ().toggle ();
+						else
+							(reg.*lanternaPortus).pin<lanterna0> ().toggle ();
+					}
+			}
 
 			return longitudo;
 		}
