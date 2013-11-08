@@ -59,7 +59,8 @@ public:
 			lanternaOperor (lanternaOperor), tractus (false), versusInversio (false),
 			celeritas (0), acceleratio (0), acceleratioColum (0),
 			impulsio ({ 0, 0 }), impulsioLanterna ({ 0, 0 }), tempusPunctum ({ 0, 0 }),
-			affectus (0), versusRotatio ({ !positio, !positio }), causarius (false), commoratio (true)
+			affectus (0), versusRotatio ({ !positio, !positio }), versusDynamic(0),
+			causarius (false), versusCausarius (false), commoratio (true)
 	{
 //		if (lanternaOperor)
 //		{
@@ -105,17 +106,24 @@ public:
 					if (impulsio[canalis] > impulsio[!canalis]) // Метры идут только по одному каналу. По большему.
 						longitudo = longitudoImpulsio; // при переключении будет небольшая погрешность в большую сторону.
 
+					// Определение направления движения
+					uint8_t vr = ((affectus + canalis) / 2) & 1;
+					if ( vr != versusDynamic )
+						if ( impulsio[canalis] != 1 )
+							versusCausarius = true;
+					versusDynamic = vr;
+
+
 					if (tempusPunctum[canalis] >= minTempusPunctum && // Прошло достаточно времени для точного определения скорости
 							(tractus || impulsio[canalis] >= 4)) // В режиме выбега повышаем порог чувствительности
 					{
 
-						causarius = (abs(impulsio[canalis] - impulsio[!canalis]) > 1); // Не было нормального чередования
+						causarius = (abs(impulsio[canalis] - impulsio[!canalis]) > 1)  // Не было нормального чередования
+									|| versusCausarius; // Направление менялось в течении измерения
 
-						// Определение направления движения
-						uint8_t vr = ((affectus + canalis) / 2) & 1;
-						if (vr == versusRotatio.retro) // Направление "применяется" только после подтверждения
+						if (versusDynamic == versusRotatio.retro) // Направление "применяется" только после подтверждения
 							versusRotatio.modo = versusRotatio.retro; //  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
-						versusRotatio.retro = vr;
+						versusRotatio.retro = versusDynamic;
 
 						debugImpulsio[0] = impulsio[0];
 						debugImpulsio[1] = impulsio[1];
@@ -129,6 +137,7 @@ public:
 						tempusPunctum[canalis] = 0;
 						impulsio[!canalis] = 0; // А сосед пусть сначала дождётся импульса и тогда начнёт считать время
 						tempusPunctum[!canalis] = 0;
+						versusCausarius = false;
 					}
 
 					// Мигание светодиодами
@@ -271,7 +280,9 @@ private:
 		uint8_t retro :1; // В прошлый раз (для контроля)
 	};
 	Bitfield<VersusRotatio> versusRotatio;
+	uint8_t versusDynamic;
 	bool causarius; // Испорченность (недостоверность данных)
+	bool versusCausarius; // При изменении направления вращения
 	bool commoratio; // Остановка
 
 	uint16_t debugImpulsio[2];
@@ -286,6 +297,7 @@ private:
 		acceleratio = 0;
 		acceleratioColum = 0;
 		causarius = false;
+		versusCausarius = false;
 	}
 
 	void computo (const uint8_t& can) __attribute__ ((noinline))
