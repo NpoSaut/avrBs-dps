@@ -188,9 +188,9 @@ void ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::catchInit
 		uint8_t getModificationNumber () const { return modification; }
 		uint8_t getProgramNumber () const { return program;  }
 		uint8_t getChannelNumber () const { return channel; }
-		uint32_t getManufactureNumber () const { return ((uint32_t)manufactureNumberHiX16 << 16)
-														+ (manufactureNumberMid << 8)
-														+ manufactureNumberLow; }
+		uint32_t getManufactureNumber () const { return ((uint32_t) manufactureNumberLow)
+														+ ((uint32_t) manufactureNumberMid << 8)
+														+ ((uint32_t) manufactureNumberHiX16 << 16); }
 
 		void setCellId (uint16_t id) { cellIdLow = id; cellIdHiX4 = id/16; }
 		void setModificationNumber (uint8_t num) { modification = num; }
@@ -206,6 +206,10 @@ void ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::catchInit
 		};
 	};
 	InitMessage &message = *((InitMessage *) addr);
+
+
+	Complex<uint32_t> mn = message.getManufactureNumber();
+	canDat.template send <0x1888> ({0,1,2,0, mn[3], mn[2], mn[1], mn[0]});
 
 	if (  message.isRightKey()
 		 &&	( message.getCellId()				== getCellId()					|| message.getCellId() 		 		== 0 )
