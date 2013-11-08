@@ -483,6 +483,8 @@ struct EepromData
 
 	enum DpsPosition { Left = 0, Right = 1 };
 	enum VelocityGauge { CL = 0, KPD = 1 }; 	// Измеритель скорости
+	enum IfSignal { ALS = 0, CKR = 1 };
+	enum AlarmSystem { ALSN = 0, CLUB = 1 };
 
 	union Saut
 	{
@@ -517,9 +519,7 @@ struct EepromData
 				uint8_t			tapKM130		:1;				// + Кран машиниста КМ-130 (1)
 				uint8_t			club			:1;				// Флаг КЛУБ-У для локомотивной сигнализации (для БЛОК всегда)
 				VelocityGauge	velocityGauge	:1; 			// Измеритель скорости
-				enum IfSignal { ALS = 0, CKR = 1 };
 				IfSignal		ifSignal		:1; 			// Источник ИФ сигнала (для БЛОК всегда АЛС)
-				enum AlarmSystem { ALSN = 0, CLUB = 1 };
 				AlarmSystem		alarmSystem		:1; 			// Локомотивная сигнализация (для БЛОК всегда КЛУБ)
 			};
 			Eeprom< Bitfield<Configuration> > configuration;// +!
@@ -591,9 +591,7 @@ struct EepromData
 				uint32_t		uktol				:1; // 13
 				uint32_t		epk151d				:1; // 14
 				uint32_t							:1; // 15
-				uint32_t		tapKM130			:1; // 16 ---
-				VelocityGauge	velocityGauge		:1; // 17
-				uint32_t							:14;
+				uint32_t							:16;
 			};
 			EeCell		configuration;				// 18 - Конфигурация
 			EeCell		vGreen; 					// 19 - Допустимая скорость на Зелёный
@@ -651,6 +649,18 @@ struct EepromData
 			EeCell		velocityGauge;				// 116
 			EeCell		ifSignalSource;				// 117
 			EeCell		alarmSystem;				// 118
+			struct SautConfiguration
+			{
+				uint32_t		tapKM130			:1; // 0
+				VelocityGauge	velocityGauge		:1; // 1
+				uint32_t		eks					:1; // 2
+				uint32_t		club				:1; // 3
+				IfSignal		ifSignal			:1; // 4
+				AlarmSystem		alarmSystem			:1; // 5
+				uint32_t							:10;
+				uint32_t							:16;
+			};
+			EeCell		sautConfiguration;			// 119
 
 //			EeCell		end;						// последняя ячейка
 		} property;
@@ -839,21 +849,49 @@ void SautConvert::dataUpdate (uint16_t )
 		}
 		else if (cellNumber == 18) // configuration
 		{
-			Bitfield<EepromData::Club::Property::Configuration> clubConf = (uint32_t)Complex<uint32_t>{ data[0], data[1], data[2], data[3] };
+			uint8_t sreg = reg.status;
+			cli ();
+			if ( eeprom.saut.property.configuration.isReady() )
+			{
+				Bitfield<EepromData::Saut::Property::Configuration> sautConf = eeprom.saut.property.configuration;
+				reg.status = sreg;
 
-			Bitfield<EepromData::Saut::Property::Configuration> sautConf (0);
-			sautConf.dps0Position = clubConf.dps0Position;
-			sautConf.dps1Position = clubConf.dps1Position;
-			sautConf.eks = 1;
-			sautConf.tapKM130 = clubConf.tapKM130;
-			sautConf.club = 1;
-			sautConf.velocityGauge = clubConf.velocityGauge;
-			sautConf.ifSignal = EepromData::Saut::Property::Configuration::IfSignal::ALS;
-			sautConf.alarmSystem = EepromData::Saut::Property::Configuration::AlarmSystem::CLUB;
+				Bitfield<EepromData::Club::Property::Configuration> clubConf = (uint32_t)Complex<uint32_t>{ data[0], data[1], data[2], data[3] };
 
-			stringNumber = 0;
-			if ( eeprom.saut.property.configuration.updateUnblock( sautConf, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
-				return;
+				sautConf.dps0Position = clubConf.dps0Position;
+				sautConf.dps1Position = clubConf.dps1Position;
+
+				stringNumber = 0;
+				if ( eeprom.saut.property.configuration.updateUnblock( sautConf, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+					return;
+			}
+			else
+				reg.status = sreg;
+		}
+		else if (cellNumber == 119) // Saut configuration
+		{
+			uint8_t sreg = reg.status;
+			cli ();
+			if ( eeprom.saut.property.configuration.isReady() )
+			{
+				Bitfield<EepromData::Saut::Property::Configuration> sautConf = eeprom.saut.property.configuration;
+				reg.status = sreg;
+
+				Bitfield<EepromData::Club::Property::SautConfiguration> conf = (uint32_t)Complex<uint32_t>{ data[0], data[1], data[2], data[3] };
+
+				sautConf.eks = conf.eks;
+				sautConf.tapKM130 = conf.tapKM130;
+				sautConf.club = conf.club;
+				sautConf.velocityGauge = conf.velocityGauge;
+				sautConf.ifSignal = conf.ifSignal;
+				sautConf.alarmSystem = conf.alarmSystem;
+
+				stringNumber = 0;
+				if ( eeprom.saut.property.configuration.updateUnblock( sautConf, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+					return;
+			}
+			else
+				reg.status = sreg;
 		}
 		else if (cellNumber == 100 || cellNumber == 101) // vMaxPassenger || vRedYellowPassenger
 		{
