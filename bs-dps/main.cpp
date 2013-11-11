@@ -55,14 +55,17 @@ typedef INT_TYPELIST_3	(CanTx::SYS_DATA_STATE_A, CanTx::SYS_DATA_STATE_B,
 						 CanTx::IPD_NEUTRAL) SYS_DATA_STATE_IPD_NEUTRAL;
 typedef INT_TYPELIST_2	(CanTx::SYS_DATA_STATE2_A, CanTx::SYS_DATA_STATE2_B) SYS_DATA_STATE2;
 typedef INT_TYPELIST_2	(CanTx::MPH_STATE_A, CanTx::MPH_STATE_B) MPH_STATE;
-typedef INT_TYPELIST_13 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
+typedef INT_TYPELIST_15 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 						 CanTx::AUX_RESOURCE_IPD_A,	CanTx::AUX_RESOURCE_IPD_B,
+						 CanTx::AUX_RESOURCE_VDS_A,	CanTx::AUX_RESOURCE_VDS_B,
 						 CanTx::SYS_DATA_A, CanTx::SYS_DATA_B,
 						 CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
 						 CanTx::MY_KPT_A, CanTx::MY_KPT_B,
 						 CanTx::IPD_PARAM_A, CanTx::IPD_PARAM_B,
 						 CanTx::SYS_KEY ) AUX_RESOURCE_SYS_DATA_IPD_PARAM;
+
 typedef INT_TYPELIST_2  (CanTx::VDS_STATE_A, CanTx::VDS_STATE_B) VDS_STATE;
+
 
 typedef INT_TYPELIST_5 (CanRx::MCO_STATE_A, CanRx::MCO_STATE_B,
 						CanRx::MCO_LIMITS_A, CanRx::MCO_LIMITS_B,
@@ -144,7 +147,8 @@ void sysDiagnostics (uint16_t a)
 		TSKBM_PCAN,
 		BS_DPS = 16,
 		ALS_TKS,
-		EPK
+		EPK,
+		VDS = 30
 	};
 	enum class Request : uint8_t
 	{
@@ -183,7 +187,7 @@ void sysDiagnostics (uint16_t a)
 	Request request = (Request) canDat.get<CanRx::SYS_DIAGNOSTICS>() [1];
 
 
-	if (unit == Unit::IPD || unit == Unit::BS_DPS)
+	if (unit == Unit::IPD || unit == Unit::BS_DPS || unit == Unit::VDS)
 	{
 		if ( request == Request::VERSION  )
 		{
@@ -207,6 +211,13 @@ void sysDiagnostics (uint16_t a)
 					canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
 				else
 					canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
+			}
+			else if (unit == Unit::VDS)
+			{
+				if (isSelfComplectA ())
+					canDat.send<CanTx::AUX_RESOURCE_VDS_A>(packet);
+				else
+					canDat.send<CanTx::AUX_RESOURCE_VDS_B>(packet);
 			}
 		}
 //		else if ( request == Request::DIST_TRAVEL_WRITE )
