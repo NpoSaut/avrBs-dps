@@ -207,10 +207,6 @@ void ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::catchInit
 	};
 	InitMessage &message = *((InitMessage *) addr);
 
-
-	Complex<uint32_t> mn = message.getManufactureNumber();
-	canDat.template send <0x1888> ({0,1,2,0, mn[3], mn[2], mn[1], mn[0]});
-
 	if (  message.isRightKey()
 		 &&	( message.getCellId()				== getCellId()					|| message.getCellId() 		 		== 0 )
 		 && ( message.getModificationNumber()   == getCellModification()   		|| message.getModificationNumber()  == 0 )
