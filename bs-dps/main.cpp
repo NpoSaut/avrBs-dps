@@ -198,75 +198,13 @@ void sysDiagnostics (uint16_t a)
 					(uint8_t) (programmingCan.getCheckSum() & 0xFF),
 					(uint8_t) (programmingCan.getCheckSum() >> 8)
 								};
-			if (unit == Unit::IPD)
-			{
-				if (isSelfComplectA ())
-					canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
-				else
-					canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet);
-			}
-			else if (unit == Unit::BS_DPS)
-			{
-				if (isSelfComplectA ())
-					canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
-				else
-					canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
-			}
-			else if (unit == Unit::VDS)
+			if (unit == Unit::VDS)
 			{
 				if (isSelfComplectA ())
 					canDat.send<CanTx::AUX_RESOURCE_VDS_A>(packet);
 				else
 					canDat.send<CanTx::AUX_RESOURCE_VDS_B>(packet);
 			}
-		}
-//		else if ( request == Request::DIST_TRAVEL_WRITE )
-//		{
-//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-//			eeprom_update_byte( adr  , canDat.get<CanRx::SYS_DIAGNOSTICS>() [5] );
-//			eeprom_update_byte( adr+1, canDat.get<CanRx::SYS_DIAGNOSTICS>() [4] );
-//			eeprom_update_byte( adr+2, canDat.get<CanRx::SYS_DIAGNOSTICS>() [3] );
-//			eeprom_update_byte( adr+3, canDat.get<CanRx::SYS_DIAGNOSTICS>() [2] );
-//		}
-//		else if ( request == Request::DIST_TRAVEL_READ_A && isSelfComplectA () )
-//		{
-//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-//			uint8_t packet[5] = {
-//					(uint8_t) Answer::DATA,
-//					eeprom_read_byte (adr+3),
-//					eeprom_read_byte (adr+2),
-//					eeprom_read_byte (adr+1),
-//					eeprom_read_byte (adr)
-//								};
-//
-//			canDat.send<CanTx::AUX_RESOURCE_IPD_A> (packet);
-//		}
-//		else if ( request == Request::DIST_TRAVEL_READ_B && !isSelfComplectA () )
-//		{
-//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-//			uint8_t packet[5] = {
-//					(uint8_t) Answer::DATA,
-//					eeprom_read_byte (adr+3),
-//					eeprom_read_byte (adr+2),
-//					eeprom_read_byte (adr+1),
-//					eeprom_read_byte (adr)
-//								};
-//
-//			canDat.send<CanTx::AUX_RESOURCE_IPD_B> (packet);
-//		}
-		else if ( request == Request::TEST_RUN && unit == Unit::BS_DPS )
-		{
-			uint8_t packet[5] = {
-					(uint8_t) Answer::DATA,
-					0,
-					0,
-					0,
-					0
-								};
-			if (isSelfComplectA ())
-				canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
-			else
-				canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
 		}
 	}
 }
@@ -276,10 +214,10 @@ void sysDiagnostics (uint16_t a)
 SoftIntHandler discreteInputA, discreteInputB;
 void pushHandler (uint16_t num)
 {
-//	if ( num == 8 ) // РБ
-//		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x13 });
-//	else if ( num == 9 ) // РБC
-//		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x1B });
+	if ( num == 8 ) // РБ
+		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x13 });
+	else if ( num == 9 ) // РБC
+		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x1B });
 
 	if ( num == 2 ) // Ж/Д ход
 	{
@@ -297,10 +235,10 @@ void pushHandler (uint16_t num)
 
 void releaseHandler (uint16_t num)
 {
-//	if ( num == 8 ) // РБ
-//		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x13 });
-//	else if ( num == 9 ) // РБC
-//		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x1B });
+	if ( num == 8 ) // РБ
+		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x13 });
+	else if ( num == 9 ) // РБC
+		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x1B });
 
 	if ( num == 2 ) // Ж/Д ход
 	{
@@ -324,25 +262,19 @@ void inputSignalStateOut (uint16_t )
 		uint16_t forwardTransmission 	:1;
 		uint16_t backwardTransmission	:1;
 		uint16_t tractionDisable		:1;
-		uint16_t						:1;
+		uint16_t 						:1;
 		uint16_t epkKey					:1;
-		uint16_t 						:5;
+		uint16_t vigilanceSpButton		:1;
+		uint16_t 						:4;
 	};
 	typedef Bitfield<OutMessageFields> OutMessage;
 	OutMessage outMessage;
 
 	DiscreteInputType::Inputs state = discreteInput.getState();
 
-	outMessage.railwayMode = state.in2;
-	outMessage.tifon = state.in7;
-	outMessage.siren = 0; // Сирена заведена на 27 вход ячейки, но она не заведена на процессор
-	outMessage.emergencyStop = state.in6;
 	outMessage.vigilanceButton = state.in8;
-	outMessage.engineWork = !state.in6; // работа двигателя как инверсия сигнала "остановка двигателя"
-	outMessage.forwardTransmission = state.in5;
-	outMessage.backwardTransmission = state.in4;
-	outMessage.tractionDisable = (state.in5 == 0) && (state.in4 == 0);
-	outMessage.epkKey = 1;
+	outMessage.vigilanceSpButton = state.in9;
+	outMessage.epkKey = state.in12;
 
 	if ( isSelfComplectA() )
 		canDat.send<CanTx::VDS_STATE_A> ({uint8_t(outMessage/256), uint8_t(outMessage)});

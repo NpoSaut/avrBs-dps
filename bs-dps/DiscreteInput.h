@@ -39,7 +39,9 @@ public:
 		uint16_t	in8		:1;
 		uint16_t	in9		:1;
 		uint16_t	in10	:1;
-		uint16_t			:6;
+		uint16_t	in11	:1;
+		uint16_t	in12	:1;
+		uint16_t			:4;
 	};
 	typedef Bitfield<InputsField> Inputs;
 
@@ -112,6 +114,8 @@ void DiscreteInput<ClockType, clock>::configPorts ()
 	reg.portA.pin6.in();
 	reg.portA.pin7.in();
 
+	reg.portC.pin1.in();
+	reg.portC.pin2.in();
 	reg.portC.pin3.in();
 	reg.portC.pin4.in();
 	reg.portC.pin5.in();
@@ -132,6 +136,9 @@ void DiscreteInput<ClockType, clock>::configLeds ()
 	reg.portB.pin5.out();
 	reg.portB.pin6.out();
 	reg.portB.pin7.out();
+
+	reg.portG.pin3.out();
+	reg.portG.pin4.out();
 }
 
 template < typename ClockType, ClockType& clock >
@@ -150,7 +157,9 @@ typename DiscreteInput<ClockType, clock>::Inputs DiscreteInput<ClockType, clock>
 	Bitfield<SignificantPinsOfPortA> inPA (reg.portA);
 	struct SignificantPinsOfPortC
 	{
-		uint8_t			:3;
+		uint8_t			:1;
+		uint8_t	in12	:1;
+		uint8_t in11	:1;
 		uint8_t	in10	:1;
 		uint8_t in9		:1;
 		uint8_t	in8		:1;
@@ -160,7 +169,7 @@ typename DiscreteInput<ClockType, clock>::Inputs DiscreteInput<ClockType, clock>
 	Bitfield<SignificantPinsOfPortC> inPC (reg.portC);
 
 	Inputs currentState ( InputsField{  inPA.in1, inPA.in2, inPA.in3, inPA.in4, inPA.in5, inPA.in6,
-										inPC.in7, inPC.in8, inPC.in9, inPC.in10 } );
+										inPC.in7, inPC.in8, inPC.in9, inPC.in10, inPC.in11, inPC.in12 } );
 	currentState = (uint16_t) currentState ^ 0xFFFF;
 	return currentState;
 }
@@ -181,6 +190,9 @@ void DiscreteInput<ClockType, clock>::lightLeds ()
 		reg.portB.pin5 = state.in8;
 		reg.portB.pin6 = state.in9;
 		reg.portB.pin7 = state.in10;
+
+		reg.portG.pin3 = state.in11;
+		reg.portG.pin4 = state.in12;
 	}
 	else
 	{
@@ -195,6 +207,9 @@ void DiscreteInput<ClockType, clock>::lightLeds ()
 		reg.portB.pin5 = !state.in8;
 		reg.portB.pin6 = !state.in9;
 		reg.portB.pin7 = !state.in10;
+
+		reg.portG.pin3 = !state.in11;
+		reg.portG.pin4 = !state.in12;
 	}
 }
 
@@ -207,7 +222,7 @@ void DiscreteInput<ClockType, clock>::poll (uint16_t )
 
 	// Проверка, изменилось ли значение.
 	// Новое значение должно продержаться в течении 30 мсек, чтобы оно применилось.
-	for (uint8_t i = 0; i < 10; i++)
+	for (uint8_t i = 0; i < 12; i++)
 	{
 		if ( (current & 1) != (last & 1) )
 		{
