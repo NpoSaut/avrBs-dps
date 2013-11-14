@@ -214,35 +214,41 @@ void sysDiagnostics (uint16_t a)
 SoftIntHandler discreteInputA, discreteInputB;
 void pushHandler (uint16_t num)
 {
-	if ( num == 8 ) // РБ
-		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x13 });
-	else if ( num == 9 ) // РБC
-		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x1B });
+	if ( isSelfComplectA() )
+	{
+		if ( num == 8 ) // РБ
+			canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x13 });
+		else if ( num == 9 ) // РБC
+			canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x1B });
 
-	if ( num == 2 ) // Ж/Д ход
-	{
-//		dps.constituoRailWayRotae(true);
-	}
-	if ( num == 5 ) // Вперёд
-	{
-//		dps.constituoVersus (0);
-	}
-	if ( num == 4 ) // Назад
-	{
-//		dps.constituoVersus (1);
+		if ( num == 2 ) // Ж/Д ход
+		{
+	//		dps.constituoRailWayRotae(true);
+		}
+		if ( num == 5 ) // Вперёд
+		{
+	//		dps.constituoVersus (0);
+		}
+		if ( num == 4 ) // Назад
+		{
+	//		dps.constituoVersus (1);
+		}
 	}
 }
 
 void releaseHandler (uint16_t num)
 {
-	if ( num == 8 ) // РБ
-		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x13 });
-	else if ( num == 9 ) // РБC
-		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x1B });
-
-	if ( num == 2 ) // Ж/Д ход
+	if ( isSelfComplectA() )
 	{
-//		dps.constituoRailWayRotae(false);
+		if ( num == 8 ) // РБ
+			canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x13 });
+		else if ( num == 9 ) // РБC
+			canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x1B });
+
+		if ( num == 2 ) // Ж/Д ход
+		{
+	//		dps.constituoRailWayRotae(false);
+		}
 	}
 }
 
@@ -274,7 +280,7 @@ void inputSignalStateOut (uint16_t )
 
 	outMessage.vigilanceButton = state.in8;
 	outMessage.vigilanceSpButton = state.in9;
-	outMessage.epkKey = state.in12;
+	outMessage.epkKey = state.in11;
 
 	if ( isSelfComplectA() )
 		canDat.send<CanTx::VDS_STATE_A> ({uint8_t(outMessage/256), uint8_t(outMessage)});
