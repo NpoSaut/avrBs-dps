@@ -274,7 +274,7 @@ private:
 	uint8_t impulsioLanterna[2]; // Это кол-во не обнуляется, чтобы корректно моргать лампочками
 	uint16_t tempusPunctum[2];
 	uint8_t affectus; // состояние порта
-	struct VersusRotatio // Напрвление вращения (true - туда, false - обратно)
+	struct VersusRotatio // Напрвление вращения (true - туда (по часовой стрелке), false - обратно)
 	{
 		uint8_t modo :1; // Сейчас
 		uint8_t retro :1; // В прошлый раз (для контроля)
