@@ -452,8 +452,11 @@ void mcoState (uint16_t pointer)
 	else
 		dps.constituoTractus ();
 
-	// В задней кабине инвертировать направление
-	dps.constituoVersusInversio ( message[3] & (1 << 5) );
+	// В задней кабине инвертировать направление, если это не маневровый
+	uint32_t locoType = 0;
+	if ( eeprom.club.property.category.read (locoType) )
+		if ( locoType != 7 ) // не маневровый
+			dps.constituoVersusInversio ( message[3] & (1 << 5) );
 
 	// Контроль перезагрузки ЦО.
 	static uint32_t lastTime = 0;
