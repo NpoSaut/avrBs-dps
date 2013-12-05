@@ -640,7 +640,7 @@ private:
 			{
 				if ( dimetior[nCapio]->sicinCommoratio() ) // стоим
 				{
-					if ( tempusTractusCommoratio >= 70*2 ) // В течении времени 70 сек.
+					if ( tempusTractusCommoratio >= 76*2 ) // В течении времени 76 сек.
 					{
 						causarius[0].conjuctio = true;
 						causarius[1].conjuctio = true;
@@ -654,7 +654,7 @@ private:
 			else
 			{
 				if ( tempusTractusCommoratio > 0 )
-				tempusTractusCommoratio --;
+				tempusTractusCommoratio = 0;
 			}
 
 			// Выставление флагов
