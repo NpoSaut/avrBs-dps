@@ -75,6 +75,7 @@ public:
 
 	// Функция должна вызываться с периодом period (мкс)
 	// принимает состояние каналов
+	// возвращает пройденный путь
 	const uint32_t punctum (uint8_t affectusNovus) __attribute__ ((noinline))
 	{
 		tempusPunctum[0]++;
@@ -349,14 +350,15 @@ public:
 	CeleritasSpatiumDimetior (Port Register::* accessusPortus, uint8_t& spatium, Safe<uint16_t>& celeritas,
 			Safe<uint16_t>& acceleratioEtAffectus, InterruptHandler odometer16dm0PlusPlus,
 			InterruptHandler odometer16dm1PlusPlus) :
-			accessusPortus (accessusPortus), spatiumMeters (0), odometer16dmPlusPlus (
-			{ odometer16dm0PlusPlus, odometer16dm1PlusPlus }), tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
+			accessusPortus (accessusPortus), spatiumMeters (0), spatiumAdjustedMeters(0),
+			odometer16dmPlusPlus ({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
+			tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
 			ecAdjust (
 					Delegate<uint16_t ()>::from_method<CeleritasSpatiumDimetior,
 							&CeleritasSpatiumDimetior::accipioCeleritas> (this)
 					,
 					Delegate<int32_t ()>::from_method<CeleritasSpatiumDimetior,
-							&CeleritasSpatiumDimetior::accipioSpatiumMeters> (this)), animadversor (
+							&CeleritasSpatiumDimetior::accipioSpatiumAdjustedMeters> (this)), animadversor (
 					InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (
 							this)), spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (
 					acceleratioEtAffectus), spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (
@@ -456,6 +458,7 @@ public:
 
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters;// пройденный путь в метрах
+	Complex<int32_t> spatiumAdjustedMeters; // пройденный путь с подстройкой под ЭК
 	InterruptHandler odometer16dmPlusPlus[2];// Делагаты функций, делающийх ++ к одометрам
 
 	bool repeto;// флаг перезагрузки в линию связи
@@ -553,9 +556,15 @@ private:
 			{
 				spatiumDecimetersMultiple10 += 10;
 				if ( versus() == 0 )
-				spatiumMeters ++;
+				{
+					spatiumMeters ++;
+					spatiumAdjustedMeters ++;
+				}
 				else
-				spatiumMeters --;
+				{
+					spatiumMeters --;
+					spatiumAdjustedMeters --;
+				}
 			}
 		}
 	}
@@ -741,7 +750,7 @@ private:
 				rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
 
 				// Подстройка под ЭК
-				ecAdjust.adjust (spatiumMeters);
+				ecAdjust.adjust (spatiumAdjustedMeters);
 
 				uint8_t ipdState[8] =
 				{
@@ -751,9 +760,9 @@ private:
 							| (!dimetior[nCapio]->sicinCommoratio() << 2)
 							| uint8_t( rotCel[1] & 0x1) ),// направление + наличие импульсов ДПС + старший бит скорости в км/ч
 					uint8_t( rotCel[0] ),// скорость в км/ч
-					uint8_t( spatiumMeters[1] ),
-					uint8_t( spatiumMeters[0] ),
-					uint8_t( spatiumMeters[2] ),
+					uint8_t( spatiumAdjustedMeters[1] ),
+					uint8_t( spatiumAdjustedMeters[0] ),
+					uint8_t( spatiumAdjustedMeters[2] ),
 					uint8_t( (ecAdjust.isMismatchCritical() << 5)
 							| (causarius[!nCapio].celeritas << 4)
 							| (nCapio << 3)
@@ -763,10 +772,13 @@ private:
 					uint8_t( dimetior[nCapio]->accipioAcceleratio()*2 )
 				};
 
+				uint8_t origDist[4] = {spatiumMeters[0], spatiumMeters[1], spatiumMeters[2], spatiumMeters[3]};
+
 				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_A>  (origDist);
 
 					// IPD_DPS_FAULT ---
 					enum class DpsFault : uint8_t
@@ -801,6 +813,7 @@ private:
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_B>  (origDist);
 				}
 			}
 		}
@@ -870,6 +883,11 @@ private:
 	int32_t accipioSpatiumMeters ()
 	{
 		return _cast(int32_t, spatiumMeters);
+	}
+
+	int32_t accipioSpatiumAdjustedMeters ()
+	{
+		return _cast(int32_t, spatiumAdjustedMeters);
 	}
 };
 
