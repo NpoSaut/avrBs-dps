@@ -361,14 +361,17 @@ public:
 							&CeleritasSpatiumDimetior::accipioSpatiumAdjustedMeters> (this)), animadversor (
 					InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (
 							this)), spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (
-					acceleratioEtAffectus), spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (
-					0), retroRotundatioCeleritas (0), nCapio (0), tempusRestitutioValidus (0), tempusDifferens (0), tempusTractusCommoratio (
-					0), activus (0)
+					acceleratioEtAffectus), spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
+					retroRotundatioCeleritas (0), nCapio (0), tempusDifferens (0), tempusTractusCommoratio (0),
+					activus (0)
+
 	{
 		causarius[0] =
 		{	0,0,0};
 		causarius[1] =
 		{	0,0,0};
+		validCycles[0] = validCyclesEnough;
+		validCycles[1] = validCyclesEnough;
 
 //		dimetior[0] = new DimetiorType( 0 );
 //		dimetior[1] = new DimetiorType( 0 );
@@ -503,7 +506,6 @@ private:
 
 	bool nCapio;
 	uint8_t nMax; // Датчик с максимальной скоростью
-	uint8_t tempusRestitutioValidus;// время после последнего сброса показаний исправности
 	uint8_t tempusDifferens;// время, в течении которого сохраняется разность показаний ДПС более 25%
 	uint8_t tempusTractusCommoratio;// время, в течении которого стоят оба ДПС в режиме Тяга
 	uint8_t activus;// 0 - пассивен, 1 - активен
@@ -515,6 +517,8 @@ private:
 		uint8_t celeritas :1;//
 	};
 	Bitfield<Causarius> causarius[2];
+	uint8_t validCycles[2]; // Счётчик "машинных циклов" после появления достоверности датчика. Циклы с нулевой скоростью не считаются.
+	static constexpr uint8_t validCyclesEnough = 128; // После этого числа машинных циклов с исправным датчиком на него станет возможным переключение
 
 	// Вызывается c периодом animadversor.period (100 мкс)
 	void animadversio ()
@@ -580,9 +584,11 @@ private:
 					:(  dimetior[0]->accipioCeleritas() 	  < (dimetior[1]->accipioCeleritas() + 64) );
 			// +64 чтобы предотвратить постоянное переключение
 
+			// Неисправность по чередованию
 			causarius[0].vicis = dimetior[0]->sicinCausarius();
 			causarius[1].vicis = dimetior[1]->sicinCausarius();
 
+			// Неиспрвность по разности скоростей
 			if ( !dimetior[0]->sicinCausarius() && !dimetior[1]->sicinCausarius() )
 			{
 				if ( dimetior[nMax]->accipioCeleritas() > 1280 &&
@@ -597,36 +603,33 @@ private:
 				else
 				{
 					tempusDifferens = 0;
-
-					if ( !dimetior[nCapio]->sicinCommoratio() )
-					tempusRestitutioValidus ++;
 				}
 			}
 
-			if ( !causarius[0] && !causarius[1] )
+			// В ход датчик пускается не сразу после воостановления исправности
+			for (uint8_t i = 0; i < 2; i ++)
+				if ( causarius[i] )
+					validCycles[i] = 0;
+				else if ( !dimetior[i]->sicinCommoratio() && validCycles[i] < validCyclesEnough )
+					validCycles[i] ++;
+
+			// Выбор датчика
+			if ( validCycles[0] >= validCyclesEnough && validCycles[1] >= validCyclesEnough )
 			{
 				bool potentiaCapio = tractus ^ nMax;
 				if ( !dimetior[potentiaCapio]->sicinCommoratio() )
-				nCapio = potentiaCapio;
+					nCapio = potentiaCapio;
 				else
-				nCapio = !potentiaCapio;
-
-				tempusRestitutioValidus = 0; // Время начинать считать с момента возникновения неисправности
+					nCapio = !potentiaCapio;
 			}
-			else
+			else  // не работает один из каналов
 			{
-				if ( causarius[0] && !causarius[1] ) // не работает один из каналов
-				nCapio = 1;// выбираем рабочий
-				else if ( !causarius[0] && causarius[1] )
-				nCapio = 0;
-				else if ( causarius[0] && causarius[1] )
-				nCapio = nMax;
-
-				if ( tempusRestitutioValidus == maxTempusRestitutioValidus )// раз в несколько секунд сбрасывать неисправность
-				{
-					causarius[0].celeritas = false;
-					causarius[1].celeritas = false;
-				}
+				if ( validCycles[0] >= validCyclesEnough )
+					nCapio = 0;
+				else if ( validCycles[1] >= validCyclesEnough )
+					nCapio = 1;
+				else
+					nCapio = nMax;
 			}
 
 			// Контроль обрыва обоих ДПС
