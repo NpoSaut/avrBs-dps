@@ -149,7 +149,7 @@ enum {		   					// adr, intput, port
 	Club0				= SautPacketHead (10, true, 0),
 	BprQuery			= SautPacketHead (13, false, 0),
 	BprVelocity			= SautPacketHead (13, false, 3),
-	// Исходящие
+	// �?сходящие
 	DpsOut0 			= SautPacketHead (1, false, 0),
 	DpsOut1 			= SautPacketHead (1, false, 1),
 	DpsOut2 			= SautPacketHead (1, false, 2),
@@ -452,8 +452,11 @@ void mcoState (uint16_t pointer)
 	else
 		dps.constituoTractus ();
 
-	// В задней кабине инвертировать направление
-	dps.constituoVersusInversio ( message[3] & (1 << 5) );
+	// В задней кабине инвертировать направление, если это не маневровый
+	uint32_t locoType = 0;
+	if ( eeprom.club.property.category.read (locoType) )
+		if ( locoType != 7 ) // не маневровый
+			dps.constituoVersusInversio ( message[3] & (1 << 5) );
 
 	// Контроль перезагрузки ЦО.
 	static uint32_t lastTime = 0;
@@ -463,7 +466,7 @@ void mcoState (uint16_t pointer)
 	lastTime = time;
 
 	// Контроль выхода из конфигурации
-	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) &&	// выход БС-ДПС или ИПД
+	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) &&	// выход БС-ДПС или �?ПД
 			clock.getTime() > 7000 && 	// проработали больше 7 секунд
 			dps.sicinActivus() && // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
 			!dps.sicinCausarius() ) // если оба датчика неисправны, то перезагрузку не делать
@@ -527,68 +530,88 @@ class Emulation
 {
 public:
 	Emulation ()
-		: engine ( 0x5555, InterruptHandler::from_method<Emulation, &Emulation::makeAStep>(this) ), parity (false), inverseDirection (false)
-//		: engine ( 0x5555, InterruptHandler(this, &Emulation::makeAStep) )
+		: engine ( 0x5555, InterruptHandler::from_method<Emulation, &Emulation::makeAStep>(this) ),
+		  current (),
+		  sautCurrentVelocity (0),
+		  sautCurrentVirtualCanMessage (),
+		  step (0)
 	{
-		getConstants(0);
-		watchDog(0);
+		scheduler.runIn( Command{ SoftIntHandler::from_method<Emulation, &Emulation::watchDog>(this), 0 }, 1000 );
 	}
 
-	void getVelocity ()
+	void getSautVelocity ()
 	{
-		uint8_t newVelocity = _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1];
-
-		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) &&  // Команда на эмуляцию
-				newVelocity > 0 )
+		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) )  // Команда на эмуляцию
 		{
-			enable();
-			if ( newVelocity != currentVelocity )
+			uint8_t newVelocity = _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1];
+
+			if ( newVelocity != sautCurrentVelocity )
 			{
-				currentVelocity = newVelocity;
+				sautCurrentVelocity = newVelocity;
 
-				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / newVelocity;
-				if (period > 150) // Чтобы не повесить систему слишком частым заходом
-					engine.setPeriod ( period );
+				// Выставляем направления вращения датчиков в зависимости от расположения таким образом, чтобы всегда ехать вперёд
+				Bitfield<EepromData::Saut::Property::Configuration> config;
+				config = eeprom.saut.property.configuration;
+				sautCurrentVirtualCanMessage.sensor[0].clockwise = config.dps0Position == EepromData::DpsPosition::Right ? 1 : 0;
+				sautCurrentVirtualCanMessage.sensor[1].clockwise = config.dps1Position == EepromData::DpsPosition::Right ? 1 : 0;
+
+				for (uint8_t i = 0; i < 2; i ++)
+				{
+					// Рачитываем период импульсов
+					sautCurrentVirtualCanMessage.sensor[0].freqX16 = uint32_t (5941784) * sautCurrentVelocity / dps.diametros(0) / 100;
+																	//sautCurrentVelocity * 42 * 16 / 3,6 / 3,14 / dps.diametros(0) * 1000;
+					sautCurrentVirtualCanMessage.sensor[i].broke1 = 0;
+					sautCurrentVirtualCanMessage.sensor[i].broke2 = 0;
+				}
 			}
-			if ( inverseDirection )
-				changeDirection();
-		}
-		else
-			disable ();
 
-		getMessage = true;
+			getCanVelocity((uint16_t) &sautCurrentVirtualCanMessage);
+		}
 	}
-	void getCanVelocity (uint16_t pointerToData)
+
+	void getCanVelocity (uint16_t pointer)
 	{
-		struct Request
-		{
-			uint16_t velocity	:9;
-			uint16_t			:6;
-			uint16_t inverseDir	:1;
-		};
-		Request& request = *((Request*) pointerToData);
+		IpdEmulationMessage& target = *( (IpdEmulationMessage *)(pointer) );
 
-		if ( request.velocity > 0 )
+		if ( !(target == current) )
 		{
-			enable();
-			if ( request.velocity != currentVelocity )
-			{
-				currentVelocity = request.velocity;
+			current = target;
 
-				uint32_t period = uint32_t(67320) * dps.diametros(0) / 1000 / currentVelocity;
-				if (period > 150) // Чтобы не повесить систему слишком частым заходом
-					engine.setPeriod ( period );
-			}
-//			if ( request.inverseDir != inverseDirection )
-//				changeDirection();
+			if (current.sensor[0].freqX16 != 0)
+				enable();
+			else
+				disable ();
 		}
-		else
-			disable ();
 
 		getMessage = true;
 	}
 
 private:
+	class IpdEmulationMessage
+	{
+	public:
+		IpdEmulationMessage ()
+		{
+			*( (uint32_t *) this   ) = 0;
+			*(((uint32_t *) this)+1) = 0;
+		}
+		bool operator == (const IpdEmulationMessage& b) const
+		{
+			return     *( (uint32_t *) this   ) == *( (uint32_t *) &b   )
+					&& *(((uint32_t *) this)+1) == *(((uint32_t *) &b)+1);
+		}
+
+		struct Sensor
+		{
+			uint16_t freqX16		:16;
+			uint16_t clockwise		:1;
+			uint16_t broke1			:1;
+			uint16_t broke2			:1;
+			uint16_t				:13;
+		};
+		Sensor sensor[2];
+	};
+
 	void watchDog (uint16_t)
 	{
 		if ( getMessage == false )
@@ -600,47 +623,32 @@ private:
 	}
 	void makeAStep ()
 	{
-		if (parity)
-		{
-			toggle (0);
-			toggle (2);
-		}
-		else
-		{
-			toggle (1);
-			toggle (3);
-		}
-		parity = !parity;
+		reg.general0 = currentOperationSequence[(step++) & 0x3];
 	}
-	void getConstants (uint16_t )
-	{
-		scheduler.runIn(
-				Command{ SoftIntHandler::from_method<Emulation, &Emulation::getConstants>(this), 0},
-				500 );
-
-			// Обновляем позицию датчиков
-			uint32_t tmp;
-			if ( eeprom.club.property.configuration.read (tmp) )
-			{
-				Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
-
-				if ( !engine.isEnable() )
-				{
-					reg.general0 = 0;
-					if ( conf.dps0Position == EepromData::DpsPosition::Right )
-						reg.general0 |= 0b0001;
-					if ( conf.dps1Position == EepromData::DpsPosition::Right )
-						reg.general0 |= 0b0100;
-
-					inverseDirection = false;
-					parity = false;
-				}
-			}
-	}
-
 	void enable ()
 	{
+		// Формируем последовательность значений порта,
+		// которые потом будем просто перебирать
+		for (uint8_t i = 0; i < 4; i++)
+		{
+			currentOperationSequence[i] = 0;
+			for (uint8_t iSensor = 0; iSensor < 2; iSensor ++)
+				currentOperationSequence[i] |=
+						( rotationClockwiseCode[current.sensor[iSensor].clockwise ? i : i^3] // ^3 делает из 0,1,2,3 -> 3,2,1,0
+								& (current.sensor[iSensor].broke1 ? ~(1 << 0) : 0xFF)
+								& (current.sensor[iSensor].broke2 ? ~(1 << 1) : 0xFF)
+						) << (iSensor*2);
+		}
+
+		// Устанавливает период таймера, генерируещего импульсы
+		uint32_t period = uint32_t(4000000) / current.sensor[0].freqX16;
+		if (period > 150) // Чтобы не повесить систему слишком частым заходом
+			engine.setPeriod ( period );
+
+		// Натравливаем БС-ДПС
 		dps.accessusPortus = (Port Register::*) (&Register::general0);
+
+		// Поехали
 		engine.enable();
 	}
 	void disable ()
@@ -649,27 +657,21 @@ private:
 		engine.disable();
 	}
 
-	void toggle (const uint8_t& n)
-	{
-		if ( reg.general0 & (1<<n) )
-			reg.general0 &= ~(1<<n);
-		else
-			reg.general0 |= (1<<n);
-	}
+	// Перебор этих значений слева направо соответсвует вращению по часовой стрелке
+	static const uint8_t rotationClockwiseCode [4];
+	uint8_t currentOperationSequence [4];
+
 
 	AlarmAdjust<Alarm1A> engine;
-	uint16_t currentVelocity;
+	IpdEmulationMessage current;
+	uint8_t sautCurrentVelocity;
+	IpdEmulationMessage sautCurrentVirtualCanMessage;
 	volatile bool getMessage;
-	bool parity;
-
-	bool inverseDirection;
-	void changeDirection ()
-	{
-		inverseDirection = !inverseDirection;
-		parity = !parity;
-	}
+	uint8_t step;
 };
+const uint8_t Emulation::rotationClockwiseCode[4] = {0, 1,  3, 2};
 Emulation emulation;
+
 
 // ---------------------------------- Парсер команд по линии связи ------------------------------►
 
@@ -751,7 +753,7 @@ int main ()
 
 	data.interruptHandler<DpsCommand> () = InterruptHandler::from_function<&commandParser>();
 	data.interruptHandler<Club0> () = InterruptHandler::from_function<&kptCommandParse>();
-	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getVelocity> (&emulation);
+	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getSautVelocity> (&emulation);
 	canDat.rxHandler<CanRx::IPD_EMULATION>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
 
 	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);

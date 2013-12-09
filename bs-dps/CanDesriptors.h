@@ -28,10 +28,10 @@ enum CanTx : uint16_t
 	 AUX_RESOURCE_IPD_B = 	((uint16_t)0x4D0	<< 5) + 5, // 9A05
 	 AUX_RESOURCE_BS_A = 	((uint16_t)0x633	<< 5) + 5, // C665
 	 AUX_RESOURCE_BS_B = 	((uint16_t)0x634	<< 5) + 5, // C685
-	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 1, // 9983
-	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 3, // 99A3
+	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 4, // 9984
+	 MY_DEBUG_B =			((uint16_t)0x4DC	<< 5) + 4, // 9B84
 	 MY_KPT_A = 			((uint16_t)0x4CE	<< 5) + 1, // 99C1
-	 MY_KPT_B = 			((uint16_t)0x4CF	<< 5) + 1, // 99E1
+	 MY_KPT_B = 			((uint16_t)0x4DE	<< 5) + 1, // 9BC1
 	 FU_DEV = 				((uint16_t)0x7E2	<< 5) + 8, // FC48
 };
 
@@ -58,7 +58,7 @@ enum CanRx : uint16_t
 	 SYS_DIAGNOSTICS = 			((uint16_t)0x468	<< 5) + 7, // 8D07
 	 AUX_RESOURCE_MCO_A =		((uint16_t)0x440	<< 5) + 5, // 8805
 	 AUX_RESOURCE_MCO_B =		((uint16_t)0x450	<< 5) + 5, // 8A05
-	 IPD_EMULATION =			((uint16_t)0x764	<< 5) + 2, // EC82
+	 IPD_EMULATION =		    ((uint16_t)0x67F	<< 5) + 8,  // CFE8
 	 FU_INIT =					((uint16_t)0x7E0	<< 5) + 8, // FC08
 };
 

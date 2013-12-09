@@ -566,7 +566,7 @@ struct EepromData
 			EeCell		coordStart;					//  9 - Начальная координата
 			EeCell		time;						// 10 - Время
 			EeCell		typeLoco; 					// 11 - Тип локомотива
-			EeCell		vMax; 						// 12 - Допустимая скорость (на белый)
+			EeCell		vWhite; 						// 12 - Допустимая скорость (на белый)
 			EeCell		vRedYellow; 				// 13 - Скорость движения на КЖ
 			EeCell		blockLength;				// 14 - Приведённая длина блок-участка «Дозор»
 			EeCell		diameter0; 					// 15 - Диаметр бандажа колеса 1, мм
@@ -1219,6 +1219,7 @@ private:
 		uint8_t				category;		// 4
 		uint8_t				lengthWagon;	// 6
 		Complex<uint16_t>	type;			// 11
+		uint8_t				vWhite;			// 12
 		uint8_t				vRedYellow;		// 13
 		uint16_t			blockLength;	// 14
 		Complex<uint16_t>	configuration;	// 18
@@ -1230,6 +1231,7 @@ private:
 			uint16_t	category		:1;
 			uint16_t	lengthWagon		:1;
 			uint16_t	type			:1;
+			uint16_t    vWhite			:1;
 			uint16_t	vRegYellow		:1;
 			uint16_t	blockLength		:1;
 			uint16_t	configuration	:1;
@@ -1517,7 +1519,8 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 
 
 		if ( monitoredData.written.configuration &&
-			 monitoredData.written.type )
+			 monitoredData.written.type &&
+			 monitoredData.written.vWhite )
 		{
 			uint8_t sysDataState2[8] = {
 					0, // Результаты выполнения тестов... здесь не выводим
@@ -1525,7 +1528,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.configuration[0],
 					monitoredData.type[1],
 					monitoredData.type[0],
-					0,
+					monitoredData.vWhite,
 					0,
 					0
 									};
@@ -1634,6 +1637,11 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 				readSuccess = eeprom.club.property.typeLoco.read (tmp);
 				monitoredData.type = tmp;
 			}
+			else if (interrogateCell == 12)
+			{
+				readSuccess = eeprom.club.property.vWhite.read (tmp);
+				monitoredData.vWhite = tmp;
+			}
 			else if (interrogateCell == 13)
 			{
 				readSuccess = eeprom.club.property.vRedYellow.read (tmp);
@@ -1676,6 +1684,8 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 				monitoredData.written.lengthWagon = 0;
 			else if (interrogateCell == 11)
 				monitoredData.written.type = 0;
+			else if (interrogateCell == 12)
+				monitoredData.written.vWhite = 0;
 			else if (interrogateCell == 13)
 				monitoredData.written.vRegYellow = 0;
 			else if (interrogateCell == 14)
