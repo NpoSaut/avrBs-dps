@@ -16,7 +16,6 @@
 #include <cpp/scheduler.h>
 #include "CanDat.h"
 #include "CanDesriptors.h"
-#include "hw_defines.h"
 
 // ------------------------------------------- Ячейка -------------------------------------------►
 //
@@ -483,7 +482,9 @@ struct EepromData
 	EepromData () {}
 
 	enum DpsPosition { Left = 0, Right = 1 };
-	enum VelocityGauge { CL = 0, KPD = 1 }; 	// Измеритель скорости
+	enum VelocityGauge { CL = 0, KPD = 1 }; 	// �?змеритель скорости
+	enum IfSignal { ALS = 0, CKR = 1 };
+	enum AlarmSystem { ALSN = 0, CLUB = 1 };
 
 	union Saut
 	{
@@ -517,17 +518,15 @@ struct EepromData
 				uint8_t			eks				:1;				// --- спросить (всегда ДА)
 				uint8_t			tapKM130		:1;				// + Кран машиниста КМ-130 (1)
 				uint8_t			club			:1;				// Флаг КЛУБ-У для локомотивной сигнализации (для БЛОК всегда)
-				VelocityGauge	velocityGauge	:1; 			// Измеритель скорости
-				enum IfSignal { ALS = 0, CKR = 1 };
-				IfSignal		ifSignal		:1; 			// Источник ИФ сигнала (для БЛОК всегда АЛС)
-				enum AlarmSystem { ALSN = 0, CLUB = 1 };
+				VelocityGauge	velocityGauge	:1; 			// �?змеритель скорости
+				IfSignal		ifSignal		:1; 			// �?сточник �?Ф сигнала (для БЛОК всегда АЛС)
 				AlarmSystem		alarmSystem		:1; 			// Локомотивная сигнализация (для БЛОК всегда КЛУБ)
 			};
 			Eeprom< Bitfield<Configuration> > configuration;// +!
 			Eeprom<uint16_t>	reserv1;    				// Резерв
 			Eeprom<int8_t>		diameterCorrection[2]; 		// + Уточнение диаметров бандажей соответственно для ДПС1 и ДПС2. Вычисляются как разность между точным значением
 															//   соответствующего диаметра бандажа в миллиметрах и средним значением, умноженным на 10.
-															//   Седьмой бит - знаковый. -- ВНИМАНИЕ -- это не дополнительный код
+															//   Седьмой бит - знаковый. -- ВН�?МАН�?Е -- это не дополнительный код
 			Eeprom<uint16_t>	controlSumm1;     			// + Контрольная сумма первой строки: CRC16 на базисе 0xA9EB
 			//  ------------------------------- Строка 2 -------------------------------
 			Eeprom<uint16_t>	string2Number; 				// + Номер второй строки (использую:0x0601, можно(?) 0x0401)BigEndian.
@@ -538,7 +537,7 @@ struct EepromData
 			{
 				None = 0,									// Нормальные локомотивы
 				TractionSignalFromBsCkr = 1,				// Сигнал "Тяга" от БС-ЦКР (ЧС2)
-				TractionInversionSignal = 2					// Инверсный сигнал "Тяга" (ЧС4, ЧС4Т, ЧС7, ЭП1, ВЛ65, ВЛ85, ВЛ11)
+				TractionInversionSignal = 2					// �?нверсный сигнал "Тяга" (ЧС4, ЧС4Т, ЧС7, ЭП1, ВЛ65, ВЛ85, ВЛ11)
 			};
 			Eeprom<FeatureCode>	featureCode;
 			Eeprom<uint8_t>		sectionNumber;				// +! Секция
@@ -567,7 +566,7 @@ struct EepromData
 			EeCell		coordStart;					//  9 - Начальная координата
 			EeCell		time;						// 10 - Время
 			EeCell		typeLoco; 					// 11 - Тип локомотива
-			EeCell		vMax; 						// 12 - Допустимая скорость (на белый)
+			EeCell		vWhite; 						// 12 - Допустимая скорость (на белый)
 			EeCell		vRedYellow; 				// 13 - Скорость движения на КЖ
 			EeCell		blockLength;				// 14 - Приведённая длина блок-участка «Дозор»
 			EeCell		diameter0; 					// 15 - Диаметр бандажа колеса 1, мм
@@ -592,26 +591,24 @@ struct EepromData
 				uint32_t		uktol				:1; // 13
 				uint32_t		epk151d				:1; // 14
 				uint32_t							:1; // 15
-				uint32_t		tapKM130			:1; // 16 ---
-				VelocityGauge	velocityGauge		:1; // 17
-				uint32_t							:14;
+				uint32_t							:16;
 			};
 			EeCell		configuration;				// 18 - Конфигурация
 			EeCell		vGreen; 					// 19 - Допустимая скорость на Зелёный
 			EeCell		dirCoord; 					// 20 - Направление изменения координаты
 			EeCell		milage; 					// 21 - Пробег локомотива
-			EeCell		clsdVersion;				// 22 - Информация о версии КЛУБ
+			EeCell		clsdVersion;				// 22 - �?нформация о версии КЛУБ
 			EeCell		trackMPH; 					// 23 - Номер пути для хранения в МПХ ВПД
 			EeCell		vpdPrivate; 				// 24 - Параментр используемый только внутри программы ВПД-М
-			EeCell		bilBrightnes;  				// 25 - Параметр яркости для модуля БИЛ
+			EeCell		bilBrightnes;  				// 25 - Параметр яркости для модуля Б�?Л
 			EeCell		snsPosition1;				// 26 - Расположение СНС первой кабины
 			EeCell		sndPosition2;				// 27 - Расположение СНС второй кабины
 			//-----------------------Запись по MCO_DATA---------------------------------------------------------
-			EeCell		ufirOutConf;				// 28 - УФИР выходил из конфигурации
+			EeCell		ufirOutConf;				// 28 - УФ�?Р выходил из конфигурации
 			EeCell		tskbmOutConf;				// 29 - ТСКБМ выходил из конфигурации
 			EeCell		sautOutConf;				// 30 - САУТ выходил из конфигурации
-			EeCell		bilOutConf;					// 31 - БИЛ выходил из конфигурации
-			EeCell		ipdOutConf;					// 32 - ИПД выходил из конфигурации
+			EeCell		bilOutConf;					// 31 - Б�?Л выходил из конфигурации
+			EeCell		ipdOutConf;					// 32 - �?ПД выходил из конфигурации
 			EeCell		bvuOutConf;					// 33 - БВУ выходил из конфигурации
 			EeCell		mmOutConf;					// 34 - ММ выходил из конфигурации
 			EeCell		ecOutConf;					// 35 - ЭК выходил из конфигурации
@@ -652,12 +649,24 @@ struct EepromData
 			EeCell		velocityGauge;				// 116
 			EeCell		ifSignalSource;				// 117
 			EeCell		alarmSystem;				// 118
+			struct SautConfiguration
+			{
+				uint32_t		tapKM130			:1; // 0
+				VelocityGauge	velocityGauge		:1; // 1
+				uint32_t		eks					:1; // 2
+				uint32_t		club				:1; // 3
+				IfSignal		ifSignal			:1; // 4
+				AlarmSystem		alarmSystem			:1; // 5
+				uint32_t							:10;
+				uint32_t							:16;
+			};
+			EeCell		sautConfiguration;			// 119
 
 //			EeCell		end;						// последняя ячейка
 		} property;
 	} club;
 
-	// Исправности датчиков
+	// �?справности датчиков
 	Eeprom<uint8_t> 		dps0Good;
 	Eeprom<uint8_t>			dps1Good;
 
@@ -684,9 +693,9 @@ struct EepromData
 // 2. При этом отсутсвует контроль целостности САУТовской части (это может делать САУТ, при этом crc нужно не забывать обновлять нам).
 // 3. В случае прерывания процесса записи обеспечить возможность прервать запись в САУТ.
 // 5. Для быстрого ответа на запрос от САУТа на чтение eeprom нужно хранить копию в оперативке (вдруг не будет доступа к eeprom)
-//    И обновлять эту копию регулярно.
+//    �? обновлять эту копию регулярно.
 //
-// ~~~ Интерфейс: ~~~
+// ~~~ �?нтерфейс: ~~~
 // 1. updateCell (number, data, afterUpdate)
 //    - Функция, которая должна быть вызвана в звене этапов записи после записи в КЛУБ и перед выдачей результата.
 //    - Производит всю работу по конвертации и записи (если нужно).
@@ -840,21 +849,49 @@ void SautConvert::dataUpdate (uint16_t )
 		}
 		else if (cellNumber == 18) // configuration
 		{
-			Bitfield<EepromData::Club::Property::Configuration> clubConf = (uint32_t)Complex<uint32_t>{ data[0], data[1], data[2], data[3] };
+			uint8_t sreg = reg.status;
+			cli ();
+			if ( eeprom.saut.property.configuration.isReady() )
+			{
+				Bitfield<EepromData::Saut::Property::Configuration> sautConf = eeprom.saut.property.configuration;
+				reg.status = sreg;
 
-			Bitfield<EepromData::Saut::Property::Configuration> sautConf (0);
-			sautConf.dps0Position = clubConf.dps0Position;
-			sautConf.dps1Position = clubConf.dps1Position;
-			sautConf.eks = 1;
-			sautConf.tapKM130 = clubConf.tapKM130;
-			sautConf.club = 1;
-			sautConf.velocityGauge = clubConf.velocityGauge;
-			sautConf.ifSignal = EepromData::Saut::Property::Configuration::IfSignal::ALS;
-			sautConf.alarmSystem = EepromData::Saut::Property::Configuration::AlarmSystem::CLUB;
+				Bitfield<EepromData::Club::Property::Configuration> clubConf = (uint32_t)Complex<uint32_t>{ data[0], data[1], data[2], data[3] };
 
-			stringNumber = 0;
-			if ( eeprom.saut.property.configuration.updateUnblock( sautConf, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
-				return;
+				sautConf.dps0Position = clubConf.dps0Position;
+				sautConf.dps1Position = clubConf.dps1Position;
+
+				stringNumber = 0;
+				if ( eeprom.saut.property.configuration.updateUnblock( sautConf, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+					return;
+			}
+			else
+				reg.status = sreg;
+		}
+		else if (cellNumber == 119) // Saut configuration
+		{
+			uint8_t sreg = reg.status;
+			cli ();
+			if ( eeprom.saut.property.configuration.isReady() )
+			{
+				Bitfield<EepromData::Saut::Property::Configuration> sautConf = eeprom.saut.property.configuration;
+				reg.status = sreg;
+
+				Bitfield<EepromData::Club::Property::SautConfiguration> conf = (uint32_t)Complex<uint32_t>{ data[0], data[1], data[2], data[3] };
+
+				sautConf.eks = conf.eks;
+				sautConf.tapKM130 = conf.tapKM130;
+				sautConf.club = conf.club;
+				sautConf.velocityGauge = conf.velocityGauge;
+				sautConf.ifSignal = conf.ifSignal;
+				sautConf.alarmSystem = conf.alarmSystem;
+
+				stringNumber = 0;
+				if ( eeprom.saut.property.configuration.updateUnblock( sautConf, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+					return;
+			}
+			else
+				reg.status = sreg;
 		}
 		else if (cellNumber == 100 || cellNumber == 101) // vMaxPassenger || vRedYellowPassenger
 		{
@@ -1182,6 +1219,7 @@ private:
 		uint8_t				category;		// 4
 		uint8_t				lengthWagon;	// 6
 		Complex<uint16_t>	type;			// 11
+		uint8_t				vWhite;			// 12
 		uint8_t				vRedYellow;		// 13
 		uint16_t			blockLength;	// 14
 		Complex<uint16_t>	configuration;	// 18
@@ -1193,6 +1231,7 @@ private:
 			uint16_t	category		:1;
 			uint16_t	lengthWagon		:1;
 			uint16_t	type			:1;
+			uint16_t    vWhite			:1;
 			uint16_t	vRegYellow		:1;
 			uint16_t	blockLength		:1;
 			uint16_t	configuration	:1;
@@ -1231,7 +1270,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getWriteMessage (
 
 	if ( packet.number > 0 && packet.number < 128 )
 	{
-		// Извращение КЛУБа
+		// �?звращение КЛУБа
 		if ( packet.number == 9 )
 			return;
 		if ( packet.number == 1 )
@@ -1252,7 +1291,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getWriteMessage (
 		}
 		else
 		{
-			if (isSelfComplectA ()) // первый полукомплект
+			if (reg.portB.pin7 == 0) // первый полукомплект
 				canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
 			else
 				canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
@@ -1266,7 +1305,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getLeftDataMessag
 {
 	Packet& packet = *((Packet *) getDataPointer);
 
-	// Извращение КЛУБа
+	// �?звращение КЛУБа
 	if ( packet.number == 1 ) // Только по адресу 1 принимать левые данные
 	{
 		if (activePacket.number == 0) // свободны
@@ -1284,7 +1323,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getLeftDataMessag
 		}
 		else
 		{
-			if (isSelfComplectA ()) // первый полукомплект
+			if (reg.portB.pin7 == 0) // первый полукомплект
 				canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
 			else
 				canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
@@ -1473,14 +1512,15 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 				uint8_t( (monitoredData.vGreen[1] << 6) | (monitoredData.blockLength/100) ),
 				monitoredData.lengthWagon
 								};
-		if (isSelfComplectA ()) // первый полукомплект
+		if (reg.portB.pin7 == 0) // первый полукомплект
 			canDat.template send<CanTx::SYS_DATA_STATE_A> (sysDataState);
 		else
 			canDat.template send<CanTx::SYS_DATA_STATE_B> (sysDataState);
 
 
 		if ( monitoredData.written.configuration &&
-			 monitoredData.written.type )
+			 monitoredData.written.type &&
+			 monitoredData.written.vWhite )
 		{
 			uint8_t sysDataState2[8] = {
 					0, // Результаты выполнения тестов... здесь не выводим
@@ -1488,11 +1528,11 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.configuration[0],
 					monitoredData.type[1],
 					monitoredData.type[0],
-					0,
+					monitoredData.vWhite,
 					0,
 					0
 									};
-			if (isSelfComplectA ()) // первый полукомплект
+			if (reg.portB.pin7 == 0) // первый полукомплект
 				canDat.template send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
 			else
 				canDat.template send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);
@@ -1511,7 +1551,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					0,
 					0
 								};
-			if (isSelfComplectA ()) // первый полукомплект
+			if (reg.portB.pin7 == 0) // первый полукомплект
 				canDat.template send<CanTx::IPD_PARAM_A> (ipdParam);
 			else
 				canDat.template send<CanTx::IPD_PARAM_B> (ipdParam);
@@ -1526,7 +1566,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.train[0],
 					monitoredData.category
 								};
-			if (isSelfComplectA ()) // первый полукомплект
+			if (reg.portB.pin7 == 0) // первый полукомплект
 				canDat.template send<CanTx::MPH_STATE_A> (mphState);
 			else
 				canDat.template send<CanTx::MPH_STATE_B> (mphState);
@@ -1537,7 +1577,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 		resetMonitor = false;
 	}
 
-	// Инициализация
+	// �?нициализация
 	monitoredData.written = 0xFFFF; // Флаги скидываются, если ячейки не записаны
 	interrogateCell = 1;
 	wrongCell = 0;
@@ -1597,6 +1637,11 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 				readSuccess = eeprom.club.property.typeLoco.read (tmp);
 				monitoredData.type = tmp;
 			}
+			else if (interrogateCell == 12)
+			{
+				readSuccess = eeprom.club.property.vWhite.read (tmp);
+				monitoredData.vWhite = tmp;
+			}
 			else if (interrogateCell == 13)
 			{
 				readSuccess = eeprom.club.property.vRedYellow.read (tmp);
@@ -1639,6 +1684,8 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16
 				monitoredData.written.lengthWagon = 0;
 			else if (interrogateCell == 11)
 				monitoredData.written.type = 0;
+			else if (interrogateCell == 12)
+				monitoredData.written.vWhite = 0;
 			else if (interrogateCell == 13)
 				monitoredData.written.vRegYellow = 0;
 			else if (interrogateCell == 14)
@@ -1670,14 +1717,14 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::endOperation (con
 {
 	if (status == Status::OK)
 	{
-		if (isSelfComplectA ()) // первый полукомплект
+		if (reg.portB.pin7 == 0) // первый полукомплект
 			canDat.template send<CanTx::SYS_DATA_A> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]});
 		else
 			canDat.template send<CanTx::SYS_DATA_B> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]});
 	}
 	else
 	{
-		if (isSelfComplectA ()) // первый полукомплект
+		if (reg.portB.pin7 == 0) // первый полукомплект
 			canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0});
 		else
 			canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0});

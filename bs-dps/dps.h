@@ -37,7 +37,7 @@
 //	основываясь на регулярно поступающих данных о состоянии каналов ДПС
 //		ДПС за оборот колеса диаметром diametros (в мм)
 //		равномерно выдаёт 42 имульса в каждый канал.
-//		Импульсы в каналах смещены на пол-импульса, что даёт возможность определять направление вращения
+//		�?мпульсы в каналах смещены на пол-импульса, что даёт возможность определять направление вращения
 //	ВХОД:
 //	- раз в period мкс должна вызываться функция punctum (affectus),
 //		которая в качестве аргумента принимает состояния двух каналов ДПС: 2 младших бита
@@ -59,7 +59,8 @@ public:
 			lanternaOperor (lanternaOperor), tractus (false), versusInversio (false),
 			celeritas (0), acceleratio (0), acceleratioColum (0),
 			impulsio ({ 0, 0 }), impulsioLanterna ({ 0, 0 }), tempusPunctum ({ 0, 0 }),
-			affectus (0), versusRotatio ({ !positio, !positio }), causarius (false), commoratio (true)
+			affectus (0), versusRotatio ({ !positio, !positio }), versusDynamic(0),
+			causarius (false), versusCausarius (false), commoratio (true)
 	{
 //		if (lanternaOperor)
 //		{
@@ -74,6 +75,7 @@ public:
 
 	// Функция должна вызываться с периодом period (мкс)
 	// принимает состояние каналов
+	// возвращает пройденный путь
 	const uint32_t punctum (uint8_t affectusNovus) __attribute__ ((noinline))
 	{
 		tempusPunctum[0]++;
@@ -86,55 +88,70 @@ public:
 
 		if (affectusCommutatio) // если случился фронт
 		{
-			// номер канала, по которому произошёл подъём
-			uint8_t canalis = affectusCommutatio / 2;
-
-			impulsio[canalis]++;
-			impulsioLanterna[canalis]++;
-
-			if (impulsio[canalis] == 1)
-				tempusPunctum[canalis] = 0; // Начинаем считать время с 1-го импульса
-											// После остановки (оба счётчика = 0) необходимо 2 импульса по одному и 1 по другому,
-											// для того, чтобы вывести скорость
-
 			uint32_t longitudo = 0;
-			if (impulsio[canalis] > impulsio[!canalis]) // Метры идут только по одному каналу. По большему.
-				longitudo = longitudoImpulsio; // при переключении будет небольшая погрешность в большую сторону.
 
-			if (tempusPunctum[canalis] >= minTempusPunctum && // Прошло достаточно времени для точного определения скорости
-					(tractus || impulsio[canalis] >= 4)) // В режиме выбега повышаем порог чувствительности
+			// каналы, по которым произошёл подъём
+			for ( uint8_t canalis = 0; canalis < 2; canalis ++  )
 			{
-				causarius = (abs(impulsio[canalis] - impulsio[!canalis]) > 1); // Не было нормального чередования
-
-				// Определение направления движения
-				uint8_t vr = ((affectus + canalis) / 2) & 1;
-				if (vr == versusRotatio.retro) // Направление "применяется" только после подтверждения
-					versusRotatio.modo = versusRotatio.retro; //  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
-				versusRotatio.retro = vr;
-
-				debugImpulsio[0] = impulsio[0];
-				debugImpulsio[1] = impulsio[1];
-
-				computo (canalis);
-
-				commoratio = false;
-
-				// Для нового расчёта
-				impulsio[canalis] = 1; // Сам начинаю считать время от текущего импульса
-				tempusPunctum[canalis] = 0;
-				impulsio[!canalis] = 0; // А сосед пусть сначала дождётся импульса и тогда начнёт считать время
-				tempusPunctum[!canalis] = 0;
-			}
-
-			// Мигание светодиодами
-			if (lanternaOperor)
-				if (impulsioLanterna[canalis] % 16 == 0) // мигать с периодом 1/16
+				if (affectusCommutatio & (1 << canalis))
 				{
-					if (canalis)
-						(reg.*lanternaPortus).pin<lanterna1> ().toggle ();
-					else
-						(reg.*lanternaPortus).pin<lanterna0> ().toggle ();
+					impulsio[canalis]++;
+					impulsioLanterna[canalis]++;
+
+					if (impulsio[canalis] == 1)
+						tempusPunctum[canalis] = 0; // Начинаем считать время с 1-го импульса
+													// После остановки (оба счётчика = 0) необходимо 2 импульса по одному и 1 по другому,
+													// для того, чтобы вывести скорость
+
+
+					if (impulsio[canalis] > impulsio[!canalis]) // Метры идут только по одному каналу. По большему.
+						longitudo = longitudoImpulsio; // при переключении будет небольшая погрешность в большую сторону.
+
+					// Определение направления движения
+					uint8_t vr = ((affectus + canalis) / 2) & 1;
+					if ( vr != versusDynamic )
+						if ( impulsio[canalis] != 1 )
+							versusCausarius = true;
+					versusDynamic = vr;
+
+
+					if (tempusPunctum[canalis] >= minTempusPunctum && // Прошло достаточно времени для точного определения скорости
+							(tractus || impulsio[canalis] >= 4)) // В режиме выбега повышаем порог чувствительности
+					{
+
+						causarius = (abs(impulsio[canalis] - impulsio[!canalis]) > 1)  // Не было нормального чередования
+									|| versusCausarius; // Направление менялось в течении измерения
+
+						if (versusDynamic == versusRotatio.retro) // Направление "применяется" только после подтверждения
+							versusRotatio.modo = versusRotatio.retro; //  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
+						versusRotatio.retro = versusDynamic;
+
+						debugImpulsio[0] = impulsio[0];
+						debugImpulsio[1] = impulsio[1];
+
+						computo (canalis);
+
+						commoratio = false;
+
+						// Для нового расчёта
+						impulsio[canalis] = 1; // Сам начинаю считать время от текущего импульса
+						tempusPunctum[canalis] = 0;
+						impulsio[!canalis] = 0; // А сосед пусть сначала дождётся импульса и тогда начнёт считать время
+						tempusPunctum[!canalis] = 0;
+						versusCausarius = false;
+					}
+
+					// Мигание светодиодами
+					if (lanternaOperor)
+						if (impulsioLanterna[canalis] % 16 == 0) // мигать с периодом 1/16
+						{
+							if (canalis)
+								(reg.*lanternaPortus).pin<lanterna1> ().toggle ();
+							else
+								(reg.*lanternaPortus).pin<lanterna0> ().toggle ();
+						}
 				}
+			}
 
 			return longitudo;
 		}
@@ -235,7 +252,7 @@ public:
 
 	EepromData::DpsPosition positio;
 
-	// --- ДЛЯ ОТЛАДКИ ---
+	// --- ДЛЯ ОТЛАДК�? ---
 //	uint8_t retroCan; // последний канал, по которому производился расчёт
 //	uint8_t vicisNum; // кол-во переключений между каналами
 	// --- КОНЕЦ ---
@@ -258,13 +275,15 @@ private:
 	uint8_t impulsioLanterna[2]; // Это кол-во не обнуляется, чтобы корректно моргать лампочками
 	uint16_t tempusPunctum[2];
 	uint8_t affectus; // состояние порта
-	struct VersusRotatio // Напрвление вращения (true - туда, false - обратно)
+	struct VersusRotatio // Напрвление вращения (true - туда (по часовой стрелке), false - обратно)
 	{
 		uint8_t modo :1; // Сейчас
 		uint8_t retro :1; // В прошлый раз (для контроля)
 	};
 	Bitfield<VersusRotatio> versusRotatio;
-	bool causarius; // Испорченность (недостоверность данных)
+	uint8_t versusDynamic;
+	bool causarius; // �?спорченность (недостоверность данных)
+	bool versusCausarius; // При изменении направления вращения
 	bool commoratio; // Остановка
 
 	uint16_t debugImpulsio[2];
@@ -279,6 +298,7 @@ private:
 		acceleratio = 0;
 		acceleratioColum = 0;
 		causarius = false;
+		versusCausarius = false;
 	}
 
 	void computo (const uint8_t& can) __attribute__ ((noinline))
@@ -330,24 +350,28 @@ public:
 	CeleritasSpatiumDimetior (Port Register::* accessusPortus, uint8_t& spatium, Safe<uint16_t>& celeritas,
 			Safe<uint16_t>& acceleratioEtAffectus, InterruptHandler odometer16dm0PlusPlus,
 			InterruptHandler odometer16dm1PlusPlus) :
-			accessusPortus (accessusPortus), spatiumMeters (0), odometer16dmPlusPlus (
-			{ odometer16dm0PlusPlus, odometer16dm1PlusPlus }), tractus (false), versus(0), railWayRotae(0), repeto (true), // после перезагрузки -- флаг перезагрузки
+			accessusPortus (accessusPortus), spatiumMeters (0), spatiumAdjustedMeters(0),
+			odometer16dmPlusPlus ({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
+			tractus (false), versus(0), railWayRotae(0), repeto (true), // после перезагрузки -- флаг перезагрузки
 			ecAdjust (
 					Delegate<uint16_t ()>::from_method<CeleritasSpatiumDimetior,
 							&CeleritasSpatiumDimetior::accipioCeleritas> (this)
 					,
 					Delegate<int32_t ()>::from_method<CeleritasSpatiumDimetior,
-							&CeleritasSpatiumDimetior::accipioSpatiumMeters> (this)), animadversor (
+							&CeleritasSpatiumDimetior::accipioSpatiumAdjustedMeters> (this)), animadversor (
 					InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (
 							this)), spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (
-					acceleratioEtAffectus), spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (
-					0), retroRotundatioCeleritas (0), nCapio (0), tempusRestitutioValidus (0), tempusDifferens (0), tempusTractusCommoratio (
-					0), activus (0)
+					acceleratioEtAffectus), spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
+					retroRotundatioCeleritas (0), nCapio (0), tempusDifferens (0), tempusTractusCommoratio (0),
+					activus (0)
+
 	{
 		causarius[0] =
 		{	0,0,0};
 		causarius[1] =
 		{	0,0,0};
+		validCycles[0] = validCyclesEnough;
+		validCycles[1] = validCyclesEnough;
 
 //		dimetior[0] = new DimetiorType( 0 );
 //		dimetior[1] = new DimetiorType( 0 );
@@ -359,7 +383,7 @@ public:
 		(reg.*lanternaPortus).pin<lanterna0>().out ();
 		(reg.*lanternaPortus).pin<lanterna1>().out ();
 
-		// Инициализация линии связи
+		// �?нициализация линии связи
 		acceleratioEtAffectus <<= 0x74;// оба вперёд и исправны. Флаг перезагрузки
 		celeritasProdo <<= 0;
 
@@ -452,6 +476,7 @@ public:
 
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters;// пройденный путь в метрах
+	Complex<int32_t> spatiumAdjustedMeters; // пройденный путь с подстройкой под ЭК
 	InterruptHandler odometer16dmPlusPlus[2];// Делагаты функций, делающийх ++ к одометрам
 
 	bool repeto;// флаг перезагрузки в линию связи
@@ -492,12 +517,12 @@ private:
 
 	uint32_t spatiumDecimeters65536;// пройденный путь в дм/65536
 	uint8_t spatiumDecimetersMultiple10;// путь в дециметрах, кратный 10; для перевода в метры
-	uint8_t spatiumDecimetersMulitple16;// путь в 1,6 м. Используется для ++ одометров
+	uint8_t spatiumDecimetersMulitple16;// путь в 1,6 м. �?спользуется для ++ одометров
 
 	uint16_t retroRotundatioCeleritas;// прошлое округлённое значение скорости. Для нужд округления с гистерезисом.
 
 	bool nCapio;
-	uint8_t tempusRestitutioValidus;// время после последнего сброса показаний исправности
+	uint8_t nMax; // Датчик с максимальной скоростью
 	uint8_t tempusDifferens;// время, в течении которого сохраняется разность показаний ДПС более 25%
 	uint8_t tempusTractusCommoratio;// время, в течении которого стоят оба ДПС в режиме Тяга
 	uint8_t activus;// 0 - пассивен, 1 - активен
@@ -509,6 +534,8 @@ private:
 		uint8_t celeritas :1;//
 	};
 	Bitfield<Causarius> causarius[2];
+	uint8_t validCycles[2]; // Счётчик "машинных циклов" после появления достоверности датчика. Циклы с нулевой скоростью не считаются.
+	static constexpr uint8_t validCyclesEnough = 128; // После этого числа машинных циклов с исправным датчиком на него станет возможным переключение
 
 	// Вызывается c периодом animadversor.period (100 мкс)
 	void animadversio ()
@@ -549,9 +576,15 @@ private:
 			{
 				spatiumDecimetersMultiple10 += 10;
 				if ( accipioVersus() == 0 )
-				spatiumMeters ++;
+				{
+					spatiumMeters ++;
+					spatiumAdjustedMeters ++;
+				}
 				else
-				spatiumMeters --;
+				{
+					spatiumMeters --;
+					spatiumAdjustedMeters --;
+				}
 			}
 		}
 	}
@@ -576,7 +609,7 @@ private:
 			{
 				if ( dimetior[nCapio]->sicinCommoratio() ) // стоим
 				{
-					if ( tempusTractusCommoratio >= 70*2 ) // В течении времени 70 сек.
+					if ( tempusTractusCommoratio >= 76*2 ) // В течении времени 76 сек.
 					{
 						causarius[0].conjuctio = true;
 						causarius[1].conjuctio = true;
@@ -590,7 +623,7 @@ private:
 			else
 			{
 				if ( tempusTractusCommoratio > 0 )
-				tempusTractusCommoratio --;
+				tempusTractusCommoratio = 0;
 			}
 
 			// Выставление флагов
@@ -640,7 +673,7 @@ private:
 //			if (!mappa.validus1)
 //				eeprom.dps1Good = 0;
 
-			// Индикация неисправности на стоянке
+			// �?ндикация неисправности на стоянке
 //			if ( dimetior[nCapio]->sicinCommoratio() )
 //			{
 //				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
@@ -703,9 +736,9 @@ private:
 							| (!dimetior[nCapio]->sicinCommoratio() << 2)
 							| uint8_t( rotCel[1] & 0x1) ),// направление + наличие импульсов ДПС + старший бит скорости в км/ч
 					uint8_t( rotCel[0] ),// скорость в км/ч
-					uint8_t( spatiumMeters[1] ),
-					uint8_t( spatiumMeters[0] ),
-					uint8_t( spatiumMeters[2] ),
+					uint8_t( spatiumAdjustedMeters[1] ),
+					uint8_t( spatiumAdjustedMeters[0] ),
+					uint8_t( spatiumAdjustedMeters[2] ),
 					uint8_t( (ecAdjust.isMismatchCritical() << 5)
 							| (causarius[!nCapio].celeritas << 4)
 							| (nCapio << 3)
@@ -715,10 +748,13 @@ private:
 					uint8_t( dimetior[nCapio]->accipioAcceleratio()*2 )
 				};
 
+				uint8_t origDist[4] = {spatiumMeters[0], spatiumMeters[1], spatiumMeters[2], spatiumMeters[3]};
+
 				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_A>  (origDist);
 
 					// IPD_DPS_FAULT ---
 					enum class DpsFault : uint8_t
@@ -753,6 +789,7 @@ private:
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
+					canDat.template send<CanTx::MY_DEBUG_B>  (origDist);
 				}
 			}
 		}
@@ -777,11 +814,10 @@ private:
 			}
 
 			if ( eeprom.club.property.diameter0.read (tmp) )
-				dimetior[0]->constituoDiametros ( tmp );
+				dimetior[0]->constituoDiametros (tmp);
 
 			if ( eeprom.club.property.diameter1.read (tmp) )
-				dimetior[1]->constituoDiametros ( tmp );
-
+				dimetior[1]->constituoDiametros (tmp);
 
 			if ( eeprom.club.property.dpsDentos.read (tmp) )
 			{
@@ -823,6 +859,11 @@ private:
 	int32_t accipioSpatiumMeters ()
 	{
 		return _cast(int32_t, spatiumMeters);
+	}
+
+	int32_t accipioSpatiumAdjustedMeters ()
+	{
+		return _cast(int32_t, spatiumAdjustedMeters);
 	}
 };
 

@@ -27,17 +27,17 @@ enum CanTx : uint16_t
 	 SYS_DATA_STATE2_B =	(0x318	<< 5) + 8, // 6308
 	 MPH_STATE_A =			(0x31C	<< 5) + 4, // 6384
 	 MPH_STATE_B =			(0x31D	<< 5) + 4, // 63A4
+	 FU_DEV = 				((uint16_t)0x337	<< 5) + 8, // 66E8
 	 AUX_RESOURCE_IPD_A = 	((uint16_t)0x4C0	<< 5) + 5, // 9805
 	 AUX_RESOURCE_IPD_B = 	((uint16_t)0x4D0	<< 5) + 5, // 9A05
 	 AUX_RESOURCE_BS_A = 	((uint16_t)0x633	<< 5) + 5, // C665
 	 AUX_RESOURCE_BS_B = 	((uint16_t)0x634	<< 5) + 5, // C685
 	 AUX_RESOURCE_VDS_A = 	((uint16_t)0x6E1	<< 5) + 5, // DC25
 	 AUX_RESOURCE_VDS_B = 	((uint16_t)0x6E2	<< 5) + 5, // DC45
-	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 1, // 9983
-	 MY_DEBUG_B =			((uint16_t)0x4CD	<< 5) + 3, // 99A3
+	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 4, // 9984
+	 MY_DEBUG_B =			((uint16_t)0x4DC	<< 5) + 4, // 9B84
 	 MY_KPT_A = 			((uint16_t)0x4CE	<< 5) + 1, // 99C1
-	 MY_KPT_B = 			((uint16_t)0x4CF	<< 5) + 1, // 99E1
-	 FU_DEV = 				((uint16_t)0x7E2	<< 5) + 8, // FC48
+	 MY_KPT_B = 			((uint16_t)0x4DE	<< 5) + 1, // 9BC1
 };
 
 enum CanRx : uint16_t
@@ -60,11 +60,11 @@ enum CanRx : uint16_t
 	 MM_NEUTRAL =				(0x215	<< 5) + 8, // 42A8
 	 BKSI_DATA =				(0x252	<< 5) + 5, // 4A45
 	 INPUT_DATA =				(0x310	<< 5) + 5, // 6205
+	 FU_INIT =					((uint16_t)0x335	<< 5) + 8, // 66A8
 	 SYS_DIAGNOSTICS = 			((uint16_t)0x468	<< 5) + 7, // 8D07
 	 AUX_RESOURCE_MCO_A =		((uint16_t)0x440	<< 5) + 5, // 8805
 	 AUX_RESOURCE_MCO_B =		((uint16_t)0x450	<< 5) + 5, // 8A05
-	 IPD_EMULATION =			((uint16_t)0x764	<< 5) + 2, // EC82
-	 FU_INIT =					((uint16_t)0x7E0	<< 5) + 8, // FC08
+	 IPD_EMULATION =		    ((uint16_t)0x67F	<< 5) + 8,  // CFE8
 };
 
 
