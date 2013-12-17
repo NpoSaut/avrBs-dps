@@ -596,13 +596,15 @@ private:
 						> dimetior[nMax]->accipioCeleritas()/4 ) // Если разброс большой (и больше 10км/ч)
 				{
 					if (tempusDifferens == maxTempusDifferens) // довольно давно
-					causarius[!nMax].celeritas = true;
+						causarius[!nMax].celeritas = true;
 					else
-					tempusDifferens ++;
+						tempusDifferens ++;
 				}
 				else
 				{
 					tempusDifferens = 0;
+					causarius[0].celeritas = false;
+					causarius[1].celeritas = false;
 				}
 			}
 
