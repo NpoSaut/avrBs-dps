@@ -39,12 +39,10 @@ void Init (void) __attribute__ ((naked)) __attribute__ ((section (".init5")));
 void Init (void)
 {
 	// Светодиоды.
-	reg.portC.pin4.out();
-	reg.portC.pin5.out();
 	reg.portD.pin7.out();
-	reg.portC.pin4 = true;
-	reg.portC.pin5 = true;
 	reg.portD.pin7 = true;
+	configSelfComplectPin();
+	lconfig();
 
 	// Watchdog
 	wdt_enable (WDTO_500MS);
@@ -255,14 +253,14 @@ void sysDiagnostics (uint16_t a)
 								};
 			if (unit == Unit::IPD)
 			{
-				if (reg.portB.pin7 == 0)
+				if (isSelfComplectA ())
 					canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
 				else
 					canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet);
 			}
 			else if (unit == Unit::BS_DPS)
 			{
-				if (reg.portB.pin7 == 0)
+				if (isSelfComplectA ())
 					canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
 				else
 					canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
@@ -276,7 +274,7 @@ void sysDiagnostics (uint16_t a)
 //			eeprom_update_byte( adr+2, canDat.get<CanRx::SYS_DIAGNOSTICS>() [3] );
 //			eeprom_update_byte( adr+3, canDat.get<CanRx::SYS_DIAGNOSTICS>() [2] );
 //		}
-//		else if ( request == Request::DIST_TRAVEL_READ_A && reg.portB.pin7 == 0 )
+//		else if ( request == Request::DIST_TRAVEL_READ_A && isSelfComplectA () )
 //		{
 //			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
 //			uint8_t packet[5] = {
@@ -289,7 +287,7 @@ void sysDiagnostics (uint16_t a)
 //
 //			canDat.send<CanTx::AUX_RESOURCE_IPD_A> (packet);
 //		}
-//		else if ( request == Request::DIST_TRAVEL_READ_B && reg.portB.pin7 != 0 )
+//		else if ( request == Request::DIST_TRAVEL_READ_B && !isSelfComplectA () )
 //		{
 //			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
 //			uint8_t packet[5] = {
@@ -311,7 +309,7 @@ void sysDiagnostics (uint16_t a)
 					0,
 					0
 								};
-			if (reg.portB.pin7 == 0)
+			if (isSelfComplectA ())
 				canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
 			else
 				canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
@@ -328,31 +326,31 @@ KptType kpt ( _cast( Complex<uint16_t>, data.member<ClubOut1>() )[0], _cast( Com
 
 void kptRiseA (uint16_t)
 {
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 		kpt.rise();
 }
 
 void kptRiseB (uint16_t)
 {
-	if (reg.portB.pin7 == 1) // второй полукомплект
+	if (!isSelfComplectA ()) // второй полукомплект
 		kpt.rise();
 }
 
 void kptFallA (uint16_t)
 {
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 		kpt.fall();
 }
 
 void kptFallB (uint16_t)
 {
-	if (reg.portB.pin7 == 1) // второй полукомплект
+	if (!isSelfComplectA ()) // второй полукомплект
 		kpt.fall();
 }
 
 void kptRiseTimeA (uint16_t dataPointer)
 {
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
@@ -362,7 +360,7 @@ void kptRiseTimeA (uint16_t dataPointer)
 
 void kptRiseTimeB (uint16_t dataPointer)
 {
-	if (reg.portB.pin7 == 1) // второй полукомплект
+	if (!isSelfComplectA ()) // второй полукомплект
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
@@ -372,7 +370,7 @@ void kptRiseTimeB (uint16_t dataPointer)
 
 void kptFallTimeA (uint16_t dataPointer)
 {
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
@@ -382,7 +380,7 @@ void kptFallTimeA (uint16_t dataPointer)
 
 void kptFallTimeB (uint16_t dataPointer)
 {
-	if (reg.portB.pin7 == 1) // второй полукомплект
+	if (!isSelfComplectA ()) // второй полукомплект
 	{
 		typedef const uint8_t Data[1];
 		Data& data = *( (Data *)(dataPointer) );
@@ -403,13 +401,13 @@ void kptCommandParse ()
 // ---------------------------------------------- ДПС -------------------------------------------►
 
 typedef
-CeleritasSpatiumDimetior  < &Register::portC, 4, 5, &Register::portB, 7,
-							CanDatType, canDat,
+CeleritasSpatiumDimetior  < CanDatType, canDat,
 							ClockType, clock,
 							SchedulerType, scheduler >
 DpsType;
 
-DpsType	dps ( 	&Register::portC,
+DpsType	dps ( 	Delegate<void (bool)>::from_function< &lset<0> >(), Delegate<void (bool)>::from_function< &lset<1> >(), isSelfComplectA(),
+				&Register::portC,
 				com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
 				InterruptHandler::from_method <KptType, &KptType::lisPlusPlus> (&kpt),
 				InterruptHandler::from_method <KptType, &KptType::correctKptDistancePlusPlus> (&kpt) );
@@ -478,13 +476,13 @@ void mcoState (uint16_t pointer)
 
 void mcoStateA (uint16_t pointer)
 {
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 		mcoState (pointer);
 }
 
 void mcoStateB (uint16_t pointer)
 {
-	if (reg.portB.pin7 == 1) // второй полукомплект
+	if (!isSelfComplectA ()) // второй полукомплект
 		mcoState (pointer);
 }
 
@@ -504,13 +502,13 @@ void mcoAuxResControl (uint16_t pointer)
 
 void mcoAuxResA (uint16_t pointer)
 {
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 		mcoAuxResControl (pointer);
 }
 
 void mcoAuxResB (uint16_t pointer)
 {
-	if (reg.portB.pin7 == 1) // второй полукомплект
+	if (!isSelfComplectA ()) // второй полукомплект
 		mcoAuxResControl (pointer);
 }
 
@@ -762,7 +760,7 @@ int main ()
 	canDat.rxHandler<CanTx::SYS_DATA_A>() = SoftIntHandler::from_method <MPHType, &MPHType::getLeftDataMessage> (&mph); // Если кто-то ещё ответит, то обновить мои данные
 	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::getQueryMessage> (&mph);
 
-	if (reg.portB.pin7 == 0) // первый полукомплект
+	if (isSelfComplectA ()) // первый полукомплект
 	{
 		canDat.rxHandler<CanRx::MM_NEUTRAL>() = SoftIntHandler::from_method <NeutralInsertionType, &NeutralInsertionType::getEcData> (&neutralInsertion);
 	}
@@ -798,7 +796,7 @@ int main ()
 				(uint8_t) (programmingCan.getCheckSum() & 0xFF),
 				(uint8_t) (programmingCan.getCheckSum() >> 8)
 							};
-		if (reg.portB.pin7 == 0)
+		if (isSelfComplectA ())
 		{
 			canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
 			_delay_ms (10);
@@ -841,7 +839,7 @@ int main ()
 //					0
 //									};
 //			dispatcher.maxSize = 0;
-//			if (reg.portB.pin7 == 0) // первый полукомплект
+//			if (isSelfComplectA ()) // первый полукомплект
 //				canDat.send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
 //			else
 //				canDat.send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);

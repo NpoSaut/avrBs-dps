@@ -51,23 +51,16 @@
 //	- На пины-светодиоды lanterna0 и lanterna1, если выставлен флаг lanternaOperor выводится:
 //		в процессе движения: информация о состоянии каналов с частостой 1/16
 //		в режиме остановке: исправность каналов ДПСа
-template<Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, uint16_t minTempusPunctum,
-		uint16_t maxTempusPunctum, uint16_t maxCeleritas, uint32_t period>
 class Dimetior {
 public:
-	Dimetior (bool lanternaOperor) :
-			lanternaOperor (lanternaOperor), tractus (false), versusInversio (false),
+	Dimetior (Delegate<void (bool)> lanterna0Set, Delegate<void (bool)> lanterna1Set, bool lanternaOperor) :
+			lanterna0Set (lanterna0Set), lanterna1Set (lanterna1Set), lanternaOperor (lanternaOperor),
+			tractus (false), versusInversio (false),
 			celeritas (0), acceleratio (0), acceleratioColum (0),
-			impulsio ({ 0, 0 }), impulsioLanterna ({ 0, 0 }), tempusPunctum ({ 0, 0 }),
+			impulsio ({ 0, 0 }), impulsioLanterna ({ 0, 0 }), lanternaState ({true, true}), tempusPunctum ({ 0, 0 }),
 			affectus (0), versusRotatio ({ !positio, !positio }), versusDynamic(0),
 			causarius (false), versusCausarius (false), commoratio (true)
 	{
-//		if (lanternaOperor)
-//		{
-		(reg.*lanternaPortus).pin<lanterna0> ().out ();
-		(reg.*lanternaPortus).pin<lanterna1> ().out ();
-//		}
-
 		constituoDiametros (1250);
 		constituoCogs (42);
 		positio = EepromData::DpsPosition::Left;
@@ -145,10 +138,11 @@ public:
 					if (lanternaOperor)
 						if (impulsioLanterna[canalis] % 16 == 0) // мигать с периодом 1/16
 						{
+							lanternaState[canalis] = !lanternaState[canalis];
 							if (canalis)
-								(reg.*lanternaPortus).pin<lanterna1> ().toggle ();
+								lanterna1Set (lanternaState[canalis]);
 							else
-								(reg.*lanternaPortus).pin<lanterna0> ().toggle ();
+								lanterna0Set (lanternaState[canalis]);
 						}
 				}
 			}
@@ -258,10 +252,24 @@ public:
 	// --- КОНЕЦ ---
 
 private:
-	enum {
-		maxCeleritasError = maxCeleritas / minTempusPunctum
-	};
+	Delegate<void (bool)> lanterna0Set, lanterna1Set;
 	const bool lanternaOperor;
+
+	enum {
+		// Максимальная скорость в единицах (км/ч / 128)
+		maxCeleritas = 65535,
+		// Период стробирования (опоса состояния датчика) в мкс
+		period = 100,
+		// После прошествия этого времени по первому спаду произойдёт подсчёт
+		minTempusPunctum = 4096,
+		// 1/minTempusPunctum - относительная погрешность определения скорости.
+		// Время обновления показания на больших скоростях: minTempusPunctum * animadversor.period
+		maxCeleritasError = maxCeleritas / minTempusPunctum,
+		// Если в течении maxTempusPunctum отсутсвуют импульсы, то считаем, что скорость = 0.
+		// В секундах: maxTempusPunctum * animadversor.period
+		maxTempusPunctum = 16384,
+	};
+
 	bool tractus; // 0 - выбег или торможение, 1 - тяга
 	bool versusInversio;
 
@@ -273,6 +281,7 @@ private:
 	int16_t acceleratioColum; // Промежуточные коэф-ты в фильтре ускорения
 	uint16_t impulsio[2]; // Кол-во импульсов, пришедших по каналу
 	uint8_t impulsioLanterna[2]; // Это кол-во не обнуляется, чтобы корректно моргать лампочками
+	bool lanternaState[2]; // Текущее состояние, для мигания
 	uint16_t tempusPunctum[2];
 	uint8_t affectus; // состояние порта
 	struct VersusRotatio // Напрвление вращения (true - туда (по часовой стрелке), false - обратно)
@@ -303,12 +312,6 @@ private:
 
 	void computo (const uint8_t& can) __attribute__ ((noinline))
 	{
-//		// Для отладки --- УБРАТЬ
-//		if (retroCan != can)
-//			vicisNum++;
-//		retroCan = can;
-//		// конец --- для отладки -- УБРАТЬ
-
 		// Считаем скорость
 		uint16_t celeritasNovus = (((uint32_t (diametros) * 1447656) / period / cogs) * (impulsio[can] - 1))
 				/ tempusPunctum[can];
@@ -341,15 +344,18 @@ private:
 // Cкоростемер
 // -----------
 
-template < Port Register::*lanternaPortus, uint8_t lanterna0, uint8_t lanterna1, Port Register::*semiSynthesisPortus, uint8_t semiSynthesisPes,
-typename CanType, CanType& canDat,
-typename ClockType, ClockType& clock,
-typename Scheduler, Scheduler& scheduler >
+template <
+		typename CanType, CanType& canDat,
+		typename ClockType, ClockType& clock,
+		typename Scheduler, Scheduler& scheduler >
 class CeleritasSpatiumDimetior {
 public:
-	CeleritasSpatiumDimetior (Port Register::* accessusPortus, uint8_t& spatium, Safe<uint16_t>& celeritas,
+	CeleritasSpatiumDimetior ( Delegate<void (bool)> lanterna0Set, Delegate<void (bool)> lanterna1Set, bool isSelfComplectA,
+			Port Register::* accessusPortus, uint8_t& spatium, Safe<uint16_t>& celeritas,
 			Safe<uint16_t>& acceleratioEtAffectus, InterruptHandler odometer16dm0PlusPlus,
-			InterruptHandler odometer16dm1PlusPlus) :
+			InterruptHandler odometer16dm1PlusPlus)
+		:
+			lanterna0Set (lanterna0Set), lanterna1Set (lanterna1Set), isSelfComplectA (isSelfComplectA),
 			accessusPortus (accessusPortus), spatiumMeters (0), spatiumAdjustedMeters(0),
 			odometer16dmPlusPlus ({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
 			tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
@@ -373,15 +379,16 @@ public:
 		validCycles[0] = validCyclesEnough;
 		validCycles[1] = validCyclesEnough;
 
-//		dimetior[0] = new DimetiorType( 0 );
-//		dimetior[1] = new DimetiorType( 0 );
-		dimetior[0] = new DimetiorType( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 );
-		dimetior[1] = new DimetiorType( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 1 );
+//		dimetior[0] = new DimetiorType( lanterna0Set, lanterna1Set, 0 );
+//		dimetior[1] = new DimetiorType( lanterna0Set, lanterna1Set, 0 );
+		dimetior[0] = new Dimetior( lanterna0Set, lanterna1Set, isSelfComplectA );
+		dimetior[1] = new Dimetior( lanterna0Set, lanterna1Set, !isSelfComplectA );
 		accipioConstans (0);
 
-		(reg.*accessusPortus).in ();
-		(reg.*lanternaPortus).pin<lanterna0>().out ();
-		(reg.*lanternaPortus).pin<lanterna1>().out ();
+		(reg.*accessusPortus).pin<0>().in ();
+		(reg.*accessusPortus).pin<1>().in ();
+		(reg.*accessusPortus).pin<2>().in ();
+		(reg.*accessusPortus).pin<3>().in ();
 
 		// Инициализация линии связи
 		acceleratioEtAffectus <<= 0x74;// оба вперёд и исправны. Флаг перезагрузки
@@ -467,17 +474,9 @@ public:
 	bool repeto;// флаг перезагрузки в линию связи
 
 private:
-//	typedef CeleritasSpatiumDimetior< lanternaPortus, lanterna0, lanterna1, semiSynthesisPortus, semiSynthesisPes, CanType, canDat, Scheduler, scheduler > myType;
-	// После прошествия этого времени по первому спаду произойдёт подсчёт
-	// 1/minTempusPunctum - относительная погрешность определения скорости.
-	// Время обновления показания на больших скоростях: minTempusPunctum * animadversor.period
-	static constexpr uint16_t minTempusPunctum = 4096;
-	// Если в течении maxTempusPunctum отсутсвуют импульсы, то считаем, что скорость = 0.
-	// В секундах: maxTempusPunctum * animadversor.period
-	static constexpr uint16_t maxTempusPunctum = 16384;
-	// Максимальная скорость в единицах (км/ч / 128)
-	static constexpr uint16_t maxCeleritas = 65535;
-	static constexpr uint8_t maxCeleritasError = maxCeleritas / minTempusPunctum;
+	const Delegate<void (bool)> lanterna0Set, lanterna1Set;
+	const bool isSelfComplectA;
+
 	// Максимальное время в единицах productor.period, в течении которого расхождение по датчикам на 25% считается допустимым
 	static constexpr uint8_t maxTempusDifferens = 127;
 	// Максимальное время, в течении которого допускается отсутсвие скорости по обоим ДПС в режиме Тяга
@@ -486,8 +485,7 @@ private:
 	static constexpr uint8_t maxTempusRestitutioValidus = 63;
 
 	Alarm<Alarm0, 100> animadversor;
-	typedef Dimetior< lanternaPortus, lanterna0, lanterna1, minTempusPunctum, maxTempusPunctum, maxCeleritas, 100 > DimetiorType;
-	DimetiorType* dimetior[2];
+	Dimetior* dimetior[2];
 
 	typedef EcAdjust < CanType, canDat > EcAdjustType;
 	EcAdjustType ecAdjust;
@@ -636,7 +634,7 @@ private:
 
 			// Контроль обрыва обоих ДПС
 			bool duplarisTractus;
-			if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
+			if ( isSelfComplectA )
 				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_A> ()[7] & 0b11) == 0b11 );// признак двойной тяги
 			else
 				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11) == 0b11 );// признак двойной тяги
@@ -712,15 +710,15 @@ private:
 			// Индикация неисправности на стоянке
 			if ( dimetior[nCapio]->sicinCommoratio() )
 			{
-				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 ) // полукомплект A
+				if ( isSelfComplectA ) // полукомплект A
 				{
-					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom.dps0Good;
-					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom.dps0Good;
+					lanterna0Set (eeprom.dps0Good);
+					lanterna1Set (eeprom.dps0Good);
 				}
 				else
 				{
-					(reg.*lanternaPortus).pin<lanterna0>() = !eeprom.dps1Good;
-					(reg.*lanternaPortus).pin<lanterna1>() = !eeprom.dps1Good;
+					lanterna0Set (eeprom.dps1Good);
+					lanterna1Set (eeprom.dps1Good);
 				}
 			}
 
@@ -779,7 +777,7 @@ private:
 
 				uint8_t origDist[4] = {spatiumMeters[0], spatiumMeters[1], spatiumMeters[2], spatiumMeters[3]};
 
-				if ( (reg.*semiSynthesisPortus).pin<semiSynthesisPes>() == 0 )
+				if ( isSelfComplectA )
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
