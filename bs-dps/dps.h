@@ -54,12 +54,13 @@
 class Dimetior {
 public:
 	Dimetior (Delegate<void (bool)> lanterna0Set, Delegate<void (bool)> lanterna1Set, bool lanternaOperor) :
-			lanterna0Set (lanterna0Set), lanterna1Set (lanterna1Set), lanternaOperor (lanternaOperor),
-			tractus (false), versusInversio (false),
-			celeritas (0), acceleratio (0), acceleratioColum (0),
-			impulsio ({ 0, 0 }), impulsioLanterna ({ 0, 0 }), lanternaState ({true, true}), tempusPunctum ({ 0, 0 }),
-			affectus (0), versusRotatio ({ !positio, !positio }), versusDynamic(0),
-			causarius (false), versusCausarius (false), commoratio (true)
+			lanterna0Set (lanterna0Set), lanterna1Set (lanterna1Set), lanternaOperor (lanternaOperor), tractus (false), versusInversio (
+					false), celeritas (0), acceleratio (0), acceleratioColum (0), impulsio (
+			{ 0, 0 }), impulsioLanterna (
+			{ 0, 0 }), lanternaState (
+			{ true, true }), tempusPunctum (
+			{ 0, 0 }), affectus (0), versusRotatio (
+			{ !positio, !positio }), versusDynamic (0), causarius (false), versusCausarius (false), commoratio (true)
 	{
 		constituoDiametros (1250);
 		constituoCogs (42);
@@ -84,7 +85,7 @@ public:
 			uint32_t longitudo = 0;
 
 			// каналы, по которым произошёл подъём
-			for ( uint8_t canalis = 0; canalis < 2; canalis ++  )
+			for (uint8_t canalis = 0; canalis < 2; canalis++)
 			{
 				if (affectusCommutatio & (1 << canalis))
 				{
@@ -96,24 +97,22 @@ public:
 													// После остановки (оба счётчика = 0) необходимо 2 импульса по одному и 1 по другому,
 													// для того, чтобы вывести скорость
 
-
 					if (impulsio[canalis] > impulsio[!canalis]) // Метры идут только по одному каналу. По большему.
 						longitudo = longitudoImpulsio; // при переключении будет небольшая погрешность в большую сторону.
 
 					// Определение направления движения
 					uint8_t vr = ((affectus + canalis) / 2) & 1;
-					if ( vr != versusDynamic )
-						if ( impulsio[canalis] != 1 )
+					if (vr != versusDynamic)
+						if (impulsio[canalis] != 1)
 							versusCausarius = true;
 					versusDynamic = vr;
-
 
 					if (tempusPunctum[canalis] >= minTempusPunctum && // Прошло достаточно времени для точного определения скорости
 							(tractus || impulsio[canalis] >= 4)) // В режиме выбега повышаем порог чувствительности
 					{
 
-						causarius = (abs(impulsio[canalis] - impulsio[!canalis]) > 1)  // Не было нормального чередования
-									|| versusCausarius; // Направление менялось в течении измерения
+						causarius = (abs(impulsio[canalis] - impulsio[!canalis]) > 1) // Не было нормального чередования
+						|| versusCausarius; // Направление менялось в течении измерения
 
 						if (versusDynamic == versusRotatio.retro) // Направление "применяется" только после подтверждения
 							versusRotatio.modo = versusRotatio.retro; //  чтобы исключить 1-импульсные дёрганья в момент трогания/остановки
@@ -222,7 +221,7 @@ public:
 			// L = Pi * d(мм) / cogs / 100 * 65536
 			// d: 2966 - 200  => d*65536*Pi помещается в uint32_t
 			// Pi * 65536 = 205887,416172544
-			longitudoImpulsio = (uint32_t (diametros) * 205887) / ( cogs * 100);
+			longitudoImpulsio = (uint32_t (diametros) * 205887) / (cogs * 100);
 		}
 	}
 
@@ -240,7 +239,7 @@ public:
 			// L = Pi * d(мм) / cogs / 100 * 65536
 			// d: 2966 - 200  => d*65536*Pi помещается в uint32_t
 			// Pi * 65536 = 205887,416172544
-			longitudoImpulsio = (uint32_t (diametros) * 205887) / ( cogs * 100);
+			longitudoImpulsio = (uint32_t (diametros) * 205887) / (cogs * 100);
 		}
 	}
 
@@ -341,48 +340,259 @@ private:
 	}
 };
 
+// Выбирает из двух датчиков один
+class DimetiorChooser {
+public:
+	DimetiorSelector () : traction (false), previous (0), speedDeviationCritical (false)
+	{}
+
+	// Устанавливает признак наличия тяги (для алгоритма прошлифовка-блокировка)
+	void setTraction (bool traction)
+	{
+		this->traction = traction;
+	}
+
+	// Обрабатывает новое состояние датчиков
+	void processNewDimetiorsState (const Dimetior (*dimetiors)[2])
+	{
+		recordValidity (dimetiors);
+		recordSpeedDeviation (dimetiors);
+
+		// Выбирает датчик по набору критериев с приоритетом критериев.
+		//  - Каждый критерий принемает номер выбранного до этого датчика и выполняет свои проверки,
+		//    В результаты возвращает номер датчика, который выбрал сам.
+		//  - Критерии проверяются по очереди. Каждый следующий критерий получается более приоритетным.
+
+		// По-умолчанию отдаётся предпочтение предыдущему
+		uint8_t preferred = previous;
+		preferred = checkSlipBlock (dimetiors, preffered);
+		preferred = checkProlongedDeviation (dimetiors, preferred);
+		preferred = checkConfidentValidity (dimetiors, preferred);
+		preferred = checkValidity (dimetiors, preferred);
+		previous = preferred;
+	}
+
+	// Возвращает номер более подходящего датчика
+	uint8_t getBestDimetiorNumber () const
+	{
+		return previous;
+	}
+
+private:
+	// Уверенная исправность
+	class ConfidentValidity {
+	public:
+		ConfidentValidity (bool initValid = true) :
+				validCycles (initValid ? validCyclesEnough : 0)
+		{ }
+
+		// Принимает новое состояние исправности.
+		void recordNextState (bool valid)
+		{
+			if (valid)
+			{
+				if (validCycles < validCyclesEnough)
+					validCycles++;
+			}
+			else
+			{
+				validCycles = 0;
+			}
+		}
+
+		// Возвращает true в случае, когда исправность "установилась" (была достаточно давно)
+		bool isConfidentValid () const
+		{
+			return validCycles == validCyclesEnough;
+		}
+
+	private:
+		uint8_t validCycles; // Счётчик "машинных циклов", прошедших после появления исправности
+		static constexpr uint8_t validCyclesEnough = 128; // Достаточное для "уверенной исправности" число циклов с исправностью
+	};
+
+	// Интегральная характеристика, показвыающая разянтся ли показания скоростей
+	class DeviationSupervisor
+	{
+	public:
+		DeviationSupervisor ()
+			: measure (0)
+		{}
+
+		// Записывает "отсчёт" с показаниями скоростей
+		void recordNextSpeedSet (const uint16_t (*speeds)[2])
+		{
+			if ( abs( int16_t(speeds[0]) - int16_t(speeds[1]) ) > speedLimit )
+			{
+				if (measure != 255)
+					measure ++;
+			}
+			else
+			{
+				if (measure != 0)
+					measure --;
+			}
+
+		}
+
+		// Возвращает true в случае "длительного существенного расхождения"
+		bool isDeviationCritical () const
+		{
+			return measure > boundary;
+		}
+
+	private:
+		// Каждый "отсчёт" сравниваются скорости, если они расходятся больше, чем на speedLimit, то к measure +1, в противном случае -1
+		uint8_t measure; // Мера расхождения
+		static constexpr uint8_t boundary = 128; // Граница, выше которой расхождение считается критическим
+		static constexpr uint16_t speedLimit = 5*128; // Предел в км/ч * 128. Выше - считается как расхождения, ниже - считается как совпадение
+	};
+
+	bool traction;
+	uint8_t previous;
+	bool speedDeviationCritical;
+	ConfidentValidity confidentValidity[2];
+	DeviationSupervisor deviationSupervisor;
+
+	// Ведёт статистику недостоверности для получения "уверенной достоверности"
+	void recordValidity (const Dimetior (*dimetiors)[2])
+	{
+		for (uint8_t i = 0; i < 2; i ++)
+			if ( !dimetiors[i]->sicinCommoratio() ) // Достоверность учитывается только на стоянке
+				confidentValidity[i].recordNextState( !dimetiors[i]->sicinCausarius() );
+	}
+
+	// Ведёт статистику по разности скоростей датчиков
+	void recordSpeedDeviation (const Dimetior (*dimetiors)[2])
+	{
+		if ( confidentValidity[0].isConfidentValid() && confidentValidity[1].isConfidentValid() )
+		{
+			uint16_t speeds [2] = {dimetiors[0]->accipioCeleritas(), dimetiors[1]->accipioCeleritas()};
+			deviationSupervisor.recordNextSpeedSet(speeds);
+		}
+	}
+
+	// При тяге выбираем более медленный (если это существенно - больлше чем на 1 км/ч), при торможении - более быстрый
+	uint8_t checkSlipBlock (const Dimetior (*dimetiors)[2], uint8_t preferred)
+	{
+		if (tractus)
+		{
+			if ( dimetiors[preferred]->accipioCeleritas () > dimetiors[!preferred]->accipioCeleritas () + 128 )
+				return !preferred;
+			else
+				return preferred;
+		}
+		else // торможение
+		{
+			if ( dimetiors[preferred]->accipioCeleritas () + 128 < dimetiors[!preferred]->accipioCeleritas () )
+				return !preferred;
+			else
+				return preferred;
+		}
+	}
+
+	// В состоянии "затянувшегося отклонения" выбирает датчик с максимальной скоростью
+	uint8_t checkProlongedDeviation (const Dimetior (*dimetiors)[2], uint8_t preferred)
+	{
+		if ( deviationSupervisor.isDeviationCritical() )
+			return dimetiors[0]->accipioCeleritas() > dimetiors[1]->accipioCeleritas() : 0 : 1; // max
+		else
+			return preferred;
+	}
+
+	// Датчик должен быть уверенно достоверным в течении последнего времени.
+	bool checkConfidentValidity (const Dimetior (*dimetiors)[2], uint8_t preferred)
+	{
+		if ( !confidentValidity[preferred].isConfidentValid() && confidentValidity[!preferred].isConfidentValid() )
+			return !preferred;
+		else
+			return preferred;
+	}
+
+	// Датчик должен быть исправным (на случай если оба не являются "достоверно испраными")
+	bool checkValidity (const Dimetior (*dimetiors)[2], uint8_t preferred)
+	{
+		if ( dimetiors[preferred]->sicinCausarius() && !dimetiors[!preferred]->sicinCausarius() )
+			return !preferred;
+		else
+			return preferred;
+	}
+
+};
+
+// Контролирует "обрыв двух датчиков"
+template <typename CanType, CanType& canDat>
+class BothBreak
+{
+public:
+	BothBreak (bool isSelfComplectA)
+		: isSelfComplectA (isSelfComplectA), tractionWithoutSpeedCycles (0), bothBreak (false)
+	{}
+
+	void processStopAndTractionState (bool stop, bool traction)
+	{
+		if ( traction && !isDoubleTraction() && stop )// Стоим при тяге
+		{
+			if ( tractionWithoutSpeedCycles >= 76*2 ) // В течении времени 76 сек.
+				bothBreak = true;
+			else
+				tractionWithoutSpeedCycles ++;
+		}
+		else
+			tractionWithoutSpeedCycles = 0;
+	}
+
+	bool isBreak () const { return bothBreak; }
+
+private:
+	const bool isSelfComplectA;
+	uint8_t tractionWithoutSpeedCycles;
+	bool bothBreak;
+
+	// признак двойной тяги
+	bool isDoubleTraction () const
+	{
+		if ( isSelfComplectA )
+			return ( (canDat.template get<CanRx::MCO_LIMITS_A> ()[7] & 0b11) == 0b11 );
+		else
+			return ( (canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11) == 0b11 );
+	}
+};
+
 // Cкоростемер
 // -----------
 
-template <
-		typename CanType, CanType& canDat,
-		typename ClockType, ClockType& clock,
-		typename Scheduler, Scheduler& scheduler >
+template<typename CanType, CanType& canDat, typename ClockType, ClockType& clock, typename Scheduler,
+		Scheduler& scheduler>
 class CeleritasSpatiumDimetior {
 public:
-	CeleritasSpatiumDimetior ( Delegate<void (bool)> lanterna0Set, Delegate<void (bool)> lanterna1Set, bool isSelfComplectA,
-			Port Register::* accessusPortus, uint8_t& spatium, Safe<uint16_t>& celeritas,
-			Safe<uint16_t>& acceleratioEtAffectus, InterruptHandler odometer16dm0PlusPlus,
-			InterruptHandler odometer16dm1PlusPlus)
-		:
-			lanterna0Set (lanterna0Set), lanterna1Set (lanterna1Set), isSelfComplectA (isSelfComplectA),
-			accessusPortus (accessusPortus), spatiumMeters (0), spatiumAdjustedMeters(0),
-			odometer16dmPlusPlus ({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
-			tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
-			ecAdjust (
-					Delegate<uint16_t ()>::from_method<CeleritasSpatiumDimetior,
-							&CeleritasSpatiumDimetior::accipioCeleritas> (this)
-					,
-					Delegate<int32_t ()>::from_method<CeleritasSpatiumDimetior,
-							&CeleritasSpatiumDimetior::accipioSpatiumAdjustedMeters> (this)), animadversor (
-					InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (
-							this)), spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (
-					acceleratioEtAffectus), spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
-					retroRotundatioCeleritas (0), nCapio (0), tempusDifferens (0), tempusTractusCommoratio (0),
-					activus (0)
+	CeleritasSpatiumDimetior (Delegate<void (bool)> lanterna0Set, Delegate<void (bool)> lanterna1Set,
+							bool isSelfComplectA, Port Register::* accessusPortus, uint8_t& spatium, Safe<uint16_t>& celeritas,
+							Safe<uint16_t>& acceleratioEtAffectus, InterruptHandler odometer16dm0PlusPlus,
+							InterruptHandler odometer16dm1PlusPlus)
+			: lanterna0Set (lanterna0Set), lanterna1Set (lanterna1Set), isSelfComplectA (isSelfComplectA),
+			  accessusPortus (accessusPortus), spatiumMeters (0), spatiumAdjustedMeters (0),
+			  odometer16dmPlusPlus ({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
+			  tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
+			  ecAdjust ( Delegate<uint16_t ()>::from_method<CeleritasSpatiumDimetior,
+					  	&CeleritasSpatiumDimetior::accipioCeleritas> (this),
+					  	 Delegate<int32_t ()>::from_method<CeleritasSpatiumDimetior,
+						&CeleritasSpatiumDimetior::accipioSpatiumAdjustedMeters> (this)),
+			  animadversor ( InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (this) ),
+			  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (acceleratioEtAffectus),
+			  spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
+			  retroRotundatioCeleritas (0), dimetiorChooser(), bothBreak(), activus (0)
 
 	{
-		causarius[0] =
-		{	0,0,0};
-		causarius[1] =
-		{	0,0,0};
+		causarius[0] = {0,0,0};
+		causarius[1] = {0,0,0};
 		validCycles[0] = validCyclesEnough;
 		validCycles[1] = validCyclesEnough;
 
 //		dimetior[0] = new DimetiorType( lanterna0Set, lanterna1Set, 0 );
 //		dimetior[1] = new DimetiorType( lanterna0Set, lanterna1Set, 0 );
-		dimetior[0] = new Dimetior( lanterna0Set, lanterna1Set, isSelfComplectA );
-		dimetior[1] = new Dimetior( lanterna0Set, lanterna1Set, !isSelfComplectA );
+		dimetiors[0] = new Dimetior( lanterna0Set, lanterna1Set, isSelfComplectA );
+		dimetiors[1] = new Dimetior( lanterna0Set, lanterna1Set, !isSelfComplectA );
 		accipioConstans (0);
 
 		(reg.*accessusPortus).pin<0>().in ();
@@ -394,15 +604,12 @@ public:
 		acceleratioEtAffectus <<= 0x74;// оба вперёд и исправны. Флаг перезагрузки
 		celeritasProdo <<= 0;
 
-		scheduler.runIn(
-				Command
-				{	SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0},
-				500 );
+		scheduler.runIn( Command{SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0}, 500 );
 	}
 	~CeleritasSpatiumDimetior ()
 	{
-		delete dimetior[0];
-		delete dimetior[1];
+		delete dimetiors[0];
+		delete dimetiors[1];
 	}
 
 	void constituoActivus ()
@@ -427,18 +634,18 @@ public:
 	void constituoTractus ()
 	{
 		tractus = true;
-		dimetior[0]->constituoTractus();
-		dimetior[1]->constituoTractus();
+		dimetiors[0]->constituoTractus();
+		dimetiors[1]->constituoTractus();
 	}
 	void constituoNonTractus ()
 	{
 		tractus = false;
-		dimetior[0]->constituoNonTractus();
-		dimetior[1]->constituoNonTractus();
+		dimetiors[0]->constituoNonTractus();
+		dimetiors[1]->constituoNonTractus();
 	}
 
 	void constituoVersusInversio ( bool inversio )
-	{	dimetior[0]->constituoVersusInversio (inversio); dimetior[1]->constituoVersusInversio (inversio);}
+	{	dimetiors[0]->constituoVersusInversio (inversio); dimetiors[1]->constituoVersusInversio (inversio);}
 
 	bool sicinCausarius () const
 	{	return causarius[0] && causarius[1];}
@@ -446,19 +653,19 @@ public:
 	// Скрость в км/ч/256 + старший бит в младшем бите
 	const uint16_t celeritas () const
 	{
-		return signCeleritas( dimetior[nCapio]->accipioCeleritas() );
+		return signCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas() );
 	}
 
 	// Напрвление движения. 0 - вперёд
 	const uint8_t versus () const
 	{
-		return dimetior[nCapio]->accipioVersus();
+		return dimetiors[nCapio]->accipioVersus();
 	}
 
 	// диаметр бандажа
 	const uint16_t diametros (const uint8_t& n) const
 	{
-		return dimetior[n]->accipioDiametros();
+		return dimetiors[n]->accipioDiametros();
 	}
 
 	void takeEcDataForAdjust(uint16_t pointerToData)
@@ -468,7 +675,7 @@ public:
 
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters;// пройденный путь в метрах
-	Complex<int32_t> spatiumAdjustedMeters; // пройденный путь с подстройкой под ЭК
+	Complex<int32_t> spatiumAdjustedMeters;// пройденный путь с подстройкой под ЭК
 	InterruptHandler odometer16dmPlusPlus[2];// Делагаты функций, делающийх ++ к одометрам
 
 	bool repeto;// флаг перезагрузки в линию связи
@@ -477,15 +684,8 @@ private:
 	const Delegate<void (bool)> lanterna0Set, lanterna1Set;
 	const bool isSelfComplectA;
 
-	// Максимальное время в единицах productor.period, в течении которого расхождение по датчикам на 25% считается допустимым
-	static constexpr uint8_t maxTempusDifferens = 127;
-	// Максимальное время, в течении которого допускается отсутсвие скорости по обоим ДПС в режиме Тяга
-	static constexpr uint8_t maxTempusTractusCommoratio = 127;
-	// Время в единицах productor.period, по истечении которого происходит восстановление испорченности, если не было расхождения более 25%
-	static constexpr uint8_t maxTempusRestitutioValidus = 63;
-
 	Alarm<Alarm0, 100> animadversor;
-	Dimetior* dimetior[2];
+	Dimetior* dimetiors[2];
 
 	typedef EcAdjust < CanType, canDat > EcAdjustType;
 	EcAdjustType ecAdjust;
@@ -502,21 +702,9 @@ private:
 
 	uint16_t retroRotundatioCeleritas;// прошлое округлённое значение скорости. Для нужд округления с гистерезисом.
 
-	bool nCapio;
-	uint8_t nMax; // Датчик с максимальной скоростью
-	uint8_t tempusDifferens;// время, в течении которого сохраняется разность показаний ДПС более 25%
-	uint8_t tempusTractusCommoratio;// время, в течении которого стоят оба ДПС в режиме Тяга
+	DimetiorChooser dimetiorChooser;
+	BothBreak<CanType, canDat> bothBreak;
 	uint8_t activus;// 0 - пассивен, 1 - активен
-
-	struct Causarius
-	{
-		uint8_t vicis :1;
-		uint8_t conjuctio :1; // Эти критерии исправности могут быть выставлены только извне
-		uint8_t celeritas :1;//
-	};
-	Bitfield<Causarius> causarius[2];
-	uint8_t validCycles[2]; // Счётчик "машинных циклов" после появления достоверности датчика. Циклы с нулевой скоростью не считаются.
-	static constexpr uint8_t validCyclesEnough = 128; // После этого числа машинных циклов с исправным датчиком на него станет возможным переключение
 
 	// Вызывается c периодом animadversor.period (100 мкс)
 	void animadversio ()
@@ -535,10 +723,10 @@ private:
 
 	void corpusVicissim (uint16_t affectus)
 	{
-		uint32_t spatium0 = dimetior[0]->punctum (affectus & 0b11);
-		uint32_t spatium1 = dimetior[1]->punctum (affectus / 4);
+		uint32_t spatium0 = dimetiors[0]->punctum (affectus & 0b11);
+		uint32_t spatium1 = dimetiors[1]->punctum (affectus / 4);
 		// накапливать пройденный путь по выбранному датчику
-		uint32_t appendicula = nCapio ? spatium1 : spatium0;
+		uint32_t appendicula = dimetiorChooser.getBestDimetiorNumber() == 1 ? spatium1 : spatium0;
 
 		if (appendicula != 0)
 		{
@@ -576,89 +764,10 @@ private:
 	{
 		if (activus)
 		{
-			// Анализ показаний датчиков, выбор ДПС, установка неисправности
-			nMax =  nMax == 0 ?
-					 ( (dimetior[0]->accipioCeleritas() + 64) <  dimetior[1]->accipioCeleritas() )
-					:(  dimetior[0]->accipioCeleritas() 	  < (dimetior[1]->accipioCeleritas() + 64) );
-			// +64 чтобы предотвратить постоянное переключение
+			dimetiorChooser.setTraction (tractus);
+			dimetiorChooser.processNewDimetiorsState (dimetiors);
 
-			// Неисправность по чередованию
-			causarius[0].vicis = dimetior[0]->sicinCausarius();
-			causarius[1].vicis = dimetior[1]->sicinCausarius();
-
-			// Неиспрвность по разности скоростей
-			if ( !dimetior[0]->sicinCausarius() && !dimetior[1]->sicinCausarius() )
-			{
-				if ( dimetior[nMax]->accipioCeleritas() > 1280 &&
-						abs( dimetior[nMax]->accipioCeleritas() - dimetior[!nMax]->accipioCeleritas() )
-						> dimetior[nMax]->accipioCeleritas()/4 ) // Если разброс большой (и больше 10км/ч)
-				{
-					if (tempusDifferens == maxTempusDifferens) // довольно давно
-						causarius[!nMax].celeritas = true;
-					else
-						tempusDifferens ++;
-				}
-				else
-				{
-					tempusDifferens = 0;
-					causarius[0].celeritas = false;
-					causarius[1].celeritas = false;
-				}
-			}
-
-			// В ход датчик пускается не сразу после воостановления исправности
-			for (uint8_t i = 0; i < 2; i ++)
-				if ( causarius[i] )
-					validCycles[i] = 0;
-				else if ( !dimetior[i]->sicinCommoratio() && validCycles[i] < validCyclesEnough )
-					validCycles[i] ++;
-
-			// Выбор датчика
-			if ( validCycles[0] >= validCyclesEnough && validCycles[1] >= validCyclesEnough )
-			{
-				bool potentiaCapio = tractus ^ nMax;
-				if ( !dimetior[potentiaCapio]->sicinCommoratio() )
-					nCapio = potentiaCapio;
-				else
-					nCapio = !potentiaCapio;
-			}
-			else  // не работает один из каналов
-			{
-				if ( validCycles[0] >= validCyclesEnough )
-					nCapio = 0;
-				else if ( validCycles[1] >= validCyclesEnough )
-					nCapio = 1;
-				else
-					nCapio = nMax;
-			}
-
-			// Контроль обрыва обоих ДПС
-			bool duplarisTractus;
-			if ( isSelfComplectA )
-				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_A> ()[7] & 0b11) == 0b11 );// признак двойной тяги
-			else
-				duplarisTractus = ( (canDat.template get<CanRx::MCO_LIMITS_B> ()[7] & 0b11) == 0b11 );// признак двойной тяги
-
-			if ( tractus && !duplarisTractus )// При тяге
-			{
-				if ( dimetior[nCapio]->sicinCommoratio() ) // стоим
-				{
-					if ( tempusTractusCommoratio >= 76*2 ) // В течении времени 76 сек.
-					{
-						causarius[0].conjuctio = true;
-						causarius[1].conjuctio = true;
-					}
-					else
-					tempusTractusCommoratio ++;
-				}
-				else
-				tempusTractusCommoratio = 0;
-			}
-			else
-			{
-				if ( tempusTractusCommoratio > 0 )
-				tempusTractusCommoratio = 0;
-			}
+			bothBreak.processStopAndTractionState (dimetiors[0]->sicinCommoratio() && dimetiors[1]->sicinCommoratio(), tractus);
 
 			// Выставление флагов
 			struct Mappa
@@ -675,21 +784,21 @@ private:
 			Bitfield<Mappa> mappa;
 
 			mappa.repeto = repeto;
-			mappa.versus0 = dimetior[0]->accipioVersus();
-			mappa.versus1 = dimetior[1]->accipioVersus();
-			mappa.commoratio = dimetior[nCapio]->sicinCommoratio();
-			mappa.dimetior = nCapio;
+			mappa.versus0 = dimetiors[0]->accipioVersus();
+			mappa.versus1 = dimetiors[1]->accipioVersus();
+			mappa.commoratio = dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio();
+			mappa.dimetior = dimetiorChooser.getBestDimetiorNumber();
 			// Неисправность != недостоверность
 			// Неисправность - это недостверность при достаточно большой скорости
 			// Потому что при смене направления и дребезге на стоянке возникает недостоверность
 			bool firmusCausarius[2] =
 			{	( causarius[0].vicis
-						&& dimetior[0]->accipioCeleritas() > 128*4
-						&& dimetior[1]->accipioCeleritas() > 128*4
+						&& dimetiors[0]->accipioCeleritas() > 128*4
+						&& dimetiors[1]->accipioCeleritas() > 128*4
 				),
 				( causarius[1].vicis
-						&& dimetior[0]->accipioCeleritas() > 128*4
-						&& dimetior[1]->accipioCeleritas() > 128*4
+						&& dimetiors[0]->accipioCeleritas() > 128*4
+						&& dimetiors[1]->accipioCeleritas() > 128*4
 				)
 			};
 			mappa.validus0 = !( firmusCausarius[0]
@@ -703,12 +812,12 @@ private:
 
 			// Сохранение неисправности в eeprom
 			if (!mappa.validus0)
-				eeprom.dps0Good = 0;
+			eeprom.dps0Good = 0;
 			if (!mappa.validus1)
-				eeprom.dps1Good = 0;
+			eeprom.dps1Good = 0;
 
 			// Индикация неисправности на стоянке
-			if ( dimetior[nCapio]->sicinCommoratio() )
+			if ( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio() )
 			{
 				if ( isSelfComplectA ) // полукомплект A
 				{
@@ -723,22 +832,22 @@ private:
 			}
 
 			// Вывод данных в линию связи
-			acceleratioEtAffectus <<= (uint16_t(dimetior[nCapio]->accipioAcceleratio()) * 256) | mappa;
+			acceleratioEtAffectus <<= (uint16_t(dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio()) * 256) | mappa;
 
-			uint16_t sigCel = signCeleritas( dimetior[nCapio]->accipioCeleritas() );
+			uint16_t sigCel = signCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas() );
 			celeritasProdo <<= sigCel;
 
 			// Вывод данных в CAN
 			if ( clock.getTime() > 1500 )// Запустит вывод сообщений через 1,5 секунды. За это время я подхвачу пройденный путь от ЭК.
 			{
 				// SAUT_INFO ---
-				Complex<uint16_t> diam0 = dimetior[0]->accipioDiametros();
-				Complex<uint16_t> diam1 = dimetior[1]->accipioDiametros();
+				Complex<uint16_t> diam0 = dimetiors[0]->accipioDiametros();
+				Complex<uint16_t> diam1 = dimetiors[1]->accipioDiametros();
 				uint8_t sautInfo[8] =
 				{
 					uint8_t(sigCel >> 8),
 					uint8_t(sigCel),
-					dimetior[nCapio]->accipioAcceleratio(),
+					dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio(),
 					diam0[1],
 					diam0[0],
 					diam1[1],
@@ -750,7 +859,7 @@ private:
 
 				// Округление скорости с гистерезисом
 				Complex<uint16_t> rotCel;
-				rotCel = rotundatioCeleritas( dimetior[nCapio]->accipioCeleritas() );
+				rotCel = rotundatioCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas() );
 
 				// Подстройка под ЭК
 				ecAdjust.adjust (spatiumAdjustedMeters);
@@ -759,29 +868,30 @@ private:
 				{
 					(mappa.validus0 == false && mappa.validus1 == false) ? (uint8_t)2 : (uint8_t)0,
 					uint8_t( (versus() * 128)
-							| ((dimetior[nCapio]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
-							| (!dimetior[nCapio]->sicinCommoratio() << 2)
+							| ((dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
+							| (!dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio() << 2)
 							| uint8_t( rotCel[1] & 0x1) ),// направление + наличие импульсов ДПС + старший бит скорости в км/ч
 					uint8_t( rotCel[0] ),// скорость в км/ч
 					uint8_t( spatiumAdjustedMeters[1] ),
 					uint8_t( spatiumAdjustedMeters[0] ),
 					uint8_t( spatiumAdjustedMeters[2] ),
 					uint8_t( (ecAdjust.isMismatchCritical() << 5)
-							| (causarius[!nCapio].celeritas << 4)
-							| (nCapio << 3)
-							| (firmusCausarius[!nCapio] << 2)
-							| (causarius[nCapio].celeritas << 1)
-							| (firmusCausarius[nCapio] << 0) ),
-					uint8_t( dimetior[nCapio]->accipioAcceleratio()*2 )
+							| (causarius[!dimetiorChooser.getBestDimetiorNumber()].celeritas << 4)
+							| (dimetiorChooser.getBestDimetiorNumber() << 3)
+							| (firmusCausarius[!dimetiorChooser.getBestDimetiorNumber()] << 2)
+							| (causarius[dimetiorChooser.getBestDimetiorNumber()].celeritas << 1)
+							| (firmusCausarius[dimetiorChooser.getBestDimetiorNumber()] << 0) ),
+					uint8_t( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio()*2 )
 				};
 
-				uint8_t origDist[4] = {spatiumMeters[0], spatiumMeters[1], spatiumMeters[2], spatiumMeters[3]};
+				uint8_t origDist[4] =
+				{	spatiumMeters[0], spatiumMeters[1], spatiumMeters[2], spatiumMeters[3]};
 
 				if ( isSelfComplectA )
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
-					canDat.template send<CanTx::MY_DEBUG_A>  (origDist);
+					canDat.template send<CanTx::MY_DEBUG_A> (origDist);
 
 					// IPD_DPS_FAULT ---
 					enum class DpsFault : uint8_t
@@ -816,47 +926,49 @@ private:
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
-					canDat.template send<CanTx::MY_DEBUG_B>  (origDist);
+					canDat.template send<CanTx::MY_DEBUG_B> (origDist);
 				}
 			}
 		}
 
 		scheduler.runIn(
-				Command {SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0},
+				Command
+				{	SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0},
 				500); // Выводить сообщения раз в 0,5 сек.
 	}
 
 	void accipioConstans (uint16_t )
 	{
 		scheduler.runIn(
-				Command{ SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioConstans>(this), 0},
+				Command
+				{	SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioConstans>(this), 0},
 				500 );
 
-			uint32_t tmp;
-			if ( eeprom.club.property.configuration.read (tmp) )
-			{
-				Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
-				dimetior[0]->positio = conf.dps0Position;
-				dimetior[1]->positio = conf.dps1Position;
-			}
+		uint32_t tmp;
+		if ( eeprom.club.property.configuration.read (tmp) )
+		{
+			Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
+			dimetiors[0]->positio = conf.dps0Position;
+			dimetiors[1]->positio = conf.dps1Position;
+		}
 
-			if ( eeprom.club.property.diameter0.read (tmp) )
-				dimetior[0]->constituoDiametros (tmp);
+		if ( eeprom.club.property.diameter0.read (tmp) )
+		dimetiors[0]->constituoDiametros (tmp);
 
-			if ( eeprom.club.property.diameter1.read (tmp) )
-				dimetior[1]->constituoDiametros (tmp);
+		if ( eeprom.club.property.diameter1.read (tmp) )
+		dimetiors[1]->constituoDiametros (tmp);
 
-			if ( eeprom.club.property.dpsDentos.read (tmp) )
-			{
-				dimetior[0]->constituoCogs (tmp);
-				dimetior[1]->constituoCogs (tmp);
-			}
+		if ( eeprom.club.property.dpsDentos.read (tmp) )
+		{
+			dimetiors[0]->constituoCogs (tmp);
+			dimetiors[1]->constituoCogs (tmp);
+		}
 	}
 
 	void dpsFaultProduco (uint16_t dpsFault)
 	{
 		uint8_t data[2] =
-		{ (uint8_t) dpsFault, 0 };
+		{	(uint8_t) dpsFault, 0};
 		canDat.template send<CanTx::IPD_DPS_FAULT> (data);
 	}
 
@@ -871,16 +983,16 @@ private:
 	const uint16_t& rotundatioCeleritas (const uint16_t& cel) const
 	{
 		if (cel / 128 < retroRotundatioCeleritas)
-			((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 96) / 128;
+		((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 96) / 128;
 		else
-			((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 32) / 128;
+		((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 32) / 128;
 		return retroRotundatioCeleritas;
 	}
 
 	// Выдаёт скрость выбранного датчика в км/ч/128
 	uint16_t accipioCeleritas ()
 	{
-		return dimetior[nCapio]->accipioCeleritas ();
+		return dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas ();
 	}
 
 	int32_t accipioSpatiumMeters ()
