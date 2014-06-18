@@ -14,7 +14,7 @@
 #include <cpp/universal.h>
 #include <cpp/eeprom.h>
 #include <cpp/scheduler.h>
-#include "CanDat.h"
+#include "cpp/can-dat.h"
 #include "CanDesriptors.h"
 
 // ------------------------------------------- Ячейка -------------------------------------------►

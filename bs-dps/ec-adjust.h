@@ -13,7 +13,7 @@
 
 #include <cpp/universal.h>
 #include <cpp/delegate/delegate.hpp>
-#include "CanDat.h"
+#include "cpp/can-dat.h"
 #include "CanDesriptors.h"
 
 template < typename CanDatType, CanDatType& canDat >

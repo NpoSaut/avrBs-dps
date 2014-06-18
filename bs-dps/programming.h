@@ -53,9 +53,9 @@
 #include <cpp/io.h>
 #include <cpp/dispatcher.h>
 
-#include "ProgSpi.h"
+#include "cpp/prog-spi.h"
 #include "SautDat.h"
-#include "CanDat.h"
+#include "cpp/can-dat.h"
 #include "CanDesriptors.h"
 
 

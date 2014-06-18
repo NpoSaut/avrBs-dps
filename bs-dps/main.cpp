@@ -26,7 +26,7 @@
 #include "programming.h"
 #include "dps.h"
 #include "eeprom.h"
-#include "CanDat.h"
+#include "cpp/can-dat.h"
 #include "CanDesriptors.h"
 #include "kpt.h"
 #include "mph.h"

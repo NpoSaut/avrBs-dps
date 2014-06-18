@@ -26,7 +26,7 @@
 
 #include "hw_defines.h"
 
-#include "CanDat.h"
+#include "cpp/can-dat.h"
 #include "CanDesriptors.h"
 #include "mph.h"
 #include "ec-adjust.h"
