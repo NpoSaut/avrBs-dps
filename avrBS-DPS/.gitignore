@@ -1,0 +1,4 @@
+Release/*
+!Release/2es6.eeprom.bin
+!Release/DPS_CAN.FLA
+*~
