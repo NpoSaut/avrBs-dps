@@ -1,0 +1,3 @@
+[submodule "avrCppLibs"]
+	path = avrCppLibs
+	url = ../avrCppLibs.git
