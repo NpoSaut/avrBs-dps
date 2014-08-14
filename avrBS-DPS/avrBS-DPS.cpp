@@ -244,13 +244,29 @@ void sysDiagnostics (uint16_t a)
 	{
 		if ( request == Request::VERSION  )
 		{
-			uint8_t packet[5] = {
-					(uint8_t) Answer::VERSION,
-					(uint8_t) programmingCan.getVersion(),
-					(uint8_t) programmingCan.getSubversion(),
-					(uint8_t) (programmingCan.getCheckSum() & 0xFF),
-					(uint8_t) (programmingCan.getCheckSum() >> 8)
-								};
+			uint8_t packet[5];
+			if ( programmingCan.isAvailable () )
+			{
+				packet[0] =	(uint8_t) Answer::VERSION;
+				packet[1] =	(uint8_t) programmingCan.getVersion();
+				packet[2] =	(uint8_t) programmingCan.getSubversion();
+				packet[3] =	(uint8_t) (programmingCan.getCheckSum() & 0xFF);
+				packet[4] =	(uint8_t) (programmingCan.getCheckSum() >> 8);			
+			}
+			else
+			{
+				uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
+				uint16_t checkSumm = 0;
+				for (uint8_t i = 0; i < idSize; i ++)
+				checkSumm += pgm_read_word ((uint16_t *)&id + i);
+
+				packet[0] =	(uint8_t) Answer::VERSION;
+				packet[1] =	pgm_read_byte(&id.version);
+				packet[2] =	0;
+				packet[3] =	0;
+				packet[4] =	uint8_t (checkSumm);
+			}
+
 			if (unit == Unit::IPD)
 			{
 				if (isSelfComplectA ())
@@ -704,16 +720,26 @@ void commandParser ()
 
 		if (command.idRead)
 		{
-			data.member<DpsOut0>() = ( (uint16_t) programmingCan.getVersion() 			<< 8 ) | ( programmingCan.getCellManufactureYear() - 1980 );
-			data.member<DpsOut1>() = ( (uint16_t) programmingCan.getCellModification()  << 8 ) | programmingCan.getCellManufactureMonth();
-			data.member<DpsOut2>() = ( (uint16_t) programmingCan.getCellManufactureNumber()  );
-			data.member<DpsOut3>() = (    uint16_t ( programmingCan.getVersion() & 0xFF )
-										+ uint16_t ( (programmingCan.getCellManufactureYear()-1980) & 0xFF )
-										+ uint16_t ( programmingCan.getCellModification() & 0xFF )
-										+ uint16_t ( programmingCan.getCellManufactureMonth() & 0xFF )
-										+ uint16_t ( (programmingCan.getCellManufactureNumber() >> 8) & 0xFF )
-										+ uint16_t ( programmingCan.getCellManufactureNumber() & 0xFF )
-									 );
+			if ( programmingCan.isAvailable() )
+			{
+				data.member<DpsOut0>() = ( (uint16_t) programmingCan.getVersion() 			<< 8 ) | ( programmingCan.getCellManufactureYear() - 1980 );
+				data.member<DpsOut1>() = ( (uint16_t) programmingCan.getCellModification()  << 8 ) | programmingCan.getCellManufactureMonth();
+				data.member<DpsOut2>() = ( (uint16_t) programmingCan.getCellManufactureNumber()  );
+				data.member<DpsOut3>() = (    uint16_t ( programmingCan.getVersion() & 0xFF )
+											+ uint16_t ( (programmingCan.getCellManufactureYear()-1980) & 0xFF )
+											+ uint16_t ( programmingCan.getCellModification() & 0xFF )
+											+ uint16_t ( programmingCan.getCellManufactureMonth() & 0xFF )
+											+ uint16_t ( (programmingCan.getCellManufactureNumber() >> 8) & 0xFF )
+											+ uint16_t ( programmingCan.getCellManufactureNumber() & 0xFF )
+										 );
+			}
+			else
+			{
+				data.member<DpsOut0>() = ( (uint16_t) pgm_read_byte(&id.version) << 8 ) | pgm_read_byte(&id.year);
+				data.member<DpsOut1>() = ( (uint16_t) pgm_read_byte(&id.modif)   << 8 ) | pgm_read_byte(&id.manth);
+				data.member<DpsOut2>() = ( (uint16_t) pgm_read_byte(&id.numberH) << 8 ) | ( (uint16_t) pgm_read_byte(&id.numberL) );
+				data.member<DpsOut3>() = ( (uint16_t) pgm_read_byte(&id.parametersSummH)  << 8 ) | ( (uint16_t) pgm_read_byte(&id.parametersSummL) );
+			}
 		}
 
 		if (command.eepromRead)
@@ -789,13 +815,29 @@ int main ()
 
 	// После включения выдавать AUX_RESOURCE с версией
 	{
-		uint8_t packet[5] = {
-				(uint8_t) 0,
-				(uint8_t) programmingCan.getVersion(),
-				(uint8_t) programmingCan.getSubversion(),
-				(uint8_t) (programmingCan.getCheckSum() & 0xFF),
-				(uint8_t) (programmingCan.getCheckSum() >> 8)
-							};
+		uint8_t packet[5];
+		if ( programmingCan.isAvailable () )
+		{
+			packet[0] =	(uint8_t) 0;
+			packet[1] =	(uint8_t) programmingCan.getVersion();
+			packet[2] =	(uint8_t) programmingCan.getSubversion();
+			packet[3] =	(uint8_t) (programmingCan.getCheckSum() & 0xFF);
+			packet[4] =	(uint8_t) (programmingCan.getCheckSum() >> 8);
+		}
+		else
+		{
+			uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
+			uint16_t checkSumm = 0;
+			for (uint8_t i = 0; i < idSize; i ++)
+			checkSumm += pgm_read_word ((uint16_t *)&id + i);
+
+			packet[0] =	(uint8_t) 0;
+			packet[1] =	pgm_read_byte(&id.version);
+			packet[2] =	0;
+			packet[3] =	0;
+			packet[4] =	uint8_t (checkSumm);
+		}
+
 		if (isSelfComplectA ())
 		{
 			canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
