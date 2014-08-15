@@ -1247,7 +1247,7 @@ private:
 
 	uint8_t killerId;
 	bool reset;
-	bool resetMonitor;
+	bool interruptMonitoringProccess;
 };
 
 
@@ -1348,6 +1348,13 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getQueryMessage (
 								400 );
 			eeprom.club.cell[number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::read> (this) );
 		}
+	}
+	else
+	{
+		if (reg.portB.pin7 == 0) // первый полукомплект
+			canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+		else
+			canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
 	}
 }
 
@@ -1491,11 +1498,11 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16_t )
 {
-	if (!resetMonitor) // Нормальный режим работы
+	if (!interruptMonitoringProccess) // Нормальный режим работы
 	{
 		if (interrogateCell != 128) // Предыдущий опрос не завершён
 		{
-			resetMonitor = true;
+			interruptMonitoringProccess = true;
 			return;
 		}
 
@@ -1574,7 +1581,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 	}
 	else // Вызов функции с включенным resetMonitor означает конец сброса
 	{
-		resetMonitor = false;
+		interruptMonitoringProccess = false;
 	}
 
 	// Инициализация
@@ -1593,7 +1600,7 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkWrite (uint16_t written)
 {
-	if (!resetMonitor)
+	if (!interruptMonitoringProccess)
 	{
 		if (written)
 			eeprom.club.cell[interrogateCell].isGood(
@@ -1611,7 +1618,7 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16_t resPrev)
 {
-	if (!resetMonitor)
+	if (!interruptMonitoringProccess)
 	{
 		if (resPrev == 1) // записан, и без ошибок
 		{
