@@ -1292,9 +1292,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getWriteMessage (
 		else
 		{
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+				while (!canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
 			else
-				canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+				while (!canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
 		}
 	}
 }
@@ -1324,9 +1324,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getLeftDataMessag
 		else
 		{
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+				while (!canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
 			else
-				canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+				while (!canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
 		}
 	}
 }
@@ -1348,13 +1348,13 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getQueryMessage (
 								400 );
 			eeprom.club.cell[number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::read> (this) );
 		}
-	}
-	else
-	{
-		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
 		else
-			canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+		{
+			if (reg.portB.pin7 == 0) // первый полукомплект
+			while (!canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
+			else
+			while (!canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
+		}
 	}
 }
 
@@ -1520,9 +1520,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 				monitoredData.lengthWagon
 								};
 		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<CanTx::SYS_DATA_STATE_A> (sysDataState);
+			while (!canDat.template send<CanTx::SYS_DATA_STATE_A> (sysDataState));
 		else
-			canDat.template send<CanTx::SYS_DATA_STATE_B> (sysDataState);
+			while (!canDat.template send<CanTx::SYS_DATA_STATE_B> (sysDataState));
 
 
 		if ( monitoredData.written.configuration &&
@@ -1540,9 +1540,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					0
 									};
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
+				while (!canDat.template send<CanTx::SYS_DATA_STATE2_A> (sysDataState2));
 			else
-				canDat.template send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);
+				while (!canDat.template send<CanTx::SYS_DATA_STATE2_B> (sysDataState2));
 		}
 
 		if ( monitoredData.written.trackMPH &&
@@ -1559,9 +1559,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					0
 								};
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::IPD_PARAM_A> (ipdParam);
+				while (!canDat.template send<CanTx::IPD_PARAM_A> (ipdParam));
 			else
-				canDat.template send<CanTx::IPD_PARAM_B> (ipdParam);
+				while (!canDat.template send<CanTx::IPD_PARAM_B> (ipdParam));
 		}
 
 		if ( monitoredData.written.train &&
@@ -1574,9 +1574,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.category
 								};
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::MPH_STATE_A> (mphState);
+				while (!canDat.template send<CanTx::MPH_STATE_A> (mphState));
 			else
-				canDat.template send<CanTx::MPH_STATE_B> (mphState);
+				while (!canDat.template send<CanTx::MPH_STATE_B> (mphState));
 		}
 	}
 	else // Вызов функции с включенным resetMonitor означает конец сброса
@@ -1725,16 +1725,16 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::endOperation (con
 	if (status == Status::OK)
 	{
 		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<CanTx::SYS_DATA_A> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]});
+			while (!canDat.template send<CanTx::SYS_DATA_A> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]}));
 		else
-			canDat.template send<CanTx::SYS_DATA_B> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]});
+			while (!canDat.template send<CanTx::SYS_DATA_B> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]}));
 	}
 	else
 	{
 		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0});
+			while (!canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0}));
 		else
-			canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0});
+			while (!canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0}));
 	}
 
 	activePacket.number = 0;
