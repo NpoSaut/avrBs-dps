@@ -217,6 +217,8 @@ bool EeCell::write (const uint32_t& value, const SoftIntHandler& runAfterWrite)
 
 bool EeCell::read(uint32_t& value)
 {
+	uint8_t sreg = reg.status;
+	cli ();
 	if ( !EeCellStaticPrivate::activeWrite  && status.isReady() && data.isReady() )
 	{
 		EeCellStaticPrivate::Status s = status;
@@ -224,6 +226,7 @@ bool EeCell::read(uint32_t& value)
 		if (!s.unWritten)
 		{
 			Complex<uint32_t> d = (uint32_t) data;
+			reg.status = sreg;
 
 			uint8_t crc = 0xFF;
 			for (uint8_t i = 0; i < 4; i++)
@@ -238,10 +241,16 @@ bool EeCell::read(uint32_t& value)
 				return false;
 		}
 		else
+		{
+			reg.status = sreg;
 			return false;
+		}
 	}
 	else
+	{
+		reg.status = sreg;
 		return false;
+	}
 }
 
 void EeCell::isGood( const SoftIntHandler& resultGetter )
@@ -350,7 +359,6 @@ uint8_t EeCell::crc7x2 (uint8_t crcx2, uint8_t data)
         crcx2 = crcx2 & 0x80 ? (crcx2 << 1) ^ (0x37 * 2) : crcx2 << 1;
 	return crcx2;
 }
-
 
 void EeCell::writeStatus (uint16_t )
 {
@@ -566,7 +574,7 @@ struct EepromData
 			EeCell		coordStart;					//  9 - Начальная координата
 			EeCell		time;						// 10 - Время
 			EeCell		typeLoco; 					// 11 - Тип локомотива
-			EeCell		vWhite; 						// 12 - Допустимая скорость (на белый)
+			EeCell		vWhite; 					// 12 - Допустимая скорость (на белый)
 			EeCell		vRedYellow; 				// 13 - Скорость движения на КЖ
 			EeCell		blockLength;				// 14 - Приведённая длина блок-участка «Дозор»
 			EeCell		diameter0; 					// 15 - Диаметр бандажа колеса 1, мм
@@ -1249,8 +1257,6 @@ private:
 	bool reset;
 	bool interruptMonitoringProccess;
 };
-
-
 
 template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
