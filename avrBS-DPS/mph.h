@@ -1089,8 +1089,8 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 {
 	if (resetRequest == ResetRequest::No)
 	{
-		uint8_t& string = Complex<uint16_t> (byteStringNumber)[0];
-		uint8_t& byte = Complex<uint16_t> (byteStringNumber)[1];
+		uint8_t& string = *((uint8_t *)&byteStringNumber);
+		uint8_t& byte = *((uint8_t *)&byteStringNumber + 1);
 
 		if (byte == 14)
 		{
@@ -1110,7 +1110,6 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 			{
 				uint8_t data = eeprom.saut.string[string].data[byte];
 				reg.status = sreg;
-
 
 				// Восстановление "номера строки" в случае отсутсвия
 				eepromOpRunning = true; // приготовимся к записи
