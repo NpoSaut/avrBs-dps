@@ -490,7 +490,7 @@ struct EepromData
 	EepromData () {}
 
 	enum DpsPosition { Left = 0, Right = 1 };
-	enum VelocityGauge { CL = 0, KPD = 1 }; 	// Измеритель скорости
+	enum VelocityGauge { SL = 0, KPD = 1 }; 	// Измеритель скорости
 	enum IfSignal { ALS = 0, CKR = 1 };
 	enum AlarmSystem { ALSN = 0, CLUB = 1 };
 
