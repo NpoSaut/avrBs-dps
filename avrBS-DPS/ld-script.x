@@ -89,14 +89,6 @@ SECTIONS
     /* For code that needs to reside in the lower 128k progmem.  */
     *(.lowtext)
     *(.lowtext*)
-     __ctors_start = . ;
-     *(.ctors)
-     __ctors_end = . ;
-     __dtors_start = . ;
-     *(.dtors)
-     __dtors_end = . ;
-    KEEP(SORT(*)(.ctors))
-    KEEP(SORT(*)(.dtors))
    }
 
    .id : AT (0x100)
@@ -107,6 +99,14 @@ SECTIONS
 
    .text :
    {
+    __ctors_start = . ;
+     *(.ctors)
+     __ctors_end = . ;
+     __dtors_start = . ;
+     *(.dtors)
+     __dtors_end = . ;
+    KEEP(SORT(*)(.ctors))
+    KEEP(SORT(*)(.dtors))
     /* From this point on, we don't bother about wether the insns are
        below or above the 16 bits boundary.  */
     *(.init0)  /* Start here after reset.  */
