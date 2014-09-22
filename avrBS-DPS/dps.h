@@ -343,7 +343,7 @@ private:
 // Выбирает из двух датчиков один
 class DimetiorChooser {
 public:
-	DimetiorSelector () : traction (false), previous (0), speedDeviationCritical (false)
+	DimetiorChooser () : traction (false), previous (0), speedDeviationCritical (false)
 	{}
 
 	// Устанавливает признак наличия тяги (для алгоритма прошлифовка-блокировка)
@@ -353,19 +353,19 @@ public:
 	}
 
 	// Обрабатывает новое состояние датчиков
-	void processNewDimetiorsState (const Dimetior (*dimetiors)[2])
+	void processNewDimetiorsState (Dimetior * (&dimetiors) [2])
 	{
 		recordValidity (dimetiors);
 		recordSpeedDeviation (dimetiors);
 
 		// Выбирает датчик по набору критериев с приоритетом критериев.
-		//  - Каждый критерий принемает номер выбранного до этого датчика и выполняет свои проверки,
+		//  - Каждый критерий принимает номер выбранного до этого датчика и выполняет свои проверки,
 		//    В результаты возвращает номер датчика, который выбрал сам.
 		//  - Критерии проверяются по очереди. Каждый следующий критерий получается более приоритетным.
 
 		// По-умолчанию отдаётся предпочтение предыдущему
 		uint8_t preferred = previous;
-		preferred = checkSlipBlock (dimetiors, preffered);
+		preferred = checkSlipBlock (dimetiors, preferred);
 		preferred = checkProlongedDeviation (dimetiors, preferred);
 		preferred = checkConfidentValidity (dimetiors, preferred);
 		preferred = checkValidity (dimetiors, preferred);
@@ -377,13 +377,12 @@ public:
 	{
 		return previous;
 	}
-
-private:
+	
 	// Уверенная исправность
 	class ConfidentValidity {
-	public:
+		public:
 		ConfidentValidity (bool initValid = true) :
-				validCycles (initValid ? validCyclesEnough : 0)
+		validCycles (initValid ? validCyclesEnough : 0)
 		{ }
 
 		// Принимает новое состояние исправности.
@@ -392,7 +391,7 @@ private:
 			if (valid)
 			{
 				if (validCycles < validCyclesEnough)
-					validCycles++;
+				validCycles++;
 			}
 			else
 			{
@@ -406,31 +405,32 @@ private:
 			return validCycles == validCyclesEnough;
 		}
 
-	private:
+		private:
 		uint8_t validCycles; // Счётчик "машинных циклов", прошедших после появления исправности
 		static constexpr uint8_t validCyclesEnough = 128; // Достаточное для "уверенной исправности" число циклов с исправностью
 	};
+	ConfidentValidity confidentValidity[2];
 
 	// Интегральная характеристика, показвыающая разянтся ли показания скоростей
 	class DeviationSupervisor
 	{
-	public:
+		public:
 		DeviationSupervisor ()
-			: measure (0)
+		: measure (0)
 		{}
 
 		// Записывает "отсчёт" с показаниями скоростей
-		void recordNextSpeedSet (const uint16_t (*speeds)[2])
+		void recordNextSpeedSet (uint16_t (&speeds) [2])
 		{
 			if ( abs( int16_t(speeds[0]) - int16_t(speeds[1]) ) > speedLimit )
 			{
 				if (measure != 255)
-					measure ++;
+				measure ++;
 			}
 			else
 			{
 				if (measure != 0)
-					measure --;
+				measure --;
 			}
 
 		}
@@ -441,29 +441,29 @@ private:
 			return measure > boundary;
 		}
 
-	private:
+		private:
 		// Каждый "отсчёт" сравниваются скорости, если они расходятся больше, чем на speedLimit, то к measure +1, в противном случае -1
 		uint8_t measure; // Мера расхождения
 		static constexpr uint8_t boundary = 128; // Граница, выше которой расхождение считается критическим
 		static constexpr uint16_t speedLimit = 5*128; // Предел в км/ч * 128. Выше - считается как расхождения, ниже - считается как совпадение
 	};
+	DeviationSupervisor deviationSupervisor;
 
+private:
 	bool traction;
 	uint8_t previous;
 	bool speedDeviationCritical;
-	ConfidentValidity confidentValidity[2];
-	DeviationSupervisor deviationSupervisor;
 
 	// Ведёт статистику недостоверности для получения "уверенной достоверности"
-	void recordValidity (const Dimetior (*dimetiors)[2])
+	void recordValidity (Dimetior * (&dimetiors) [2])
 	{
 		for (uint8_t i = 0; i < 2; i ++)
-			if ( !dimetiors[i]->sicinCommoratio() ) // Достоверность учитывается только на стоянке
+			if ( !dimetiors[i]->sicinCommoratio() ) // Достоверность учитывается только в движении
 				confidentValidity[i].recordNextState( !dimetiors[i]->sicinCausarius() );
 	}
 
 	// Ведёт статистику по разности скоростей датчиков
-	void recordSpeedDeviation (const Dimetior (*dimetiors)[2])
+	void recordSpeedDeviation (Dimetior * (&dimetiors) [2])
 	{
 		if ( confidentValidity[0].isConfidentValid() && confidentValidity[1].isConfidentValid() )
 		{
@@ -473,9 +473,9 @@ private:
 	}
 
 	// При тяге выбираем более медленный (если это существенно - больлше чем на 1 км/ч), при торможении - более быстрый
-	uint8_t checkSlipBlock (const Dimetior (*dimetiors)[2], uint8_t preferred)
+	uint8_t checkSlipBlock (Dimetior * (&dimetiors) [2], uint8_t preferred)
 	{
-		if (tractus)
+		if (traction)
 		{
 			if ( dimetiors[preferred]->accipioCeleritas () > dimetiors[!preferred]->accipioCeleritas () + 128 )
 				return !preferred;
@@ -492,16 +492,16 @@ private:
 	}
 
 	// В состоянии "затянувшегося отклонения" выбирает датчик с максимальной скоростью
-	uint8_t checkProlongedDeviation (const Dimetior (*dimetiors)[2], uint8_t preferred)
+	uint8_t checkProlongedDeviation (Dimetior * (&dimetiors) [2], uint8_t preferred)
 	{
 		if ( deviationSupervisor.isDeviationCritical() )
-			return dimetiors[0]->accipioCeleritas() > dimetiors[1]->accipioCeleritas() : 0 : 1; // max
+			return dimetiors[0]->accipioCeleritas() > dimetiors[1]->accipioCeleritas() ? 0 : 1; // max
 		else
 			return preferred;
 	}
 
 	// Датчик должен быть уверенно достоверным в течении последнего времени.
-	bool checkConfidentValidity (const Dimetior (*dimetiors)[2], uint8_t preferred)
+	bool checkConfidentValidity (Dimetior * (&dimetiors) [2], uint8_t preferred)
 	{
 		if ( !confidentValidity[preferred].isConfidentValid() && confidentValidity[!preferred].isConfidentValid() )
 			return !preferred;
@@ -509,8 +509,8 @@ private:
 			return preferred;
 	}
 
-	// Датчик должен быть исправным (на случай если оба не являются "достоверно испраными")
-	bool checkValidity (const Dimetior (*dimetiors)[2], uint8_t preferred)
+	// Датчик должен быть исправным (на случай если оба не являются "достоверно исправными")
+	bool checkValidity (Dimetior * (&dimetiors) [2], uint8_t preferred)
 	{
 		if ( dimetiors[preferred]->sicinCausarius() && !dimetiors[!preferred]->sicinCausarius() )
 			return !preferred;
@@ -581,16 +581,9 @@ public:
 			  animadversor ( InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (this) ),
 			  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (acceleratioEtAffectus),
 			  spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
-			  retroRotundatioCeleritas (0), dimetiorChooser(), bothBreak(), activus (0)
+			  retroRotundatioCeleritas (0), dimetiorChooser(), bothBreak(isSelfComplectA), activus (0)
 
 	{
-		causarius[0] = {0,0,0};
-		causarius[1] = {0,0,0};
-		validCycles[0] = validCyclesEnough;
-		validCycles[1] = validCyclesEnough;
-
-//		dimetior[0] = new DimetiorType( lanterna0Set, lanterna1Set, 0 );
-//		dimetior[1] = new DimetiorType( lanterna0Set, lanterna1Set, 0 );
 		dimetiors[0] = new Dimetior( lanterna0Set, lanterna1Set, isSelfComplectA );
 		dimetiors[1] = new Dimetior( lanterna0Set, lanterna1Set, !isSelfComplectA );
 		accipioConstans (0);
@@ -647,8 +640,8 @@ public:
 	void constituoVersusInversio ( bool inversio )
 	{	dimetiors[0]->constituoVersusInversio (inversio); dimetiors[1]->constituoVersusInversio (inversio);}
 
-	bool sicinCausarius () const
-	{	return causarius[0] && causarius[1];}
+	bool sicinBothBrake () const
+	{	return bothBreak.isBreak();}
 
 	// Скрость в км/ч/256 + старший бит в младшем бите
 	const uint16_t celeritas () const
@@ -659,7 +652,7 @@ public:
 	// Напрвление движения. 0 - вперёд
 	const uint8_t versus () const
 	{
-		return dimetiors[nCapio]->accipioVersus();
+		return dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioVersus();
 	}
 
 	// диаметр бандажа
@@ -792,23 +785,17 @@ private:
 			// Неисправность - это недостверность при достаточно большой скорости
 			// Потому что при смене направления и дребезге на стоянке возникает недостоверность
 			bool firmusCausarius[2] =
-			{	( causarius[0].vicis
+			{	( dimetiors[0]->sicinCausarius()
 						&& dimetiors[0]->accipioCeleritas() > 128*4
 						&& dimetiors[1]->accipioCeleritas() > 128*4
 				),
-				( causarius[1].vicis
+				( dimetiors[1]->sicinCausarius()
 						&& dimetiors[0]->accipioCeleritas() > 128*4
 						&& dimetiors[1]->accipioCeleritas() > 128*4
 				)
 			};
-			mappa.validus0 = !( firmusCausarius[0]
-					|| causarius[0].celeritas
-					|| causarius[0].conjuctio
-			);
-			mappa.validus1 = !( firmusCausarius[1]
-					|| causarius[1].celeritas
-					|| causarius[1].conjuctio
-			);
+			mappa.validus0 = firmusCausarius[0];
+			mappa.validus1 = firmusCausarius[1];
 
 			// Сохранение неисправности в eeprom
 			if (!mappa.validus0)
@@ -876,10 +863,10 @@ private:
 					uint8_t( spatiumAdjustedMeters[0] ),
 					uint8_t( spatiumAdjustedMeters[2] ),
 					uint8_t( (ecAdjust.isMismatchCritical() << 5)
-							| (causarius[!dimetiorChooser.getBestDimetiorNumber()].celeritas << 4)
+							| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 4)
 							| (dimetiorChooser.getBestDimetiorNumber() << 3)
 							| (firmusCausarius[!dimetiorChooser.getBestDimetiorNumber()] << 2)
-							| (causarius[dimetiorChooser.getBestDimetiorNumber()].celeritas << 1)
+							| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 1)
 							| (firmusCausarius[dimetiorChooser.getBestDimetiorNumber()] << 0) ),
 					uint8_t( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio()*2 )
 				};
@@ -907,14 +894,14 @@ private:
 						Celeritas1
 					};
 					DpsFault dpsFault = DpsFault::AllValidus;
-					if ( causarius[0].vicis )
-					dpsFault = DpsFault::Causarius0;
-					if ( causarius[1].vicis )
-					dpsFault = DpsFault::Causarius1;
-					if ( causarius[0].vicis && causarius[1].vicis )
-					dpsFault = DpsFault::DuplarisCausarius;
-					if ( causarius[0].conjuctio && causarius[1].conjuctio )
-					dpsFault = DpsFault::DuplarisConjuctio;
+					if ( firmusCausarius[0] )
+						dpsFault = DpsFault::Causarius0;
+					if ( firmusCausarius[1] )
+						dpsFault = DpsFault::Causarius1;
+					if ( firmusCausarius[0] && firmusCausarius[1] )
+						dpsFault = DpsFault::DuplarisCausarius;
+					if ( bothBreak.isBreak() )
+						dpsFault = DpsFault::DuplarisConjuctio;
 
 					scheduler.runIn(
 							Command
