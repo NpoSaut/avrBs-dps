@@ -794,8 +794,8 @@ private:
 						&& dimetiors[1]->accipioCeleritas() > 128*4
 				)
 			};
-			mappa.validus0 = firmusCausarius[0];
-			mappa.validus1 = firmusCausarius[1];
+			mappa.validus0 = !firmusCausarius[0];
+			mappa.validus1 = !firmusCausarius[1];
 
 			// Сохранение неисправности в eeprom
 			if (!mappa.validus0)
