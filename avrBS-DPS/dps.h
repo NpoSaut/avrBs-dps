@@ -799,9 +799,9 @@ private:
 
 			// Сохранение неисправности в eeprom
 			if (!mappa.validus0)
-			eeprom.dps0Good = 0;
+				eeprom.dps0Good = 0;
 			if (!mappa.validus1)
-			eeprom.dps1Good = 0;
+				eeprom.dps1Good = 0;
 
 			// Индикация неисправности на стоянке
 			if ( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio() )
@@ -853,7 +853,7 @@ private:
 
 				uint8_t ipdState[8] =
 				{
-					(mappa.validus0 == false && mappa.validus1 == false) ? (uint8_t)2 : (uint8_t)0,
+					(mappa.validus0 == false && mappa.validus1 == false) || bothBreak.isBreak() ? (uint8_t)2 : (uint8_t)0,
 					uint8_t( (versus() * 128)
 							| ((dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
 							| (!dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio() << 2)
