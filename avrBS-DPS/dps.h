@@ -343,7 +343,7 @@ private:
 // Выбирает из двух датчиков один
 class DimetiorChooser {
 public:
-	DimetiorChooser () : traction (false), previous (0), speedDeviationCritical (false)
+	DimetiorChooser () : traction (false), previous (0), wasSwitch (false), speedDeviationCritical (false)
 	{}
 
 	// Устанавливает признак наличия тяги (для алгоритма прошлифовка-блокировка)
@@ -369,6 +369,8 @@ public:
 		preferred = checkProlongedDeviation (dimetiors, preferred);
 		preferred = checkConfidentValidity (dimetiors, preferred);
 		preferred = checkValidity (dimetiors, preferred);
+		
+		wasSwitch = (previous != preferred);
 		previous = preferred;
 	}
 
@@ -376,6 +378,12 @@ public:
 	uint8_t getBestDimetiorNumber () const
 	{
 		return previous;
+	}
+	
+	// Было ли переключене датчика при последнем processNewDimetiorsState ()
+	bool wasSwitchUntilLastProcessState () const
+	{
+		return wasSwitch;
 	}
 	
 	// Уверенная исправность
@@ -452,6 +460,7 @@ public:
 private:
 	bool traction;
 	uint8_t previous;
+	bool wasSwitch;
 	bool speedDeviationCritical;
 
 	// Ведёт статистику недостоверности для получения "уверенной достоверности"
@@ -581,7 +590,7 @@ public:
 			  animadversor ( InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (this) ),
 			  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (acceleratioEtAffectus),
 			  spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
-			  retroRotundatioCeleritas (0), dimetiorChooser(), bothBreak(isSelfComplectA), activus (0)
+			  rotundCeleritas (0), dimetiorChooser(), bothBreak(isSelfComplectA), activus (0)
 
 	{
 		dimetiors[0] = new Dimetior( lanterna0Set, lanterna1Set, isSelfComplectA );
@@ -665,6 +674,8 @@ public:
 	{
 		ecAdjust.takeEcData(pointerToData);
 	}
+	
+	
 
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters;// пройденный путь в метрах
@@ -693,11 +704,13 @@ private:
 	uint8_t spatiumDecimetersMultiple10;// путь в дециметрах, кратный 10; для перевода в метры
 	uint8_t spatiumDecimetersMulitple16;// путь в 1,6 м. Используется для ++ одометров
 
-	uint16_t retroRotundatioCeleritas;// прошлое округлённое значение скорости. Для нужд округления с гистерезисом.
+	Complex<uint16_t> rotundCeleritas;// прошлое округлённое значение скорости. Для нужд округления с гистерезисом.
 
 	DimetiorChooser dimetiorChooser;
 	BothBreak<CanType, canDat> bothBreak;
 	uint8_t activus;// 0 - пассивен, 1 - активен
+	
+	uint8_t auxResourceTimer;
 
 	// Вызывается c периодом animadversor.period (100 мкс)
 	void animadversio ()
@@ -845,8 +858,7 @@ private:
 				// IPD_STATE ---
 
 				// Округление скорости с гистерезисом
-				Complex<uint16_t> rotCel;
-				rotCel = rotundatioCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas() );
+				rotundCeleritas = rotundatioCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas );
 
 				// Подстройка под ЭК
 				ecAdjust.adjust (spatiumAdjustedMeters);
@@ -857,8 +869,8 @@ private:
 					uint8_t( (versus() * 128)
 							| ((dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
 							| (!dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio() << 2)
-							| uint8_t( rotCel[1] & 0x1) ),// направление + наличие импульсов ДПС + старший бит скорости в км/ч
-					uint8_t( rotCel[0] ),// скорость в км/ч
+							| uint8_t( (rotundCeleritas >> 15) & 1 ) ),// направление + наличие импульсов ДПС + старший бит скорости в км/ч
+					uint8_t( rotundCeleritas/128 ),// скорость в км/ч
 					uint8_t( spatiumAdjustedMeters[1] ),
 					uint8_t( spatiumAdjustedMeters[0] ),
 					uint8_t( spatiumAdjustedMeters[2] ),
@@ -873,12 +885,38 @@ private:
 
 				uint8_t origDist[4] =
 				{	spatiumMeters[0], spatiumMeters[1], spatiumMeters[2], spatiumMeters[3]};
+					
+				// AUX_RESORCE: RES_INTERNAL_WARNING ---
+				uint8_t auxResource[5] = {1, 0, 0, 0, 0};
+				if ( dimetiorChooser.wasSwitchUntilLastProcessState() )
+				{
+					auxResource[1] = 1;
+				}
+				else if ( auxResourceTimer++ >= 240 ) // Раз в 2 минуты
+				{
+					auxResourceTimer = 0;
+					auxResource[1] = 2;
+				}
+					
+				if ( auxResource[1] != 0 )
+				{
+					auxResource[2] = (firmusCausarius[dimetiorChooser.getBestDimetiorNumber()] << 0)
+							| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 1)
+							| (firmusCausarius[!dimetiorChooser.getBestDimetiorNumber()] << 2)
+							| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 3)
+							| (dimetiorChooser.getBestDimetiorNumber() << 4);
+					auxResource[3] = rotundatioCeleritas (dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas) / 128;
+					auxResource[4] = rotundatioCeleritas (dimetiors[!dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas) / 128;
+				}
 
 				if ( isSelfComplectA )
 				{
 					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
-					canDat.template send<CanTx::MY_DEBUG_A> (origDist);
+					if ( auxResource[1] != 0 )
+						canDat.template send<CanTx::AUX_RESOURCE_IPD_A> (auxResource);
+					else
+						canDat.template send<CanTx::MY_DEBUG_A> (origDist);
 
 					// IPD_DPS_FAULT ---
 					enum class DpsFault : uint8_t
@@ -913,7 +951,10 @@ private:
 				{
 					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
 					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
-					canDat.template send<CanTx::MY_DEBUG_B> (origDist);
+					if ( auxResource[1] != 0 )
+						canDat.template send<CanTx::AUX_RESOURCE_IPD_B> (auxResource);
+					else
+						canDat.template send<CanTx::MY_DEBUG_B> (origDist);
 				}
 			}
 		}
@@ -967,13 +1008,16 @@ private:
 	}
 
 	// Округление скорости до целых с гистерезисом
-	const uint16_t& rotundatioCeleritas (const uint16_t& cel) const
+	uint16_t rotundatioCeleritas (const uint16_t& cel, const uint16_t& retroCel) const
 	{
-		if (cel / 128 < retroRotundatioCeleritas)
-		((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 96) / 128;
+		uint16_t rotund;
+		
+		if (cel < retroCel)
+			rotund = cel + 96;
 		else
-		((CeleritasSpatiumDimetior*) this)->retroRotundatioCeleritas = (cel + 32) / 128;
-		return retroRotundatioCeleritas;
+			rotund = cel + 32;
+
+		return rotund;
 	}
 
 	// Выдаёт скрость выбранного датчика в км/ч/128
