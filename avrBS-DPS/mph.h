@@ -569,7 +569,7 @@ struct EepromData
 			EeCell		category; 					//  4 - Категория поезда
 			EeCell		lengthWheel;				//  5 - Длина состава в осях
 			EeCell		lengthWagon; 				//  6 - Длина состава в условных вагонах
-			EeCell		locoNumber; 				//  7 - Номер локомотива или ведущей секции многосекционного локомотива
+			EeCell		locoNumberSection; 			//  7 - Номер локомотива + номер секции
 			EeCell		weigth; 					//  8 - масса поезда
 			EeCell		coordStart;					//  9 - Начальная координата
 			EeCell		time;						// 10 - Время
@@ -648,15 +648,15 @@ struct EepromData
 			EeCell		locoTip;					// 108
 			EeCell		locoName1;					// 109
 			EeCell		locoName2;					// 110
-			EeCell		section;					// 111
-
-			EeCell		dps0Position;				// 112 conf.0
-			EeCell		dps1Position;				// 113 conf.2
-			EeCell		eks;						// 114
-			EeCell		tapKM130;					// 115
-			EeCell		velocityGauge;				// 116
-			EeCell		ifSignalSource;				// 117
-			EeCell		alarmSystem;				// 118
+			EeCell		locoNumber;					// 111
+			EeCell		section;					// 112 
+			
+			EeCell		cell113;					// 113 free
+			EeCell		cell114;					// 114 free
+			EeCell		cell115;					// 115 free
+			EeCell		cell116;					// 116 free
+			EeCell		cell117;					// 117 free
+			EeCell		cell118;					// 118 free
 			struct SautConfiguration
 			{
 				uint32_t		tapKM130			:1; // 0
@@ -803,15 +803,7 @@ void SautConvert::dataUpdate (uint16_t )
 	{
 		eepromOpRunning = true;
 
-		if (cellNumber == 7) // locoNumber
-		{
-			stringNumber = 1;
-			if ( eeprom.saut.property.locoNumberBigEndian.updateUnblock(
-					(uint16_t)Complex<uint16_t>{ data[1], data[0] },
-					SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
-				return;
-		}
-		else if (cellNumber == 15 || cellNumber == 16) // diameter0, diameter1
+		if (cellNumber == 15 || cellNumber == 16) // diameter0, diameter1
 		{
 			uint8_t num = (cellNumber == 16); // Номер вводимого бандажа
 			eepromOpRunning = false;
@@ -875,6 +867,14 @@ void SautConvert::dataUpdate (uint16_t )
 			}
 			else
 				reg.status = sreg;
+		}
+		else if (cellNumber == 111) // locoNumber
+		{
+			stringNumber = 1;
+			if ( eeprom.saut.property.locoNumberBigEndian.updateUnblock(
+			(uint16_t)Complex<uint16_t>{ data[1], data[0] },
+			SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+			return;
 		}
 		else if (cellNumber == 119) // Saut configuration
 		{
@@ -996,10 +996,10 @@ void SautConvert::dataUpdate (uint16_t )
 					(uint16_t)Complex<uint16_t>{ data[3], data[2] }, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
-		else if (cellNumber == 111) // section
+		else if (cellNumber == 112) // section
 		{
 			stringNumber = 1;
-			if ( eeprom.saut.property.sectionNumber.updateUnblock( data[0], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+			if ( eeprom.saut.property.sectionNumber.updateUnblock(data[3], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
 		else
