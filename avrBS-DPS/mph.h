@@ -677,6 +677,9 @@ struct EepromData
 	// Исправности датчиков
 	Eeprom<uint8_t> 		dps0Good;
 	Eeprom<uint8_t>			dps1Good;
+	
+	// Причина перезагрузки
+	Eeprom<uint8_t>			restartReason;
 
 } eeprom EEMEM;
 

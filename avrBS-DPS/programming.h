@@ -79,6 +79,8 @@ public:
 	uint8_t getCellManufactureMonth () const { return cellManufactureMonth; }
 	uint8_t getChannel () const { return channel; }
 	uint8_t getCellModification () const { return cellModification; }
+		
+	Delegate<void ()> reboot;
 
 private:
 	typedef int32_t (*GetPropertyFunction) (uint8_t key);
@@ -272,6 +274,8 @@ public:
 		Return( neighbour.rebootInProg() ? 0x0 : 0x20 );
 	}
 	void comParser ();
+	
+	Delegate<void ()> reboot;
 
 private:
 	ProgSpi::

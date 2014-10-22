@@ -10,7 +10,7 @@
 
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
-
+#include <avr/wdt.h>
 //#include <cpp/interrupt-dynamic.h>
 #include <cpp/io.h>
 #include <cpp/universal.h>
@@ -31,9 +31,7 @@
 #include "kpt.h"
 #include "mph.h"
 #include "neutral-insertion.h"
-
-
-
+#include "diagnostic.h"
 
 void Init (void) __attribute__ ((naked)) __attribute__ ((section (".init5")));
 void Init (void)
@@ -476,16 +474,18 @@ void mcoState (uint16_t pointer)
 	static uint32_t lastTime = 0;
 	uint32_t time = clock.getTime();
 	if ( time - lastTime > 4000 )
-		reboot();
+		diagnostic_restart(RestartReason::CO_LOST);
 	lastTime = time;
 
 	// Контроль выхода из конфигурации
-	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) &&	// выход БС-ДПС или �?ПД
-			clock.getTime() > 7000 && 	// проработали больше 7 секунд
-			dps.sicinActivus() && // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
-			!dps.sicinBothBrake() ) // если оба датчика неисправны, то перезагрузку не делать
+	if ( clock.getTime() > 7000 && 	// проработали больше 7 секунд
+		dps.sicinActivus() && // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
+		!dps.sicinBothBrake() ) // если оба датчика неисправны, то перезагрузку не делать
 	{
-		reboot ();
+		if( !(message[6] & (1 << 1)) )
+			diagnostic_restart(RestartReason::IPD_OUT);
+		if( !(message[7] & (1 << 6)) )
+			diagnostic_restart(RestartReason::DPS_OUT);
 	}
 
 }
@@ -512,7 +512,7 @@ void mcoAuxResControl (uint16_t pointer)
 			clock.getTime() > 7000 && 	// проработали больше 7 секунд
 			dps.sicinActivus() ) // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
 	{
-		reboot ();
+		diagnostic_restart(RestartReason::MPH_OUT);
 	}
 }
 
@@ -766,6 +766,38 @@ void unsetResetFlag (uint16_t)
 	dps.repeto = false;
 }
 
+// -------------------------------------- store restart reason ----------------------------------►
+
+void storeRestartReason (uint8_t val)
+{
+	eeprom.restartReason = val;
+}
+
+uint8_t restoreRestartReason ()
+{
+	return eeprom.restartReason;
+}
+
+void canBusOffHandler ()
+{
+	diagnostic_restart (RestartReason::CAN_BUSOFF);
+}
+
+void dispatcherOverflowHandler ()
+{
+	diagnostic_restart (RestartReason::DISPATCHER_OVER);
+}
+
+void schedulerFullHandler ()
+{
+	diagnostic_sendWarninReason(RestartReason::SCHEDULER_FULL);
+}
+
+void programmingRebootHandler ()
+{
+	diagnostic_restart(RestartReason::PROGRAM_MODE);
+}
+
 // --------------------------------------------- main -------------------------------------------►
 
 int main ()
@@ -808,6 +840,16 @@ int main ()
 	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_B>() = SoftIntHandler::from_function <&kptRiseTimeB>();
 	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler::from_function <&kptFallB>();
 	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallTimeB>();
+	
+	// Причина перезагрузки
+	diagnostic_storeDelegate = Delegate<void (uint8_t)>::from_function <&storeRestartReason> ();
+	diagnostic_restoreDelegate = Delegate<uint8_t ()>::from_function <&restoreRestartReason> ();
+	diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_A> > (&canDat);
+	canDat.busOffHandler = Delegate<void ()>::from_function <&canBusOffHandler> ();
+	dispatcher.overflowHandler = Delegate<void ()>::from_function <&dispatcherOverflowHandler> ();
+	scheduler.fullHandler = Delegate<void ()>::from_function <&schedulerFullHandler> ();
+	programmingCan.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();
+	programming.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();
 
 		dps.constituoActivus();
 
@@ -851,6 +893,8 @@ int main ()
 			canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
 		}
 	}
+	
+	diagnostic_sendReasonOfPreviousRestart();
 
 	scheduler.runIn( Command {SoftIntHandler::from_function<&unsetResetFlag>(), 0}, 7000 );
 
@@ -862,7 +906,7 @@ int main ()
     	{
     		eeprom.dps0Good = 1;
     		eeprom.dps1Good = 1;
-    		reboot();
+    		diagnostic_restart(RestartReason::BUTTON_PRESS);
     	}
 
 //    	static uint16_t ctr = 0;

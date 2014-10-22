@@ -152,6 +152,12 @@
     <Compile Include="CanDesriptors.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="diagnostic.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="diagnostic.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="dps.h">
       <SubType>compile</SubType>
     </Compile>

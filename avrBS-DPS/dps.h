@@ -887,7 +887,7 @@ private:
 				{	spatiumMeters[0], spatiumMeters[1], spatiumMeters[2], spatiumMeters[3]};
 					
 				// AUX_RESORCE: RES_INTERNAL_WARNING ---
-				uint8_t auxResource[5] = {1, 0, 0, 0, 0};
+				uint8_t auxResource[5] = {2, 0, 0, 0, 0};
 				if ( dimetiorChooser.wasSwitchUntilLastProcessState() )
 				{
 					auxResource[1] = 1;
