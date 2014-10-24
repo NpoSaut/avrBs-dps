@@ -783,19 +783,19 @@ void canBusOffHandler ()
 	diagnostic_restart (RestartReason::CAN_BUSOFF);
 }
 
-void dispatcherOverflowHandler ()
+void dispatcherOverflowHandler (uint16_t detail)
 {
-	diagnostic_restart (RestartReason::DISPATCHER_OVER);
+	diagnostic_restart (RestartReason::DISPATCHER_OVER, detail);
 }
 
 void schedulerFullHandler ()
 {
-	diagnostic_sendWarninReason(RestartReason::SCHEDULER_FULL);
+	diagnostic_sendWarninReason (RestartReason::SCHEDULER_FULL);
 }
 
 void programmingRebootHandler ()
 {
-	diagnostic_restart(RestartReason::PROGRAM_MODE);
+	diagnostic_restart (RestartReason::PROGRAM_MODE);
 }
 
 // --------------------------------------------- main -------------------------------------------►
@@ -844,9 +844,12 @@ int main ()
 	// Причина перезагрузки
 	diagnostic_storeDelegate = Delegate<void (uint8_t)>::from_function <&storeRestartReason> ();
 	diagnostic_restoreDelegate = Delegate<uint8_t ()>::from_function <&restoreRestartReason> ();
-	diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_A> > (&canDat);
+	if (isSelfComplectA())
+		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_A> > (&canDat);
+	else
+		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_B> > (&canDat);
 	canDat.busOffHandler = Delegate<void ()>::from_function <&canBusOffHandler> ();
-	dispatcher.overflowHandler = Delegate<void ()>::from_function <&dispatcherOverflowHandler> ();
+	dispatcher.overflowHandler = Delegate<void (uint16_t)>::from_function <&dispatcherOverflowHandler> ();
 	scheduler.fullHandler = Delegate<void ()>::from_function <&schedulerFullHandler> ();
 	programmingCan.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();
 	programming.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();

@@ -22,27 +22,27 @@ bool diagnostic_trySendAuxResource (const uint8_t (&message)[5])
 	return successSend;
 }
 
-bool diagnostic_sendRestartReason (RestartReason reason, bool previousWrited = false)
+bool diagnostic_sendRestartReason (RestartReason reason, bool previousWrited = false, uint16_t detail = 0)
 {
 	uint8_t data [5] = {
 		1,
 		previousWrited ? 2 : 1,
 		uint8_t (reason),
-		0,
-		0
+		uint8_t (detail >> 8),
+		uint8_t (detail)
 	};
 	
 	return diagnostic_trySendAuxResource(data);
 }
 
-void diagnostic_sendWarninReason (RestartReason reason)
+void diagnostic_sendWarninReason (RestartReason reason, uint16_t detail)
 {
 	uint8_t data [5] = {
 		2,
 		3,
 		uint8_t (reason),
-		0,
-		0
+		uint8_t (detail >> 8),
+		uint8_t (detail)
 	};
 		
 	diagnostic_trySendAuxResource(data);
@@ -59,10 +59,10 @@ void diagnostic_reboot ()
 	while (0);
 }
 
-void diagnostic_restart (RestartReason reason)
+void diagnostic_restart (RestartReason reason, uint16_t detail)
 {
 	if (!diagnostic_sendRestartReason(reason, false))
-	diagnostic_storeDelegate (uint8_t(reason));
+		diagnostic_storeDelegate (uint8_t(reason));
 	
 	diagnostic_reboot();
 }
