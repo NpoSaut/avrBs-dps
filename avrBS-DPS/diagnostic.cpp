@@ -16,10 +16,9 @@ AuxResourceMessage diagnostic_sendMessageDelegate;
 
 bool diagnostic_trySendAuxResource (const uint8_t (&message)[5])
 {
-	bool successSend = false;
-	for (uint8_t i = 0; i++ < 100 || !successSend; _delay_us(100))
-	successSend = diagnostic_sendMessageDelegate(message);
-	
+	volatile bool successSend = false;
+	for (uint8_t i = 0; i++ < 100 && !successSend; _delay_us(100))
+		successSend = diagnostic_sendMessageDelegate(message);
 	return successSend;
 }
 
