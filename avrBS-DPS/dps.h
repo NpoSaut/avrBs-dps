@@ -590,11 +590,12 @@ public:
 			  animadversor ( InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (this) ),
 			  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (acceleratioEtAffectus),
 			  spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
-			  rotundCeleritas (0), dimetiorChooser(), bothBreak(isSelfComplectA), activus (0)
+			  rotundCeleritas (0), dimetiorChooser(), bothBreak(isSelfComplectA), activus (0),
+			  dimetiorObj ({Dimetior(lanterna0Set, lanterna1Set, isSelfComplectA), Dimetior(lanterna0Set, lanterna1Set, !isSelfComplectA)})
 
 	{
-		dimetiors[0] = new Dimetior( lanterna0Set, lanterna1Set, isSelfComplectA );
-		dimetiors[1] = new Dimetior( lanterna0Set, lanterna1Set, !isSelfComplectA );
+		dimetiors[0] = &(dimetiorObj[0]);
+		dimetiors[1] = &(dimetiorObj[1]);
 		accipioConstans (0);
 
 		(reg.*accessusPortus).pin<0>().in ();
@@ -607,11 +608,6 @@ public:
 		celeritasProdo <<= 0;
 
 		scheduler.runIn( Command{SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0}, 500 );
-	}
-	~CeleritasSpatiumDimetior ()
-	{
-		delete dimetiors[0];
-		delete dimetiors[1];
 	}
 
 	void constituoActivus ()
@@ -689,6 +685,7 @@ private:
 	const bool isSelfComplectA;
 
 	Alarm<Alarm0, 100> animadversor;
+	Dimetior dimetiorObj[2];
 	Dimetior* dimetiors[2];
 
 	typedef EcAdjust < CanType, canDat > EcAdjustType;
