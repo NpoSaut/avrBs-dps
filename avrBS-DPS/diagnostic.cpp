@@ -61,7 +61,7 @@ void diagnostic_reboot ()
 
 void diagnostic_restart (RestartReason reason, uint16_t detail)
 {
-	if (!diagnostic_sendRestartReason(reason, false))
+	if (!diagnostic_sendRestartReason(reason, false, detail))
 		diagnostic_storeDelegate (uint8_t(reason));
 	
 	diagnostic_reboot();
