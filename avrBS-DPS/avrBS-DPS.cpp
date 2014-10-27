@@ -54,7 +54,7 @@ void Init (void)
 typedef Clock< Alarm< Alarm3A, 1000 >, uint32_t > ClockType;  // Обнуление через 50 суток
 ClockType clock;
 
-typedef Scheduler< ClockType, clock, 16, uint16_t > SchedulerType;
+typedef Scheduler< ClockType, clock, Dispatcher, dispatcher, 16, uint16_t > SchedulerType;
 SchedulerType scheduler;
 
 // ---------------------------------------------- CAN -------------------------------------------►
@@ -935,8 +935,6 @@ int main ()
 //    	}
 
     	dispatcher.invoke();
-    	wdt_reset();
-    	scheduler.invoke();
     	wdt_reset();
     }
 }
