@@ -24,6 +24,7 @@ enum RestartReason
 	CAN_BUSOFF = 7,
 	DISPATCHER_OVER = 8,
 	SCHEDULER_FULL = 9,
+	WATCHDOG = 10,
 	UNDEFINED = 0xFF
 };
 

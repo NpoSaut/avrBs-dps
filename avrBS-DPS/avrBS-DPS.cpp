@@ -19,6 +19,11 @@
 #include <cpp/timers.h>
 #include <util/delay.h>
 
+#define SMARTDOG_ALARM Alarm2
+#define SMARTDOG_WDT_TIME WDTO_15MS
+#define SMARTDOG_ALARM_TIME 10000
+#include <cpp/smartdog.h>
+
 #include "hw_defines.h"
 #include "SautCom.h"
 #include "SautDat.h"
@@ -43,7 +48,8 @@ void Init (void)
 	lconfig();
 
 	// Watchdog
-	wdt_enable (WDTO_500MS);
+	wdt_enable (WDTO_250MS);
+	// smartdog будет инициализирован позже
 
 	// Кнопка сброса
 	reg.portB.pin5.in();
@@ -675,7 +681,6 @@ private:
 	static const uint8_t rotationClockwiseCode [4];
 	uint8_t currentOperationSequence [4];
 
-
 	AlarmAdjust<Alarm1A> engine;
 	IpdEmulationMessage current;
 	uint8_t sautCurrentVelocity;
@@ -798,15 +803,15 @@ void programmingRebootHandler ()
 	diagnostic_restart (RestartReason::PROGRAM_MODE);
 }
 
+void smartdogAlarm (uint16_t ptr)
+{
+	diagnostic_restart (RestartReason::WATCHDOG, ptr);
+}
+
 // --------------------------------------------- main -------------------------------------------►
 
 int main ()
 {
-	asm volatile ("nop"); // !!! 126 version hack !!!
-//	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
-//	asm volatile ("nop");
-//	asm volatile ("nop");
-
 	data.interruptHandler<DpsCommand> () = InterruptHandler::from_function<&commandParser>();
 	data.interruptHandler<Club0> () = InterruptHandler::from_function<&kptCommandParse>();
 	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getSautVelocity> (&emulation);
@@ -853,8 +858,8 @@ int main ()
 	scheduler.fullHandler = Delegate<void ()>::from_function <&schedulerFullHandler> ();
 	programmingCan.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();
 	programming.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();
-
-		dps.constituoActivus();
+	smartdog_deathAlarm = &smartdogAlarm;
+	smartdog_on();
 
 	sei();
 
@@ -885,15 +890,13 @@ int main ()
 
 		if (isSelfComplectA ())
 		{
-			canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
-			_delay_ms (10);
-			canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
+			while ( !canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet) );
+			while ( !canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet) );
 		}
 		else
 		{
-			canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet);
-			_delay_ms (10);
-			canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
+			while ( !canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet) );
+			while ( !canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet) );
 		}
 	}
 	
@@ -935,7 +938,7 @@ int main ()
 //    	}
 
     	dispatcher.invoke();
-    	wdt_reset();
+    	smartdog_reset();
     }
 }
 
