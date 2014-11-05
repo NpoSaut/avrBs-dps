@@ -590,7 +590,7 @@ public:
 			  animadversor ( InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (this) ),
 			  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (acceleratioEtAffectus),
 			  spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
-			  rotundCeleritas (0), dimetiorChooser(), bothBreak(isSelfComplectA), activus (0),
+			  rotundCeleritas (0), dimetiorChooser(), bothBreak(isSelfComplectA), activus (1),
 			  dimetiorObj ({Dimetior(lanterna0Set, lanterna1Set, isSelfComplectA), Dimetior(lanterna0Set, lanterna1Set, !isSelfComplectA)})
 
 	{
