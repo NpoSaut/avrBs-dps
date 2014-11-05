@@ -32,6 +32,7 @@
 #include "dps.h"
 #include "eeprom.h"
 #include "cpp/can-dat.h"
+#include "cpp/can-async.h"
 #include "CanDesriptors.h"
 #include "kpt.h"
 #include "mph.h"
@@ -135,6 +136,9 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
 	CanDatType;
 CanDatType canDat;
+
+typedef CanAsync<CanDatType, canDat, Dispatcher, dispatcher, 16> CanAsyncType;
+CanAsyncType canAsync;
 
 // -------------------------------------------- RS-485 ------------------------------------------►
 
@@ -536,7 +540,7 @@ void mcoAuxResB (uint16_t pointer)
 
 // --------------------------------- Модуль постоянных характеристик ----------------------------►
 
-typedef ConstValModule <CanDatType, canDat, SchedulerType, scheduler> MPHType;
+typedef ConstValModule <CanAsyncType, canAsync, SchedulerType, scheduler> MPHType;
 MPHType mph;
 
 // ------------------------------------- Нейтральная вставка -------------------------------------►
@@ -890,13 +894,13 @@ int main ()
 
 		if (isSelfComplectA ())
 		{
-			while ( !canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet) );
-			while ( !canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet) );
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_IPD_A>(packet) );
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_BS_A>(packet) );
 		}
 		else
 		{
-			while ( !canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet) );
-			while ( !canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet) );
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_IPD_B>(packet) );
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_BS_B>(packet) );
 		}
 	}
 	
