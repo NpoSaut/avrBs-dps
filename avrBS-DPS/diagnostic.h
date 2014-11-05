@@ -24,29 +24,31 @@ enum RestartReason
 	CAN_BUSOFF = 7,
 	DISPATCHER_OVER = 8,
 	SCHEDULER_FULL = 9,
-	WATCHDOG = 10,
+	WATCHDOG_DISPATCHER_POINTER = 10,
+	WATCHDOG = 11,
 	UNDEFINED = 0xFF
 };
 
-// Callback'и, которые необходимо инициализировать
+// Callback'Рё, РєРѕС‚РѕСЂС‹Рµ РЅРµРѕР±С…РѕРґРёРјРѕ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°С‚СЊ
 extern Delegate<void (uint8_t)> diagnostic_storeDelegate;
 extern Delegate<uint8_t ()> diagnostic_restoreDelegate;
 typedef Delegate<bool (const uint8_t (&)[5])> AuxResourceMessage;
 extern AuxResourceMessage diagnostic_sendMessageDelegate;
+extern Delegate<void ()> diagnostic_watchdogResetDelegate;
 
-// Уходе в перезагрузку с предварительной выдачей сообщения AuxResource с причиной перезапуска
-//  Делает попытку отправить причину перезапуска с помощью diagnostic_sendMessageDelegate в течении ~10 мсек
-//  Если не удаётся, то сохраняет причину с помощью diagnostic_storeDelegate
+// РЈС…РѕРґРµ РІ РїРµСЂРµР·Р°РіСЂСѓР·РєСѓ СЃ РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕР№ РІС‹РґР°С‡РµР№ СЃРѕРѕР±С‰РµРЅРёСЏ AuxResource СЃ РїСЂРёС‡РёРЅРѕР№ РїРµСЂРµР·Р°РїСѓСЃРєР°
+//  Р”РµР»Р°РµС‚ РїРѕРїС‹С‚РєСѓ РѕС‚РїСЂР°РІРёС‚СЊ РїСЂРёС‡РёРЅСѓ РїРµСЂРµР·Р°РїСѓСЃРєР° СЃ РїРѕРјРѕС‰СЊСЋ diagnostic_sendMessageDelegate РІ С‚РµС‡РµРЅРёРё ~10 РјСЃРµРє
+//  Р•СЃР»Рё РЅРµ СѓРґР°С‘С‚СЃСЏ, С‚Рѕ СЃРѕС…СЂР°РЅСЏРµС‚ РїСЂРёС‡РёРЅСѓ СЃ РїРѕРјРѕС‰СЊСЋ diagnostic_storeDelegate
 void diagnostic_restart (RestartReason reason, uint16_t detail = 0);
 
-// Выдает сообщение с сохранённой причиной предыдущего перезапуска
-//  Читает сохраненное значение с помощью diagnostic_restoreDelegate
-//  Отправляет сообщение с помощью diagnostic_sendMessageDelegate
+// Р’С‹РґР°РµС‚ СЃРѕРѕР±С‰РµРЅРёРµ СЃ СЃРѕС…СЂР°РЅС‘РЅРЅРѕР№ РїСЂРёС‡РёРЅРѕР№ РїСЂРµРґС‹РґСѓС‰РµРіРѕ РїРµСЂРµР·Р°РїСѓСЃРєР°
+//  Р§РёС‚Р°РµС‚ СЃРѕС…СЂР°РЅРµРЅРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ СЃ РїРѕРјРѕС‰СЊСЋ diagnostic_restoreDelegate
+//  РћС‚РїСЂР°РІР»СЏРµС‚ СЃРѕРѕР±С‰РµРЅРёРµ СЃ РїРѕРјРѕС‰СЊСЋ diagnostic_sendMessageDelegate
 void diagnostic_sendReasonOfPreviousRestart ();
 
-// Выдаёт сообщение с предупреждением (не перезагружается)
-//  Пытается сделать это в течении ~10 мсек
-//  Не сохраняет в случае неудачи
+// Р’С‹РґР°С‘С‚ СЃРѕРѕР±С‰РµРЅРёРµ СЃ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµРј (РЅРµ РїРµСЂРµР·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ)
+//  РџС‹С‚Р°РµС‚СЃСЏ СЃРґРµР»Р°С‚СЊ СЌС‚Рѕ РІ С‚РµС‡РµРЅРёРё ~10 РјСЃРµРє
+//  РќРµ СЃРѕС…СЂР°РЅСЏРµС‚ РІ СЃР»СѓС‡Р°Рµ РЅРµСѓРґР°С‡Рё
 void diagnostic_sendWarninReason (RestartReason reason, uint16_t detail = 0);
 
 #endif /* DIAGNOSTIC_H_ */

@@ -20,8 +20,8 @@
 #include <util/delay.h>
 
 #define SMARTDOG_ALARM Alarm2
-#define SMARTDOG_WDT_TIME WDTO_15MS
-#define SMARTDOG_ALARM_TIME 10000
+#define SMARTDOG_WDT_TIME WDTO_120MS
+#define SMARTDOG_ALARM_TIME 100000
 #include <cpp/smartdog.h>
 
 #include "hw_defines.h"
@@ -809,6 +809,7 @@ void programmingRebootHandler ()
 
 void smartdogAlarm (uint16_t ptr)
 {
+	diagnostic_sendWarninReason (RestartReason::WATCHDOG_DISPATCHER_POINTER, dispatcher.getCurrentCommandPointer());
 	diagnostic_restart (RestartReason::WATCHDOG, ptr);
 }
 
@@ -857,7 +858,8 @@ int main ()
 		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_A> > (&canDat);
 	else
 		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_B> > (&canDat);
-	canDat.busOffHandler = Delegate<void ()>::from_function <&canBusOffHandler> ();
+	diagnostic_watchdogResetDelegate = Delegate<void ()>::from_function <&smartdog_reset> ();
+	canDat.setBusOffHandler( Delegate<void ()>::from_function <&canBusOffHandler> () );
 	dispatcher.overflowHandler = Delegate<void (uint16_t)>::from_function <&dispatcherOverflowHandler> ();
 	scheduler.fullHandler = Delegate<void ()>::from_function <&schedulerFullHandler> ();
 	programmingCan.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();

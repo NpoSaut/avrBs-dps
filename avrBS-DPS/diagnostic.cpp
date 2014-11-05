@@ -13,12 +13,15 @@
 Delegate<void (uint8_t)> diagnostic_storeDelegate;
 Delegate<uint8_t (void)> diagnostic_restoreDelegate;
 AuxResourceMessage diagnostic_sendMessageDelegate;
+Delegate<void ()> diagnostic_watchdogResetDelegate;
 
 bool diagnostic_trySendAuxResource (const uint8_t (&message)[5])
 {
 	volatile bool successSend = false;
-	for (uint8_t i = 0; i++ < 100 && !successSend; _delay_us(100))
+	for (uint8_t i = 0; i++ < 80 && !successSend; _delay_us(100))
+	{
 		successSend = diagnostic_sendMessageDelegate(message);
+	}
 	return successSend;
 }
 
@@ -60,7 +63,9 @@ void diagnostic_reboot ()
 }
 
 void diagnostic_restart (RestartReason reason, uint16_t detail)
-{
+{	
+	diagnostic_watchdogResetDelegate ();
+	
 	if (!diagnostic_sendRestartReason(reason, false, detail))
 		diagnostic_storeDelegate (uint8_t(reason));
 	
@@ -71,7 +76,7 @@ void diagnostic_sendReasonOfPreviousRestart ()
 {
 	RestartReason reason = RestartReason (diagnostic_restoreDelegate());
 	
-	if (!reason == POWER_OFF)
+	if (reason != POWER_OFF)
 	{
 		if (diagnostic_sendRestartReason (reason, true))
 		diagnostic_storeDelegate (RestartReason::POWER_OFF);
