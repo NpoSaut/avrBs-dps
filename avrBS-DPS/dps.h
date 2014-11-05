@@ -763,230 +763,264 @@ private:
 	}
 
 	// Выводит результат работы датчиков в линию связи и CAN
-	void produco (uint16_t)
+	void produco (uint16_t step)
 	{
 		if (activus)
 		{
-			dimetiorChooser.setTraction (tractus);
-			dimetiorChooser.processNewDimetiorsState (dimetiors);
-
-			bothBreak.processStopAndTractionState (dimetiors[0]->sicinCommoratio() && dimetiors[1]->sicinCommoratio(), tractus);
-
-			// Выставление флагов
-			struct Mappa
+			switch (step)
 			{
-				uint8_t versus0 :1;
-				uint8_t versus1 :1;
-				uint8_t commoratio :1;
-				uint8_t dimetior :1;
-				uint8_t validus0 :1;
-				uint8_t validus1 :1;
-				uint8_t repeto :1;
-				uint8_t :1;
-			};
-			Bitfield<Mappa> mappa;
+				case 0:
+				dimetiorChooser.setTraction (tractus);
+				dimetiorChooser.processNewDimetiorsState (dimetiors);
 
-			mappa.repeto = repeto;
-			mappa.versus0 = dimetiors[0]->accipioVersus();
-			mappa.versus1 = dimetiors[1]->accipioVersus();
-			mappa.commoratio = dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio();
-			mappa.dimetior = dimetiorChooser.getBestDimetiorNumber();
-			// Неисправность != недостоверность
-			// Неисправность - это недостверность при достаточно большой скорости
-			// Потому что при смене направления и дребезге на стоянке возникает недостоверность
-			bool firmusCausarius[2] =
-			{	( dimetiors[0]->sicinCausarius()
-						&& dimetiors[0]->accipioCeleritas() > 128*4
-						&& dimetiors[1]->accipioCeleritas() > 128*4
-				),
-				( dimetiors[1]->sicinCausarius()
-						&& dimetiors[0]->accipioCeleritas() > 128*4
-						&& dimetiors[1]->accipioCeleritas() > 128*4
-				)
-			};
-			mappa.validus0 = !firmusCausarius[0];
-			mappa.validus1 = !firmusCausarius[1];
+				bothBreak.processStopAndTractionState (dimetiors[0]->sicinCommoratio() && dimetiors[1]->sicinCommoratio(), tractus);
+				break;
+				
+				case 1:
 
-			// Сохранение неисправности в eeprom
-			if (!mappa.validus0)
-				eeprom.dps0Good = 0;
-			if (!mappa.validus1)
-				eeprom.dps1Good = 0;
-
-			// Индикация неисправности на стоянке
-			if ( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio() )
-			{
-				if ( isSelfComplectA ) // полукомплект A
+				// Выставление флагов
+				struct Mappa
 				{
-					lanterna0Set (eeprom.dps0Good);
-					lanterna1Set (eeprom.dps0Good);
-				}
-				else
-				{
-					lanterna0Set (eeprom.dps1Good);
-					lanterna1Set (eeprom.dps1Good);
-				}
-			}
-
-			// Вывод данных в линию связи
-			acceleratioEtAffectus <<= (uint16_t(dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio()) * 256) | mappa;
-
-			uint16_t sigCel = signCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas() );
-			celeritasProdo <<= sigCel;
-
-			// Вывод данных в CAN
-			if ( clock.getTime() > 1500 )// Запустит вывод сообщений через 1,5 секунды. За это время я подхвачу пройденный путь от ЭК.
-			{
-				// SAUT_INFO ---
-				Complex<uint16_t> diam0 = dimetiors[0]->accipioDiametros();
-				Complex<uint16_t> diam1 = dimetiors[1]->accipioDiametros();
-				uint8_t sautInfo[8] =
-				{
-					uint8_t(sigCel >> 8),
-					uint8_t(sigCel),
-					dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio(),
-					diam0[1],
-					diam0[0],
-					diam1[1],
-					diam1[0],
-					mappa
+					uint8_t versus0 :1;
+					uint8_t versus1 :1;
+					uint8_t commoratio :1;
+					uint8_t dimetior :1;
+					uint8_t validus0 :1;
+					uint8_t validus1 :1;
+					uint8_t repeto :1;
+					uint8_t :1;
 				};
+				Bitfield<Mappa> mappa;
 
-				// IPD_STATE ---
-
-				// Округление скорости с гистерезисом
-				rotundCeleritas = rotundatioCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas );
-
-				// Подстройка под ЭК
-				ecAdjust.adjust (spatiumAdjustedMeters);
-
-				uint8_t ipdState[8] =
-				{
-					(mappa.validus0 == false && mappa.validus1 == false) || bothBreak.isBreak() ? (uint8_t)2 : (uint8_t)0,
-					uint8_t( (versus() * 128)
-							| ((dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
-							| (!dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio() << 2)
-							| uint8_t( (rotundCeleritas >> 15) & 1 ) ),// направление + наличие импульсов ДПС + старший бит скорости в км/ч
-					uint8_t( rotundCeleritas/128 ),// скорость в км/ч
-					uint8_t( spatiumAdjustedMeters[1] ),
-					uint8_t( spatiumAdjustedMeters[0] ),
-					uint8_t( spatiumAdjustedMeters[2] ),
-					uint8_t( (ecAdjust.isMismatchCritical() << 5)
-							| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 4)
-							| (dimetiorChooser.getBestDimetiorNumber() << 3)
-							| (firmusCausarius[!dimetiorChooser.getBestDimetiorNumber()] << 2)
-							| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 1)
-							| (firmusCausarius[dimetiorChooser.getBestDimetiorNumber()] << 0) ),
-					uint8_t( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio()*2 )
+				mappa.repeto = repeto;
+				mappa.versus0 = dimetiors[0]->accipioVersus();
+				mappa.versus1 = dimetiors[1]->accipioVersus();
+				mappa.commoratio = dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio();
+				mappa.dimetior = dimetiorChooser.getBestDimetiorNumber();
+				// Неисправность != недостоверность
+				// Неисправность - это недостверность при достаточно большой скорости
+				// Потому что при смене направления и дребезге на стоянке возникает недостоверность
+				bool firmusCausarius[2] =
+				{	( dimetiors[0]->sicinCausarius()
+							&& dimetiors[0]->accipioCeleritas() > 128*4
+							&& dimetiors[1]->accipioCeleritas() > 128*4
+					),
+					( dimetiors[1]->sicinCausarius()
+							&& dimetiors[0]->accipioCeleritas() > 128*4
+							&& dimetiors[1]->accipioCeleritas() > 128*4
+					)
 				};
+				mappa.validus0 = !firmusCausarius[0];
+				mappa.validus1 = !firmusCausarius[1];
 
-				uint8_t origDist[4] =
-				{	spatiumMeters[0], spatiumMeters[1], spatiumMeters[2], spatiumMeters[3]};
-					
-				// AUX_RESORCE: RES_INTERNAL_WARNING ---
-				uint8_t auxResource[5] = {2, 0, 0, 0, 0};
-				if ( dimetiorChooser.wasSwitchUntilLastProcessState() )
-				{
-					auxResource[1] = 1;
-				}
-				else if ( auxResourceTimer++ >= 240 ) // Раз в 2 минуты
-				{
-					auxResourceTimer = 0;
-					auxResource[1] = 2;
-				}
-					
-				if ( auxResource[1] != 0 )
-				{
-					auxResource[2] = (firmusCausarius[dimetiorChooser.getBestDimetiorNumber()] << 0)
-							| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 1)
-							| (firmusCausarius[!dimetiorChooser.getBestDimetiorNumber()] << 2)
-							| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 3)
-							| (dimetiorChooser.getBestDimetiorNumber() << 4);
-					auxResource[3] = rotundatioCeleritas (dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas) / 128;
-					auxResource[4] = rotundatioCeleritas (dimetiors[!dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas) / 128;
-				}
+				// Сохранение неисправности в eeprom
+				if (!mappa.validus0)
+					eeprom.dps0Good = 0;
+				if (!mappa.validus1)
+					eeprom.dps1Good = 0;
 
-				if ( isSelfComplectA )
+				// Индикация неисправности на стоянке
+				if ( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio() )
 				{
-					canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
-					canDat.template send<CanTx::IPD_STATE_A> (ipdState);
-					if ( auxResource[1] != 0 )
-						canDat.template send<CanTx::AUX_RESOURCE_IPD_A> (auxResource);
-					else
-						canDat.template send<CanTx::MY_DEBUG_A> (origDist);
-
-					// IPD_DPS_FAULT ---
-					enum class DpsFault : uint8_t
+					if ( isSelfComplectA ) // полукомплект A
 					{
-						AllValidus,
-						DuplarisCausarius,
-						DuplarisConjuctio,
-						Causarius0,
-						Causarius1,
-						Conjuctio0,
-						Conjuctio1,
-						Celeritas0,
-						Celeritas1
-					};
-					DpsFault dpsFault = DpsFault::AllValidus;
-					if ( firmusCausarius[0] )
-						dpsFault = DpsFault::Causarius0;
-					if ( firmusCausarius[1] )
-						dpsFault = DpsFault::Causarius1;
-					if ( firmusCausarius[0] && firmusCausarius[1] )
-						dpsFault = DpsFault::DuplarisCausarius;
-					if ( bothBreak.isBreak() )
-						dpsFault = DpsFault::DuplarisConjuctio;
-
-					scheduler.runIn(
-							Command
-							{	SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::dpsFaultProduco>(this), (uint16_t) dpsFault},
-							100
-					); // Вывести через 0,1 сек, чтобы успели освободиться страницы отправки CAN
-				}
-				else
-				{
-					canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
-					canDat.template send<CanTx::IPD_STATE_B> (ipdState);
-					if ( auxResource[1] != 0 )
-						canDat.template send<CanTx::AUX_RESOURCE_IPD_B> (auxResource);
+						lanterna0Set (eeprom.dps0Good);
+						lanterna1Set (eeprom.dps0Good);
+					}
 					else
-						canDat.template send<CanTx::MY_DEBUG_B> (origDist);
+					{
+						lanterna0Set (eeprom.dps1Good);
+						lanterna1Set (eeprom.dps1Good);
+					}
 				}
+
+				// Вывод данных в линию связи
+				acceleratioEtAffectus <<= (uint16_t(dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio()) * 256) | mappa;
+
+				uint16_t sigCel = signCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas() );
+				celeritasProdo <<= sigCel;
+
+				// Вывод данных в CAN
+				if ( clock.getTime() > 1500 )// Запустит вывод сообщений через 1,5 секунды. За это время я подхвачу пройденный путь от ЭК.
+				{
+					// SAUT_INFO ---
+					Complex<uint16_t> diam0 = dimetiors[0]->accipioDiametros();
+					Complex<uint16_t> diam1 = dimetiors[1]->accipioDiametros();
+					uint8_t sautInfo[8] =
+					{
+						uint8_t(sigCel >> 8),
+						uint8_t(sigCel),
+						dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio(),
+						diam0[1],
+						diam0[0],
+						diam1[1],
+						diam1[0],
+						mappa
+					};
+
+					// IPD_STATE ---
+
+					// Округление скорости с гистерезисом
+					rotundCeleritas = rotundatioCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas );
+
+					// Подстройка под ЭК
+					ecAdjust.adjust (spatiumAdjustedMeters);
+
+					uint8_t ipdState[8] =
+					{
+						(mappa.validus0 == false && mappa.validus1 == false) || bothBreak.isBreak() ? (uint8_t)2 : (uint8_t)0,
+						uint8_t( (versus() * 128)
+								| ((dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio() & 0x80) >> 2) // знак ускорения
+								| (!dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio() << 2)
+								| uint8_t( (rotundCeleritas >> 15) & 1 ) ),// направление + наличие импульсов ДПС + старший бит скорости в км/ч
+						uint8_t( rotundCeleritas/128 ),// скорость в км/ч
+						uint8_t( spatiumAdjustedMeters[1] ),
+						uint8_t( spatiumAdjustedMeters[0] ),
+						uint8_t( spatiumAdjustedMeters[2] ),
+						uint8_t( (ecAdjust.isMismatchCritical() << 5)
+								| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 4)
+								| (dimetiorChooser.getBestDimetiorNumber() << 3)
+								| (firmusCausarius[!dimetiorChooser.getBestDimetiorNumber()] << 2)
+								| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 1)
+								| (firmusCausarius[dimetiorChooser.getBestDimetiorNumber()] << 0) ),
+						uint8_t( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio()*2 )
+					};
+
+					uint8_t origDist[4] =
+					{	spatiumMeters[0], spatiumMeters[1], spatiumMeters[2], spatiumMeters[3]};
+					
+					// AUX_RESORCE: RES_INTERNAL_WARNING ---
+					uint8_t auxResource[5] = {2, 0, 0, 0, 0};
+					if ( dimetiorChooser.wasSwitchUntilLastProcessState() )
+					{
+						auxResource[1] = 1;
+					}
+					else if ( auxResourceTimer++ >= 240 ) // Раз в 2 минуты
+					{
+						auxResourceTimer = 0;
+						auxResource[1] = 2;
+					}
+					
+					if ( auxResource[1] != 0 )
+					{
+						auxResource[2] = (firmusCausarius[dimetiorChooser.getBestDimetiorNumber()] << 0)
+								| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 1)
+								| (firmusCausarius[!dimetiorChooser.getBestDimetiorNumber()] << 2)
+								| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 3)
+								| (dimetiorChooser.getBestDimetiorNumber() << 4);
+						auxResource[3] = rotundatioCeleritas (dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas) / 128;
+						auxResource[4] = rotundatioCeleritas (dimetiors[!dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas) / 128;
+					}
+
+					if ( isSelfComplectA )
+					{
+						canDat.template send<CanTx::SAUT_INFO_A> (sautInfo);
+						canDat.template send<CanTx::IPD_STATE_A> (ipdState);
+						if ( auxResource[1] != 0 )
+							canDat.template send<CanTx::AUX_RESOURCE_IPD_A> (auxResource);
+						else
+							canDat.template send<CanTx::MY_DEBUG_A> (origDist);
+
+						// IPD_DPS_FAULT ---
+						enum class DpsFault : uint8_t
+						{
+							AllValidus,
+							DuplarisCausarius,
+							DuplarisConjuctio,
+							Causarius0,
+							Causarius1,
+							Conjuctio0,
+							Conjuctio1,
+							Celeritas0,
+							Celeritas1
+						};
+						DpsFault dpsFault = DpsFault::AllValidus;
+						if ( firmusCausarius[0] )
+							dpsFault = DpsFault::Causarius0;
+						if ( firmusCausarius[1] )
+							dpsFault = DpsFault::Causarius1;
+						if ( firmusCausarius[0] && firmusCausarius[1] )
+							dpsFault = DpsFault::DuplarisCausarius;
+						if ( bothBreak.isBreak() )
+							dpsFault = DpsFault::DuplarisConjuctio;
+
+						scheduler.runIn(
+								Command
+								{	SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::dpsFaultProduco>(this), (uint16_t) dpsFault},
+								100
+						); // Вывести через 0,1 сек, чтобы успели освободиться страницы отправки CAN
+					}
+					else
+					{
+						canDat.template send<CanTx::SAUT_INFO_B> (sautInfo);
+						canDat.template send<CanTx::IPD_STATE_B> (ipdState);
+						if ( auxResource[1] != 0 )
+							canDat.template send<CanTx::AUX_RESOURCE_IPD_B> (auxResource);
+						else
+							canDat.template send<CanTx::MY_DEBUG_B> (origDist);
+					}
+				}
+				break;
 			}
 		}
 
-		scheduler.runIn(
-				Command
-				{	SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0},
+		if (step == 0)
+		{
+			dispatcher.add(
+				Command{SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), step+1});
+		}
+		else
+		{
+			scheduler.runIn(
+				Command{SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::produco>(this), 0},
 				500); // Выводить сообщения раз в 0,5 сек.
+		}
 	}
 
-	void accipioConstans (uint16_t )
+	void accipioConstans (uint16_t step)
 	{
-		scheduler.runIn(
-				Command
-				{	SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioConstans>(this), 0},
-				500 );
-
 		uint32_t tmp;
-		if ( eeprom.club.property.configuration.read (tmp) )
+		
+		switch (step)
 		{
-			Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
-			dimetiors[0]->positio = conf.dps0Position;
-			dimetiors[1]->positio = conf.dps1Position;
+			case 0:
+			if ( eeprom.club.property.configuration.read (tmp) )
+			{
+				Bitfield<EepromData::Club::Property::Configuration> conf (tmp);
+				dimetiors[0]->positio = conf.dps0Position;
+				dimetiors[1]->positio = conf.dps1Position;
+			}
+			break;
+			
+			case 1:
+			if ( eeprom.club.property.diameter0.read (tmp) )
+				dimetiors[0]->constituoDiametros (tmp);
+			break;
+			
+			case 2:
+			if ( eeprom.club.property.diameter1.read (tmp) )
+				dimetiors[1]->constituoDiametros (tmp);
+			break;
+			
+			case 3:
+			if ( eeprom.club.property.dpsDentos.read (tmp) )
+			{
+				dimetiors[0]->constituoCogs (tmp);
+				dimetiors[1]->constituoCogs (tmp);
+			}
+			break;
 		}
-
-		if ( eeprom.club.property.diameter0.read (tmp) )
-		dimetiors[0]->constituoDiametros (tmp);
-
-		if ( eeprom.club.property.diameter1.read (tmp) )
-		dimetiors[1]->constituoDiametros (tmp);
-
-		if ( eeprom.club.property.dpsDentos.read (tmp) )
+		if (step < 3)
 		{
-			dimetiors[0]->constituoCogs (tmp);
-			dimetiors[1]->constituoCogs (tmp);
+			dispatcher.add(
+				Command{SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioConstans>(this), step+1}
+			);
+		}
+		else
+		{
+			scheduler.runIn(
+				Command{SoftIntHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::accipioConstans>(this), 0},
+				500 );
 		}
 	}
 

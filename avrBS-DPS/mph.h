@@ -1140,7 +1140,7 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 
 					// Выполняем подсчёт crc..
 					crc = crcUpdate<0xEBA9> (crc, data);
-					readNextStringByte( Complex<uint16_t>{string, byte+1} );
+					dispatcher.add( Command{SoftIntHandler::from_method<SautConvert, &SautConvert::readNextStringByte>(this), Complex<uint16_t>{string, byte+1}} );
 					return;
 				}
 			}
