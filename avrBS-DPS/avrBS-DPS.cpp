@@ -290,40 +290,6 @@ void sysDiagnostics (uint16_t a)
 					canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
 			}
 		}
-//		else if ( request == Request::DIST_TRAVEL_WRITE )
-//		{
-//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-//			eeprom_update_byte( adr  , canDat.get<CanRx::SYS_DIAGNOSTICS>() [5] );
-//			eeprom_update_byte( adr+1, canDat.get<CanRx::SYS_DIAGNOSTICS>() [4] );
-//			eeprom_update_byte( adr+2, canDat.get<CanRx::SYS_DIAGNOSTICS>() [3] );
-//			eeprom_update_byte( adr+3, canDat.get<CanRx::SYS_DIAGNOSTICS>() [2] );
-//		}
-//		else if ( request == Request::DIST_TRAVEL_READ_A && isSelfComplectA () )
-//		{
-//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-//			uint8_t packet[5] = {
-//					(uint8_t) Answer::DATA,
-//					eeprom_read_byte (adr+3),
-//					eeprom_read_byte (adr+2),
-//					eeprom_read_byte (adr+1),
-//					eeprom_read_byte (adr)
-//								};
-//
-//			canDat.send<CanTx::AUX_RESOURCE_IPD_A> (packet);
-//		}
-//		else if ( request == Request::DIST_TRAVEL_READ_B && !isSelfComplectA () )
-//		{
-//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-//			uint8_t packet[5] = {
-//					(uint8_t) Answer::DATA,
-//					eeprom_read_byte (adr+3),
-//					eeprom_read_byte (adr+2),
-//					eeprom_read_byte (adr+1),
-//					eeprom_read_byte (adr)
-//								};
-//
-//			canDat.send<CanTx::AUX_RESOURCE_IPD_B> (packet);
-//		}
 		else if ( request == Request::TEST_RUN && unit == Unit::BS_DPS )
 		{
 			uint8_t packet[5] = {
@@ -643,7 +609,6 @@ private:
 
 		getMessage = false;
 		scheduler.runIn( Command{ SoftIntHandler::from_method<Emulation, &Emulation::watchDog>(this), 0 }, 1000 );
-//		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
 	}
 	void makeAStep ()
 	{
@@ -920,28 +885,6 @@ int main ()
     		eeprom.dps1Good = 1;
     		diagnostic_restart(RestartReason::BUTTON_PRESS);
     	}
-
-//    	static uint16_t ctr = 0;
-//    	if (ctr++ > 2000)
-//    	{
-//    		sei();
-//    		ctr = 0;
-//			uint8_t sysDataState2[8] = {
-//					0, // Результаты выполнения тестов... здесь не выводим
-//					0,
-//					0,
-//					0,
-//					0,
-//					scheduler.fill,
-//					dispatcher.maxSize,
-//					0
-//									};
-//			dispatcher.maxSize = 0;
-//			if (isSelfComplectA ()) // первый полукомплект
-//				canDat.send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
-//			else
-//				canDat.send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);
-//    	}
 
     	dispatcher.invoke();
     	smartdog_reset();

@@ -107,7 +107,6 @@ private:
 			impulseWatchDog = false;
 
 		scheduler.runIn( Command{ SoftIntHandler::from_method <Kpt, &Kpt::watchDog>(this), 0 }, 2000000/Scheduler::discreetMks );
-//		scheduler.runIn( Command{SoftIntHandler (this, &Kpt::watchDog), 0}, 2000000/Scheduler::discreetMks );
 	}
 
 
@@ -121,7 +120,6 @@ public:
 //		static_assert (timeMod < timePrescale/256, "Выбранный таймер не даёт необходимой точности");
 		setPassive ();
 		scheduler.runIn( Command{ SoftIntHandler::from_method <Kpt, &Kpt::watchDog>(this), 0}, 2000000/Scheduler::discreetMks );
-//		scheduler.runIn( Command{ SoftIntHandler (this, &Kpt::watchDog), 0}, 2000000/Scheduler::discreetMks );
 	}
 
 	void fall ()
