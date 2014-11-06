@@ -79,6 +79,6 @@ void diagnostic_sendReasonOfPreviousRestart ()
 	if (reason != POWER_OFF)
 	{
 		if (diagnostic_sendRestartReason (reason, true))
-		diagnostic_storeDelegate (RestartReason::POWER_OFF);
+			diagnostic_storeDelegate (RestartReason::POWER_OFF);
 	}
 }

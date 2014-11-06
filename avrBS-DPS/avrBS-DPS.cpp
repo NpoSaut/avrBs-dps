@@ -20,8 +20,8 @@
 #include <util/delay.h>
 
 #define SMARTDOG_ALARM Alarm2
-#define SMARTDOG_WDT_TIME WDTO_120MS
-#define SMARTDOG_ALARM_TIME 100000
+#define SMARTDOG_WDT_TIME WDTO_30MS
+#define SMARTDOG_ALARM_TIME 19968
 #include <cpp/smartdog.h>
 
 #include "hw_defines.h"
