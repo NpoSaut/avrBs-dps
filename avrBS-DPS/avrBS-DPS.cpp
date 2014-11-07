@@ -874,6 +874,8 @@ int main ()
 	diagnostic_sendReasonOfPreviousRestart();
 
 	scheduler.runIn( Command {SoftIntHandler::from_function<&unsetResetFlag>(), 0}, 7000 );
+		
+	dps.constituoActivus();
 
     for (;;)
     {
