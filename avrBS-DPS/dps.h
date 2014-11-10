@@ -343,7 +343,7 @@ private:
 // Выбирает из двух датчиков один
 class DimetiorChooser {
 public:
-	DimetiorChooser () : traction (false), previous (0), wasSwitch (false), speedDeviationCritical (false)
+	DimetiorChooser () : traction (false), previous (0), wasSwitch (false), speedDeviationCritical (false), _causariusInTraction({false, false})
 	{}
 
 	// Устанавливает признак наличия тяги (для алгоритма прошлифовка-блокировка)
@@ -384,6 +384,16 @@ public:
 	bool wasSwitchUntilLastProcessState () const
 	{
 		return wasSwitch;
+	}
+	
+	bool getCausariusInTraction (uint8_t i) const
+	{
+		return _causariusInTraction[i];
+	}
+	
+	bool wasCausariusChange () const
+	{
+		return causariusChanged;
 	}
 	
 	// Уверенная исправность
@@ -462,13 +472,29 @@ private:
 	uint8_t previous;
 	bool wasSwitch;
 	bool speedDeviationCritical;
+	bool causariusChanged;
+	bool _causariusInTraction[2];
+	
+	void setCausariusInTraction (uint8_t dimetior, bool causarius)
+	{
+		if ( _causariusInTraction[dimetior] != causarius )
+		{
+			_causariusInTraction[dimetior] = causarius;
+			causariusChanged = true;
+		}
+	}
 
 	// Ведёт статистику недостоверности для получения "уверенной достоверности"
 	void recordValidity (Dimetior * (&dimetiors) [2])
 	{
+		causariusChanged = false;
+		
 		for (uint8_t i = 0; i < 2; i ++)
-			if ( !dimetiors[i]->sicinCommoratio() ) // Достоверность учитывается только в движении
-				confidentValidity[i].recordNextState( !dimetiors[i]->sicinCausarius() );
+			if ( dimetiors[previous]->accipioCeleritas() > 128 ) // Достоверность учитывается только в движении
+			{
+				setCausariusInTraction(i, dimetiors[i]->sicinCausarius());
+				confidentValidity[i].recordNextState( !getCausariusInTraction(i) );
+			}				
 	}
 
 	// Ведёт статистику по разности скоростей датчиков
@@ -521,7 +547,7 @@ private:
 	// Датчик должен быть исправным (на случай если оба не являются "достоверно исправными")
 	bool checkValidity (Dimetior * (&dimetiors) [2], uint8_t preferred)
 	{
-		if ( dimetiors[preferred]->sicinCausarius() && !dimetiors[!preferred]->sicinCausarius() )
+		if ( getCausariusInTraction(preferred) && !getCausariusInTraction(!preferred) )
 			return !preferred;
 		else
 			return preferred;
@@ -797,21 +823,8 @@ private:
 				mappa.versus1 = dimetiors[1]->accipioVersus();
 				mappa.commoratio = dimetiors[dimetiorChooser.getBestDimetiorNumber()]->sicinCommoratio();
 				mappa.dimetior = dimetiorChooser.getBestDimetiorNumber();
-				// Неисправность != недостоверность
-				// Неисправность - это недостверность при достаточно большой скорости
-				// Потому что при смене направления и дребезге на стоянке возникает недостоверность
-				bool firmusCausarius[2] =
-				{	( dimetiors[0]->sicinCausarius()
-							&& dimetiors[0]->accipioCeleritas() > 128*4
-							&& dimetiors[1]->accipioCeleritas() > 128*4
-					),
-					( dimetiors[1]->sicinCausarius()
-							&& dimetiors[0]->accipioCeleritas() > 128*4
-							&& dimetiors[1]->accipioCeleritas() > 128*4
-					)
-				};
-				mappa.validus0 = !firmusCausarius[0];
-				mappa.validus1 = !firmusCausarius[1];
+				mappa.validus0 = !dimetiorChooser.getCausariusInTraction(0);
+				mappa.validus1 = !dimetiorChooser.getCausariusInTraction(1);
 
 				// Сохранение неисправности в eeprom
 				if (!mappa.validus0)
@@ -880,9 +893,9 @@ private:
 						uint8_t( (ecAdjust.isMismatchCritical() << 5)
 								| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 4)
 								| (dimetiorChooser.getBestDimetiorNumber() << 3)
-								| (firmusCausarius[!dimetiorChooser.getBestDimetiorNumber()] << 2)
+								| (dimetiorChooser.getCausariusInTraction(!dimetiorChooser.getBestDimetiorNumber()) << 2)
 								| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 1)
-								| (firmusCausarius[dimetiorChooser.getBestDimetiorNumber()] << 0) ),
+								| (dimetiorChooser.getCausariusInTraction(dimetiorChooser.getBestDimetiorNumber()) << 0) ),
 						uint8_t( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioAcceleratio()*2 )
 					};
 
@@ -900,12 +913,16 @@ private:
 						auxResourceTimer = 0;
 						auxResource[1] = 2;
 					}
+					else if ( dimetiorChooser.wasCausariusChange() )
+					{
+						auxResource[1] = 2;
+					}
 					
 					if ( auxResource[1] != 0 )
 					{
-						auxResource[2] = (firmusCausarius[dimetiorChooser.getBestDimetiorNumber()] << 0)
+						auxResource[2] = (dimetiorChooser.getCausariusInTraction(dimetiorChooser.getBestDimetiorNumber()) << 0)
 								| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 1)
-								| (firmusCausarius[!dimetiorChooser.getBestDimetiorNumber()] << 2)
+								| (dimetiorChooser.getCausariusInTraction(!dimetiorChooser.getBestDimetiorNumber()) << 2)
 								| (dimetiorChooser.deviationSupervisor.isDeviationCritical() << 3)
 								| (dimetiorChooser.getBestDimetiorNumber() << 4);
 						auxResource[3] = rotundatioCeleritas (dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas(), rotundCeleritas) / 128;
@@ -935,11 +952,11 @@ private:
 							Celeritas1
 						};
 						DpsFault dpsFault = DpsFault::AllValidus;
-						if ( firmusCausarius[0] )
+						if ( dimetiorChooser.getCausariusInTraction(0) )
 							dpsFault = DpsFault::Causarius0;
-						if ( firmusCausarius[1] )
+						if ( dimetiorChooser.getCausariusInTraction(1) )
 							dpsFault = DpsFault::Causarius1;
-						if ( firmusCausarius[0] && firmusCausarius[1] )
+						if ( dimetiorChooser.getCausariusInTraction(0) && dimetiorChooser.getCausariusInTraction(1) )
 							dpsFault = DpsFault::DuplarisCausarius;
 						if ( bothBreak.isBreak() )
 							dpsFault = DpsFault::DuplarisConjuctio;
