@@ -15,43 +15,35 @@ Delegate<uint8_t (void)> diagnostic_restoreDelegate;
 AuxResourceMessage diagnostic_sendMessageDelegate;
 Delegate<void ()> diagnostic_watchdogResetDelegate;
 
-bool diagnostic_trySendAuxResource (const uint8_t (&message)[5])
+bool diagnostic_internal_trySend (const uint8_t (&message)[5])
 {
 	volatile bool successSend = false;
 	for (uint8_t i = 0; i++ < 80 && !successSend; _delay_us(100))
-	{
 		successSend = diagnostic_sendMessageDelegate(message);
-	}
 	return successSend;
 }
 
-bool diagnostic_sendRestartReason (RestartReason reason, bool previousWrited = false, uint16_t detail = 0)
+enum diagnostic_internal_Situation
+{
+	RESTART = 1,
+	LOAD = 3,
+	INFO = 4
+};
+	
+bool diagnostic_internal_sendAuxResource (diagnostic_internal_Situation situation, RestartReason reason,  uint8_t detail1 = 0, uint8_t detail2 = 0, uint8_t detail3 = 0)
 {
 	uint8_t data [5] = {
-		1,
-		previousWrited ? 2 : 1,
+		uint8_t (situation),
 		uint8_t (reason),
-		uint8_t (detail >> 8),
-		uint8_t (detail)
+		detail1,
+		detail2,
+		detail3
 	};
 	
-	return diagnostic_trySendAuxResource(data);
+	return diagnostic_internal_trySend(data);
 }
 
-void diagnostic_sendWarninReason (RestartReason reason, uint16_t detail)
-{
-	uint8_t data [5] = {
-		2,
-		3,
-		uint8_t (reason),
-		uint8_t (detail >> 8),
-		uint8_t (detail)
-	};
-		
-	diagnostic_trySendAuxResource(data);
-}
-
-void diagnostic_reboot ()
+void diagnostic_internal_reboot ()
 {
 	cli ();
 	do
@@ -62,14 +54,23 @@ void diagnostic_reboot ()
 	while (0);
 }
 
-void diagnostic_restart (RestartReason reason, uint16_t detail)
+void diagnostic_restart (RestartReason reason, uint8_t detail1, uint8_t detail2, uint8_t detail3)
 {	
 	diagnostic_watchdogResetDelegate ();
 	
-	if (!diagnostic_sendRestartReason(reason, false, detail))
+	if (!diagnostic_internal_sendAuxResource(RESTART, reason, detail1, detail2, detail3))
+	{
+		diagnostic_watchdogResetDelegate ();
 		diagnostic_storeDelegate (uint8_t(reason));
+	}
 	
-	diagnostic_reboot();
+	diagnostic_internal_reboot();
+}
+
+bool diagnostic_sendInfo (RestartReason reason, uint8_t detail1, uint8_t detail2, uint8_t detail3)
+{
+	diagnostic_watchdogResetDelegate ();
+	return diagnostic_internal_sendAuxResource(INFO, reason, detail1, detail2, detail3);
 }
 
 void diagnostic_sendReasonOfPreviousRestart ()
@@ -78,7 +79,10 @@ void diagnostic_sendReasonOfPreviousRestart ()
 	
 	if (reason != POWER_OFF)
 	{
-		if (diagnostic_sendRestartReason (reason, true))
+		if (diagnostic_internal_sendAuxResource(LOAD, reason, 0, 0, 0))
+		{
+			diagnostic_watchdogResetDelegate ();
 			diagnostic_storeDelegate (RestartReason::POWER_OFF);
+		}
 	}
 }

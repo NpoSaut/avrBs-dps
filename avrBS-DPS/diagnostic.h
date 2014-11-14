@@ -39,16 +39,16 @@ extern Delegate<void ()> diagnostic_watchdogResetDelegate;
 // Уходе в перезагрузку с предварительной выдачей сообщения AuxResource с причиной перезапуска
 //  Делает попытку отправить причину перезапуска с помощью diagnostic_sendMessageDelegate в течении ~10 мсек
 //  Если не удаётся, то сохраняет причину с помощью diagnostic_storeDelegate
-void diagnostic_restart (RestartReason reason, uint16_t detail = 0);
+void diagnostic_restart (RestartReason reason, uint8_t detail1 = 0, uint8_t detail2 = 0, uint8_t detail3 = 0);
+
+// Выдаёт сообщение с предупреждением (не перезагружается)
+//  Пытается сделать это в течении ~10 мсек
+//  Не сохраняет в случае неудачи
+bool diagnostic_sendInfo (RestartReason reason, uint8_t detail1 = 0, uint8_t detail2 = 0, uint8_t detail3 = 0);
 
 // Выдает сообщение с сохранённой причиной предыдущего перезапуска
 //  Читает сохраненное значение с помощью diagnostic_restoreDelegate
 //  Отправляет сообщение с помощью diagnostic_sendMessageDelegate
 void diagnostic_sendReasonOfPreviousRestart ();
-
-// Выдаёт сообщение с предупреждением (не перезагружается)
-//  Пытается сделать это в течении ~10 мсек
-//  Не сохраняет в случае неудачи
-void diagnostic_sendWarninReason (RestartReason reason, uint16_t detail = 0);
 
 #endif /* DIAGNOSTIC_H_ */

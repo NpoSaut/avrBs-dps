@@ -764,7 +764,7 @@ void dispatcherOverflowHandler (uint16_t detail)
 
 void schedulerFullHandler ()
 {
-	diagnostic_sendWarninReason (RestartReason::SCHEDULER_FULL);
+	diagnostic_sendInfo (RestartReason::SCHEDULER_FULL);
 }
 
 void programmingRebootHandler ()
@@ -772,10 +772,12 @@ void programmingRebootHandler ()
 	diagnostic_restart (RestartReason::PROGRAM_MODE);
 }
 
-void smartdogAlarm (uint16_t ptr)
+void smartdogAlarm (uint16_t wdtPointer)
 {
-	diagnostic_sendWarninReason (RestartReason::WATCHDOG_DISPATCHER_POINTER, dispatcher.getCurrentCommandPointer());
-	diagnostic_restart (RestartReason::WATCHDOG, ptr);
+	Complex<uint32_t> ptr = uint32_t(dispatcher.getCurrentCommandPointer()) * 2;
+	diagnostic_sendInfo (RestartReason::WATCHDOG_DISPATCHER_POINTER, ptr[2], ptr[1], ptr[0]);
+	ptr = uint32_t(wdtPointer)*2;
+	diagnostic_restart (RestartReason::WATCHDOG, ptr[2], ptr[1], ptr[0]);
 }
 
 // --------------------------------------------- main -------------------------------------------►

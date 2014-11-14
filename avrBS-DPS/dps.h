@@ -915,7 +915,7 @@ private:
 					}
 					else if ( dimetiorChooser.wasCausariusChange() )
 					{
-						auxResource[1] = 2;
+						auxResource[1] = 3;
 					}
 					
 					if ( auxResource[1] != 0 )
