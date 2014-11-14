@@ -1,6 +1,3 @@
-Release/*
-!Release/2es6.eeprom.bin
-!Release/DPS_CAN.FLA
 *~
 
 ## Ignore Visual Studio temporary files, build results, and
@@ -14,8 +11,8 @@ Release/*
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
+Release/*
+!Release/2es6.eeprom.bin
 x64/
 x86/
 build/
