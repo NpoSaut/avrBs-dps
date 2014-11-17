@@ -729,7 +729,8 @@ void commandParser ()
 	if (data.member<DpsCommand>() == 0x0efe)			// Переход в режим программирования
 	{
 		dps.constituoPassivus ();
-
+		smartdog_off ();
+		
 		programming.enterProgramMode();
 		data.interruptHandler<Dps0> () = InterruptHandler::from_method <Programming, &Programming::comParser> (&programming);
 	}
