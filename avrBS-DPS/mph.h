@@ -720,6 +720,7 @@ struct EepromData
 //    - побайтный массив в оперативной памяти, отражающий текущее состояние eeprom.
 //
 
+template< typename Scheduler, Scheduler &scheduler >
 class SautConvert
 {
 public:
@@ -761,22 +762,25 @@ private:
 
 };
 
-SautConvert::SautConvert ()
+template< typename Scheduler, Scheduler &scheduler >
+SautConvert<Scheduler, scheduler>::SautConvert ()
 	: eepromOpRunning (false), resetRequest (No)
 {
 	stringNumber = 0;
 	runAfter = SoftIntHandler::from_method<SautConvert, &SautConvert::init1StringPlainMap>(this);
-	updateStringCrc (0);
+	scheduler.runIn(Command{SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc> (this), 0}, 1000);
 }
 
-void SautConvert::init1StringPlainMap (uint16_t	)
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::init1StringPlainMap (uint16_t	)
 {
 	runAfter = SoftIntHandler();
 	stringNumber = 1;
 	updateStringCrc (0);
 }
 
-void SautConvert::updateCell (uint8_t number, Complex<uint32_t> data, const SoftIntHandler& afterUpdate)
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::updateCell (uint8_t number, Complex<uint32_t> data, const SoftIntHandler& afterUpdate)
 {
 	cellNumber = number;
 	SautConvert::data = data;
@@ -785,7 +789,8 @@ void SautConvert::updateCell (uint8_t number, Complex<uint32_t> data, const Soft
 	dataUpdate (0);
 }
 
-void SautConvert::reset (SoftIntHandler afterReset)
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::reset (SoftIntHandler afterReset)
 {
 	SautConvert::afterReset = afterReset;
 
@@ -800,7 +805,8 @@ void SautConvert::reset (SoftIntHandler afterReset)
 
 }
 
-void SautConvert::dataUpdate (uint16_t )
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::dataUpdate (uint16_t )
 {
 	if (resetRequest == ResetRequest::No)
 	{
@@ -1022,7 +1028,8 @@ void SautConvert::dataUpdate (uint16_t )
 	}
 }
 
-void SautConvert::diametersWriteStep1 (uint16_t)
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::diametersWriteStep1 (uint16_t)
 {
 	eepromOpRunning = false;
 	if (resetRequest == ResetRequest::No)
@@ -1041,7 +1048,8 @@ void SautConvert::diametersWriteStep1 (uint16_t)
 	}
 }
 
-void SautConvert::diametersWriteStep2 (uint16_t)
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::diametersWriteStep2 (uint16_t)
 {
 	eepromOpRunning = false;
 	if (resetRequest == ResetRequest::No)
@@ -1060,7 +1068,8 @@ void SautConvert::diametersWriteStep2 (uint16_t)
 	}
 }
 
-void SautConvert::diametersWriteStep3 (uint16_t)
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::diametersWriteStep3 (uint16_t)
 {
 	eepromOpRunning = false;
 	if (resetRequest == ResetRequest::No)
@@ -1080,7 +1089,8 @@ void SautConvert::diametersWriteStep3 (uint16_t)
 	}
 }
 
-void SautConvert::updateStringCrc (uint16_t pointer)
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::updateStringCrc (uint16_t pointer)
 {
 	eepromOpRunning = false; // Эта функция вызывается по завершению операции eeprom
 	uint8_t str = stringNumber;
@@ -1088,7 +1098,8 @@ void SautConvert::updateStringCrc (uint16_t pointer)
 	readNextStringByte( Complex<uint16_t>{str,0} );
 }
 
-void SautConvert::readNextStringByte (uint16_t byteStringNumber)
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::readNextStringByte (uint16_t byteStringNumber)
 {
 	if (resetRequest == ResetRequest::No)
 	{
@@ -1156,8 +1167,9 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 	}
 }
 
+template< typename Scheduler, Scheduler &scheduler >
 template<uint16_t poly>
-uint16_t SautConvert::crcUpdate (uint16_t crc, const uint8_t& data)
+uint16_t SautConvert<Scheduler, scheduler>::crcUpdate (uint16_t crc, const uint8_t& data)
 {
 	crc ^= (uint16_t(data) << 8);
     for (uint8_t i = 0; i < 8; i++)
@@ -1165,7 +1177,8 @@ uint16_t SautConvert::crcUpdate (uint16_t crc, const uint8_t& data)
     return crc;
 }
 
-void SautConvert::runAfterReset (uint16_t)
+template< typename Scheduler, Scheduler &scheduler >
+void SautConvert<Scheduler, scheduler>::runAfterReset (uint16_t)
 {
 	resetRequest = ResetRequest::No;
 	dispatcher.add( afterReset, 0 );
@@ -1184,7 +1197,7 @@ public:
 	void getLeftDataMessage (uint16_t getDataPointer);
 	void getQueryMessage (uint16_t getDataPointer);
 
-	SautConvert sautConvert;
+	SautConvert<Scheduler, scheduler> sautConvert;
 
 private:
 	void isWritten (uint16_t res);
