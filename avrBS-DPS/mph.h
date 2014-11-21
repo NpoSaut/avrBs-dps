@@ -730,7 +730,6 @@ public:
 	uint8_t plainMap[32]; // отображение в ram данных из eeprom
 
 private:
-	void init1StringPlainMap (uint16_t );
 	void dataUpdate (uint16_t);
 	void diametersWriteStep1 (uint16_t);
 	void diametersWriteStep2 (uint16_t);
@@ -763,18 +762,7 @@ private:
 
 SautConvert::SautConvert ()
 	: eepromOpRunning (false), resetRequest (No)
-{
-	stringNumber = 0;
-	runAfter = SoftIntHandler::from_method<SautConvert, &SautConvert::init1StringPlainMap>(this);
-	updateStringCrc (0);
-}
-
-void SautConvert::init1StringPlainMap (uint16_t	)
-{
-	runAfter = SoftIntHandler();
-	stringNumber = 1;
-	updateStringCrc (0);
-}
+{ }
 
 void SautConvert::updateCell (uint8_t number, Complex<uint32_t> data, const SoftIntHandler& afterUpdate)
 {
