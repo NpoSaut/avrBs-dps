@@ -686,11 +686,11 @@ void commandParser ()
 		data.member<DpsOut2>() = dps.diametros(0); // выводим диаметры бандажа
 		data.member<DpsOut3>() = dps.diametros(1);
 
-		dps.constituoActivus ();
+		dps.constituoMittoSaut (true);
 	}
 	else
 	{
-		dps.constituoPassivus ();
+		dps.constituoMittoSaut (false);
 
 		if (command.idRead)
 		{

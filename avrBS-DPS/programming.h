@@ -400,14 +400,16 @@ void Programming::comParser ()
 		switch (command)
 		{
 		case FUSEWrite:
-//			Complex<uint16_t> in1 = +inPort1;
-//			Complex<uint16_t> in3 = +inPort3;
-//
-//			neighbour.fuseWriteLow( in1[1] );
-//			neighbour.fuseWriteHigh( in1[0] );
-//			neighbour.fuseWriteExt ( in3[1] );
+			{
+			Complex<uint16_t> in1 = +inPort1;
+			Complex<uint16_t> in2 = +inPort2;
+
+			neighbour.fuseWriteLow( in1[1] );
+			neighbour.fuseWriteHigh( in1[0] );
+			neighbour.fuseWriteExt ( in2[1] );
 
 			Return (0);
+			}
 			break;
 
 		case FUSERead:
