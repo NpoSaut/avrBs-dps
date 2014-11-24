@@ -614,7 +614,7 @@ public:
 					  	 Delegate<int32_t ()>::from_method<CeleritasSpatiumDimetior,
 						&CeleritasSpatiumDimetior::accipioSpatiumAdjustedMeters> (this)),
 			  animadversor ( InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (this) ),
-			  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (acceleratioEtAffectus),
+			  mittoSaut (false), spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (acceleratioEtAffectus),
 			  spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
 			  rotundCeleritas (0), dimetiorChooser(), bothBreak(isSelfComplectA), activus (0),
 			  dimetiorObj ({Dimetior(lanterna0Set, lanterna1Set, isSelfComplectA), Dimetior(lanterna0Set, lanterna1Set, !isSelfComplectA)})
@@ -653,7 +653,14 @@ public:
 		}
 	}
 	bool sicinActivus () const
-	{	return activus;}
+	{	
+		return activus;
+	}
+	
+	void constituoMittoSaut (bool mitto)
+	{
+		mittoSaut = mitto;
+	}
 
 	void constituoTractus ()
 	{
@@ -719,6 +726,7 @@ private:
 
 	bool tractus;// 0 - выбег или торможение, 1 - тяга
 
+	bool mittoSaut; // Отправлять ли информацию в САУТ
 	uint8_t& spatium;
 	Safe<uint16_t>& celeritasProdo;
 	Safe<uint16_t>& acceleratioEtAffectus;
