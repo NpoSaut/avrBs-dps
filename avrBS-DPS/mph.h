@@ -723,6 +723,9 @@ struct EepromData
 	
 	// Причина перезагрузки
 	Eeprom<uint8_t>			restartReason;
+	
+	// Флаг готовности МПХ
+	Eeprom<uint32_t>		initFlag;
 
 } eeprom EEMEM;
 
@@ -1218,6 +1221,8 @@ public:
 	SautConvert sautConvert;
 
 private:
+	void checkInit (uint16_t);
+	void clearCell (uint16_t);
 	void isWritten (uint16_t res);
 	void isGoodWhenWrite (uint16_t res);
 	void isGoodWhenRead (uint16_t res);
@@ -1245,7 +1250,6 @@ private:
 		ErrUnknown		= 5
 	};
 	void endOperation (const Status& status);
-
 
 	struct Packet
 	{
@@ -1284,11 +1288,13 @@ private:
 	monitoredData;
 	uint8_t interrogateCell;
 	uint8_t wrongCell;
-
+	uint8_t clearCellNumber;
 
 	uint8_t killerId;
 	bool reset;
 	bool interruptMonitoringProccess;
+	
+	enum InitEtalon : uint32_t {initEtalon = (uint32_t)0x56EAA36D};
 };
 
 template <  typename CanDatType, CanDatType& canDat,
@@ -1296,9 +1302,55 @@ template <  typename CanDatType, CanDatType& canDat,
 ConstValModule<CanDatType, canDat, Scheduler, scheduler>::ConstValModule ()
 	: sautConvert (), interrogateCell (128), wrongCell (0), activePacket({0,0}), reset(false)
 {
-	scheduler.runIn(
-			Command {SoftIntHandler::from_method<ConstValModule,&ConstValModule::sendState> (this), 0},
-			500 );
+	checkInit(0);
+}
+
+template <  typename CanDatType, CanDatType& canDat,
+			typename Scheduler, Scheduler& scheduler >
+void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkInit (uint16_t )
+{
+	uint8_t sreg = reg.status;
+	cli ();	
+	if ( eeprom.initFlag.isReady() )
+	{
+		if (eeprom.initFlag == initEtalon)
+		{
+			reg.status = sreg;
+			scheduler.runIn(
+				Command {SoftIntHandler::from_method<ConstValModule,&ConstValModule::sendState> (this), 0},
+						500 );
+		}
+		else
+		{
+			reg.status = sreg;
+			clearCellNumber = 0;
+			clearCell(0);
+		}
+	}
+	else // eeprom занят
+	{
+		reg.status = sreg;
+		// Повторим попытку позже
+		dispatcher.add ( SoftIntHandler::from_method<ConstValModule,&ConstValModule::checkInit> (this), 0 );
+	}
+}
+
+template <  typename CanDatType, CanDatType& canDat,
+typename Scheduler, Scheduler& scheduler >
+void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::clearCell (uint16_t)
+{
+	if (clearCellNumber < 128)
+	{
+		if ( eeprom.club.cell[clearCellNumber].setUnwritten(SoftIntHandler::from_method<ConstValModule,&ConstValModule::clearCell> (this)) )
+			clearCellNumber ++;
+		else
+			dispatcher.add ( SoftIntHandler::from_method<ConstValModule,&ConstValModule::clearCell> (this), 0 );
+	}
+	else
+	{
+		if ( !eeprom.initFlag.updateUnblock (initEtalon, SoftIntHandler::from_method<ConstValModule,&ConstValModule::sendState> (this)) )
+			dispatcher.add ( SoftIntHandler::from_method<ConstValModule,&ConstValModule::clearCell> (this), 0 );
+	}
 }
 
 template <  typename CanDatType, CanDatType& canDat,
