@@ -174,6 +174,7 @@ class EeCell
 public:
 	bool write( const uint32_t& value, const SoftIntHandler& runAfterWriteEnd = SoftIntHandler() );
 	bool read ( uint32_t& value );
+	bool setUnwritten (const SoftIntHandler& runAfterWrite);
 	void isGood ( const SoftIntHandler& resultGetter );
 	void isWritten ( const SoftIntHandler& resultGetter );
 	void reset ( const SoftIntHandler& runAfterReset = SoftIntHandler() );
@@ -189,6 +190,8 @@ private:
 	void goodDelayedRequest (uint16_t);
 	void writtenDelayedRequest (uint16_t);
 	void runAfterReset (uint16_t);
+	void clearStatus (uint16_t);
+	void clearingResult (uint16_t);
 
 	Eeprom< EeCellStaticPrivate::Status > status;
 	Eeprom<uint32_t> data;
@@ -251,6 +254,22 @@ bool EeCell::read(uint32_t& value)
 		reg.status = sreg;
 		return false;
 	}
+}
+
+bool EeCell::setUnwritten(const SoftIntHandler& runAfterWrite)
+{
+	namespace Static = EeCellStaticPrivate;
+	if ( !Static::activeWrite )
+	{
+		Static::activeWrite = true;
+		Static::afterWrite = runAfterWrite;
+		Static::status = 0xFF;
+		clearStatus (0);
+
+		return true;
+	}
+	else
+		return false;
 }
 
 void EeCell::isGood( const SoftIntHandler& resultGetter )
@@ -367,7 +386,7 @@ void EeCell::writeStatus (uint16_t )
 		if ( status.updateUnblock( EeCellStaticPrivate::status, SoftIntHandler::from_method<EeCell, &EeCell::writeData>(this) ) )
 			EeCellStaticPrivate::eepromOpRunning = true;
 		else
-				dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writeStatus> (this), 0 );
+			dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writeStatus> (this), 0 );
 	}
 	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
 	{
@@ -463,6 +482,30 @@ void EeCell::lastControl (uint16_t )
 		runAfterReset (0);
 	}
 
+}
+
+void EeCell::clearStatus (uint16_t )
+{
+	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
+	{
+		if ( status.updateUnblock( EeCellStaticPrivate::status, SoftIntHandler::from_method<EeCell, &EeCell::clearingResult>(this) ) )
+			EeCellStaticPrivate::eepromOpRunning = true;
+		else
+			dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::clearStatus> (this), 0 );
+	}
+	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
+	{
+		runAfterReset (0);
+	}
+}
+
+void EeCell::clearingResult (uint16_t )
+{
+	EeCellStaticPrivate::eepromOpRunning = false;
+	
+	dispatcher.add( EeCellStaticPrivate::afterWrite, 0 );
+
+	EeCellStaticPrivate::activeWrite = false;
 }
 
 void EeCell::goodDelayedRequest (uint16_t )
