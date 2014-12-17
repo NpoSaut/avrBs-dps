@@ -370,6 +370,9 @@ public:
 		preferred = checkConfidentValidity (dimetiors, preferred);
 		preferred = checkValidity (dimetiors, preferred);
 		
+		// HACK
+		preferred = 1;
+		
 		wasSwitch = (previous != preferred);
 		previous = preferred;
 	}
