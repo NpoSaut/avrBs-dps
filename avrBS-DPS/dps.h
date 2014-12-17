@@ -371,7 +371,7 @@ public:
 		preferred = checkValidity (dimetiors, preferred);
 		
 		// HACK
-		preferred = 1;
+		preferred = 0;
 		
 		wasSwitch = (previous != preferred);
 		previous = preferred;
