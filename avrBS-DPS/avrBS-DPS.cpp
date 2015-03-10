@@ -10,7 +10,7 @@
 
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
-
+#include <avr/wdt.h>
 //#include <cpp/interrupt-dynamic.h>
 #include <cpp/io.h>
 #include <cpp/universal.h>
@@ -19,6 +19,11 @@
 #include <cpp/timers.h>
 #include <util/delay.h>
 
+#define SMARTDOG_ALARM Alarm2
+#define SMARTDOG_WDT_TIME WDTO_30MS
+#define SMARTDOG_ALARM_TIME 19968
+#include <cpp/smartdog.h>
+
 #include "hw_defines.h"
 #include "SautCom.h"
 #include "SautDat.h"
@@ -26,26 +31,32 @@
 #include "programming.h"
 #include "dps.h"
 #include "eeprom.h"
-#include "CanDat.h"
+#include "cpp/can-dat.h"
+#include "cpp/can-async.h"
 #include "CanDesriptors.h"
 #include "kpt.h"
 #include "mph.h"
 #include "neutral-insertion.h"
 #include "DiscreteInput.h"
-
-
+#include "diagnostic.h"
 
 void Init (void) __attribute__ ((naked)) __attribute__ ((section (".init5")));
 void Init (void)
 {
-	// Светодиоды
+	// Светодиоды.
 	reg.portG.pin3.out();
 	reg.portG.pin4.out();
 	reg.portG.pin3 = true;
 	reg.portG.pin4 = true;
+	configSelfComplectPin();
+	lconfig();
 
 	// Watchdog
-	wdt_enable (WDTO_500MS);
+	wdt_enable (WDTO_250MS);
+	// smartdog будет инициализирован позже
+
+	// Кнопка сброса
+	reg.portB.pin5.in();
 }
 
 // ----------------------------------- Системные часы и планировщик -----------------------------►
@@ -53,7 +64,7 @@ void Init (void)
 typedef Clock< Alarm< Alarm3A, 1000 >, uint32_t > ClockType;  // Обнуление через 50 суток
 ClockType clock;
 
-typedef Scheduler< ClockType, clock, 16, uint16_t > SchedulerType;
+typedef Scheduler< ClockType, clock, Dispatcher, dispatcher, 16, uint16_t > SchedulerType;
 SchedulerType scheduler;
 
 // ---------------------------------------------- CAN -------------------------------------------►
@@ -132,6 +143,9 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 				 100 >									// BaudRate = 100 Кбит, SamplePoint = 75% (по умолчанию)
 	CanDatType;
 CanDatType canDat;
+
+typedef CanAsync<CanDatType, canDat, Dispatcher, dispatcher, 16> CanAsyncType;
+CanAsyncType canAsync;
 
 // -------------------------------------------- RS-485 ------------------------------------------►
 
@@ -250,13 +264,29 @@ void sysDiagnostics (uint16_t a)
 	{
 		if ( request == Request::VERSION  )
 		{
-			uint8_t packet[5] = {
-					(uint8_t) Answer::VERSION,
-					(uint8_t) programmingCan.getVersion(),
-					(uint8_t) programmingCan.getSubversion(),
-					(uint8_t) (programmingCan.getCheckSum() & 0xFF),
-					(uint8_t) (programmingCan.getCheckSum() >> 8)
-								};
+			uint8_t packet[5];
+			if ( programmingCan.isAvailable () )
+			{
+				packet[0] =	(uint8_t) Answer::VERSION;
+				packet[1] =	(uint8_t) programmingCan.getVersion();
+				packet[2] =	(uint8_t) programmingCan.getSubversion();
+				packet[3] =	(uint8_t) (programmingCan.getCheckSum() & 0xFF);
+				packet[4] =	(uint8_t) (programmingCan.getCheckSum() >> 8);			
+			}
+			else
+			{
+				uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
+				uint16_t checkSumm = 0;
+				for (uint8_t i = 0; i < idSize; i ++)
+				checkSumm += pgm_read_word ((uint16_t *)&id + i);
+
+				packet[0] =	(uint8_t) Answer::VERSION;
+				packet[1] =	pgm_read_byte(&id.version);
+				packet[2] =	0;
+				packet[3] =	0;
+				packet[4] =	uint8_t (checkSumm);
+			}
+
 			if (unit == Unit::IPD)
 			{
 				if (isSelfComplectA ())
@@ -279,40 +309,6 @@ void sysDiagnostics (uint16_t a)
 					canDat.send<CanTx::AUX_RESOURCE_VDS_B>(packet);
 			}
 		}
-//		else if ( request == Request::DIST_TRAVEL_WRITE )
-//		{
-//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-//			eeprom_update_byte( adr  , canDat.get<CanRx::SYS_DIAGNOSTICS>() [5] );
-//			eeprom_update_byte( adr+1, canDat.get<CanRx::SYS_DIAGNOSTICS>() [4] );
-//			eeprom_update_byte( adr+2, canDat.get<CanRx::SYS_DIAGNOSTICS>() [3] );
-//			eeprom_update_byte( adr+3, canDat.get<CanRx::SYS_DIAGNOSTICS>() [2] );
-//		}
-//		else if ( request == Request::DIST_TRAVEL_READ_A && isSelfComplectA () )
-//		{
-//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-//			uint8_t packet[5] = {
-//					(uint8_t) Answer::DATA,
-//					eeprom_read_byte (adr+3),
-//					eeprom_read_byte (adr+2),
-//					eeprom_read_byte (adr+1),
-//					eeprom_read_byte (adr)
-//								};
-//
-//			canDat.send<CanTx::AUX_RESOURCE_IPD_A> (packet);
-//		}
-//		else if ( request == Request::DIST_TRAVEL_READ_B && !isSelfComplectA () )
-//		{
-//			uint8_t* adr = (uint8_t *) &eeprom.club.milage;
-//			uint8_t packet[5] = {
-//					(uint8_t) Answer::DATA,
-//					eeprom_read_byte (adr+3),
-//					eeprom_read_byte (adr+2),
-//					eeprom_read_byte (adr+1),
-//					eeprom_read_byte (adr)
-//								};
-//
-//			canDat.send<CanTx::AUX_RESOURCE_IPD_B> (packet);
-//		}
 		else if ( request == Request::TEST_RUN && unit == Unit::BS_DPS )
 		{
 			uint8_t packet[5] = {
@@ -337,16 +333,17 @@ InterruptHandler kptOdometerPluPlusHandler;
 // ---------------------------------------------- ДПС -------------------------------------------►
 
 typedef
-CeleritasSpatiumDimetior  < &Register::portG, 3, 4, &Register::portA, 0,
-							CanDatType, canDat,
+CeleritasSpatiumDimetior  < CanDatType, canDat,
 							ClockType, clock,
 							SchedulerType, scheduler >
 DpsType;
 
-DpsType	dps ( 	&Register::portC,
+DpsType	dps ( 	Delegate<void (bool)>::from_function< &lset<0> >(), Delegate<void (bool)>::from_function< &lset<1> >(), isSelfComplectA(),
+				&Register::portC,
 				sautDecimeters, sautVelocity, sautAcceleratio,
 				kptOdometerPluPlusHandler,
 				kptOdometerPluPlusHandler );
+
 
 void unsetResetFlag (uint16_t)
 {
@@ -377,16 +374,18 @@ void mcoState (uint16_t pointer)
 	static uint32_t lastTime = 0;
 	uint32_t time = clock.getTime();
 	if ( time - lastTime > 4000 )
-		reboot();
+		diagnostic_restart(RestartReason::CO_LOST);
 	lastTime = time;
 
 	// Контроль выхода из конфигурации
-	if ( !(message[6] & (1 << 1) && message[7] & (1 << 6)) && //message[7] & (1 << ?) && 	// выход БС-ДПС или �?ПД или ВДС
-			clock.getTime() > 7000 && 	// проработали больше 7 секунд
-			dps.sicinActivus() && // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
-			!dps.sicinCausarius() ) // если оба датчика неисправны, то перезагрузку не делать
+	if ( clock.getTime() > 7000 && 	// проработали больше 7 секунд
+		dps.sicinActivus() && // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
+		!dps.sicinBothBrake() ) // если оба датчика неисправны, то перезагрузку не делать
 	{
-		reboot ();
+		if( !(message[6] & (1 << 1)) )
+			diagnostic_restart(RestartReason::IPD_OUT);
+		if( !(message[7] & (1 << 6)) )
+			diagnostic_restart(RestartReason::DPS_OUT);
 	}
 
 }
@@ -413,7 +412,7 @@ void mcoAuxResControl (uint16_t pointer)
 			clock.getTime() > 7000 && 	// проработали больше 7 секунд
 			dps.sicinActivus() ) // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
 	{
-		reboot ();
+		diagnostic_restart(RestartReason::MPH_OUT);
 	}
 }
 
@@ -431,7 +430,7 @@ void mcoAuxResB (uint16_t pointer)
 
 // --------------------------------- Модуль постоянных характеристик ----------------------------►
 
-typedef ConstValModule <CanDatType, canDat, SchedulerType, scheduler> MPHType;
+typedef ConstValModule <CanAsyncType, canAsync, SchedulerType, scheduler> MPHType;
 MPHType mph;
 
 // ------------------------------------- Нейтральная вставка -------------------------------------►
@@ -504,7 +503,6 @@ private:
 
 		getMessage = false;
 		scheduler.runIn( Command{ SoftIntHandler::from_method<Emulation, &Emulation::watchDog>(this), 0 }, 1000 );
-//		scheduler.runIn( Command{ SoftIntHandler(this, &Emulation::watchDog), 0 }, 1000 );
 	}
 	void makeAStep ()
 	{
@@ -546,7 +544,6 @@ private:
 	// Перебор этих значений слева направо соответсвует вращению по часовой стрелке
 	static const uint8_t rotationClockwiseCode [4];
 	uint8_t currentOperationSequence [4];
-
 
 	AlarmAdjust<Alarm1A> engine;
 	IpdEmulationMessage current;
@@ -639,15 +636,50 @@ void inputSignalStateOut (uint16_t )
 	scheduler.runIn( Command {SoftIntHandler::from_function<&inputSignalStateOut>(), 0}, 500 );
 }
 
+// -------------------------------------- store restart reason ----------------------------------►
+
+void storeRestartReason (uint8_t val)
+{
+	eeprom.restartReason = val;
+}
+
+uint8_t restoreRestartReason ()
+{
+	return eeprom.restartReason;
+}
+
+void canBusOffHandler ()
+{
+	diagnostic_restart (RestartReason::CAN_BUSOFF);
+}
+
+void dispatcherOverflowHandler (uint16_t detail)
+{
+	diagnostic_restart (RestartReason::DISPATCHER_OVER, detail);
+}
+
+void schedulerFullHandler ()
+{
+	diagnostic_sendInfo (RestartReason::SCHEDULER_FULL);
+}
+
+void programmingRebootHandler ()
+{
+	diagnostic_restart (RestartReason::PROGRAM_MODE);
+}
+
+void smartdogAlarm (uint16_t wdtPointer)
+{
+	Complex<uint32_t> ptr = uint32_t(dispatcher.getCurrentCommandPointer()) * 2;
+	diagnostic_sendInfo (RestartReason::WATCHDOG_DISPATCHER_POINTER, ptr[2], ptr[1], ptr[0]);
+	ptr = uint32_t(wdtPointer)*2;
+	diagnostic_restart (RestartReason::WATCHDOG, ptr[2], ptr[1], ptr[0]);
+}
+
 // --------------------------------------------- main -------------------------------------------►
 
 int main ()
 {
-	asm volatile ("nop"); // !!! 126 version hack !!!
-//	asm volatile ("nop"); // Для того чтобы сделать размер программы картным 6
-//	asm volatile ("nop");
-//	asm volatile ("nop");
-
 	canDat.rxHandler<CanRx::IPD_EMULATION>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
 
 	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);
@@ -673,63 +705,72 @@ int main ()
 	// ВДС
 	inputSignalStateOut(0);
 
-		dps.constituoActivus();
+	dps.constituoActivus();
+
+	// Причина перезагрузки
+	diagnostic_storeDelegate = Delegate<void (uint8_t)>::from_function <&storeRestartReason> ();
+	diagnostic_restoreDelegate = Delegate<uint8_t ()>::from_function <&restoreRestartReason> ();
+	if (isSelfComplectA())
+		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_A> > (&canDat);
+	else
+		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_B> > (&canDat);
+	diagnostic_watchdogResetDelegate = Delegate<void ()>::from_function <&smartdog_reset> ();
+	canDat.setBusOffHandler( Delegate<void ()>::from_function <&canBusOffHandler> () );
+	dispatcher.overflowHandler = Delegate<void (uint16_t)>::from_function <&dispatcherOverflowHandler> ();
+	scheduler.fullHandler = Delegate<void ()>::from_function <&schedulerFullHandler> ();
+	programmingCan.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();
+	smartdog_deathAlarm = &smartdogAlarm;
+	smartdog_on();
 
 	sei();
 
 	// После включения выдавать AUX_RESOURCE с версией
 	{
-		uint8_t packet[5] = {
-				(uint8_t) 0,
-				(uint8_t) programmingCan.getVersion(),
-				(uint8_t) programmingCan.getSubversion(),
-				(uint8_t) (programmingCan.getCheckSum() & 0xFF),
-				(uint8_t) (programmingCan.getCheckSum() >> 8)
-							};
-		if (isSelfComplectA ())
+		uint8_t packet[5];
+		if ( programmingCan.isAvailable () )
 		{
-			canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
-			_delay_ms (10);
-			canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
+			packet[0] =	(uint8_t) 0;
+			packet[1] =	(uint8_t) programmingCan.getVersion();
+			packet[2] =	(uint8_t) programmingCan.getSubversion();
+			packet[3] =	(uint8_t) (programmingCan.getCheckSum() & 0xFF);
+			packet[4] =	(uint8_t) (programmingCan.getCheckSum() >> 8);
 		}
 		else
 		{
-			canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet);
-			_delay_ms (10);
-			canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
+			uint8_t idSize = pgm_read_byte(&id.idSize)*8; // Размер в словах
+			uint16_t checkSumm = 0;
+			for (uint8_t i = 0; i < idSize; i ++)
+			checkSumm += pgm_read_word ((uint16_t *)&id + i);
+
+			packet[0] =	(uint8_t) 0;
+			packet[1] =	pgm_read_byte(&id.version);
+			packet[2] =	0;
+			packet[3] =	0;
+			packet[4] =	uint8_t (checkSumm);
+		}
+
+		if (isSelfComplectA ())
+		{
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_IPD_A>(packet) );
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_BS_A>(packet) );
+		}
+		else
+		{
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_IPD_B>(packet) );
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_BS_B>(packet) );
 		}
 	}
+	
+	diagnostic_sendReasonOfPreviousRestart();
 
 	scheduler.runIn( Command {SoftIntHandler::from_function<&unsetResetFlag>(), 0}, 7000 );
+		
+	dps.constituoActivus();
 
     for (;;)
     {
-//    	static uint16_t ctr = 0;
-//    	if (ctr++ > 2000)
-//    	{
-//    		sei();
-//    		ctr = 0;
-//			uint8_t sysDataState2[8] = {
-//					0, // Результаты выполнения тестов... здесь не выводим
-//					0,
-//					0,
-//					0,
-//					0,
-//					scheduler.fill,
-//					dispatcher.maxSize,
-//					0
-//									};
-//			dispatcher.maxSize = 0;
-//			if (isSelfComplectA ()) // первый полукомплект
-//				canDat.send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
-//			else
-//				canDat.send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);
-//    	}
-
     	dispatcher.invoke();
-    	wdt_reset();
-    	scheduler.invoke();
-    	wdt_reset();
+    	smartdog_reset();
     }
 }
 

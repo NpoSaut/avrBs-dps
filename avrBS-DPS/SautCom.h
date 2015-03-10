@@ -52,9 +52,6 @@
 
 #include "hw_defines.h"
 
-#include "CanDesriptors.h"
-
-
 namespace Saut
 {
 
@@ -124,14 +121,6 @@ public:
 		block3Byte = 1;
 
 		reset ();
-
-		// DEBUG
-		reg.timer2Compare = 255;
-		reg.timer2Control.clockType = TimerControl8_2::ClockType::Prescale8; // 0,66667 мкс
-		reg.timer2Control.waveform = TimerControl8_2::Waveform::Normal;
-		reg.timer2Control.outputMode = TimerControl8_2::OutputMode::OutPinDisconnect;
-		reg.timer2InterruptMask.CompInterrupt = false;
-		reg.timer2InterruptMask.OverflowInterrupt = false;
 	}
 
 	uint16_t dataOut;
@@ -144,7 +133,6 @@ public:
 	// Пройдено метров. Для передачи в 3-ем байте.
 	uint8_t decimeters;
 //	Safe<uint8_t> decimeters;
-	volatile uint8_t termTime;
 
 	void rxHandler ();
 	void txHandler ();
@@ -154,8 +142,6 @@ public:
 //	INTERRUPT_HANDLER(udreHandler);
 
 private:
-	bool flag;
-
 	//Коды Хэмминга
 	enum MessageType
 	{
@@ -331,8 +317,6 @@ start:
 				{
 					outMode ();
 					(reg.*usartData) = ham[Data][decimeters&0x0f]; 			// Отправляем
-//					start = reg.timer3Counter;
-//					flag = true;
 
 					step = Get3Byte;							// ещё +1 на выходе. Реально step = Data0  - Перепрыгиваем через получение 3-го байта
 
@@ -341,11 +325,6 @@ start:
 						dataOut = (uint16_t) packet.data;
 						cli ();									// Дождаться выхода из этого обработчика
 						(reg.*usartControl).dataRegEmptyInterrupt = true;	// Оттуда отправка данных
-					}
-					else
-					{
-						flag = true;
-						reg.timer2Counter = 0;
 					}
 				}
 			}
@@ -451,31 +430,9 @@ template <  volatile Bitfield<UsartControl> Register::* usartControl, volatile B
 void Com<usartControl, usartBaudRate, usartData, rxPort, rxPin, txPort, txPin, ioSwitchPort, ioSwitchPin, scPort, scPin, myAdr, DatType, dat>::txHandler()
 {
 	inMode ();
-	uint8_t time = reg.timer2Counter;
 
 	if ( step == End )											// Закончили отправку данных
 		reset ();
-	else if (flag)
-	{
-		flag = false;
-//		if ( reg.timer2InterruptFlag.OverflowOccur )
-//		{
-//			reg.timer2InterruptFlag.OverflowOccur = 1;
-//			time = 0xFF;
-//		}
-
-		if ( time  > 144 ) // очень странно, если нет
-		{
-			time -= 144;
-			time = (time * 2) / 3; // время задержки в мкс
-		}
-		else
-		{
-			termTime = 0xFE;
-			reg.general1 = termTime;
-		}
-	}
-
 }
 
 } // namespace Saut

@@ -12,7 +12,7 @@
 #define AUX_RESOURCE_H_
 
 #include <cpp/universal.h>
-#include "CanDat.h"
+#include "cpp/can-dat.h"
 #include "CanDesriptors.h"
 #include "id.h"
 

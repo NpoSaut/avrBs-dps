@@ -53,9 +53,9 @@
 #include <cpp/io.h>
 #include <cpp/dispatcher.h>
 
-#include "ProgSpi.h"
+#include "cpp/prog-spi.h"
 #include "SautDat.h"
-#include "CanDat.h"
+#include "cpp/can-dat.h"
 #include "CanDesriptors.h"
 
 
@@ -65,6 +65,8 @@ class ProgrammingCan
 {
 public:
 	ProgrammingCan ();
+	
+	bool isAvailable () const { return getPropertyPointer != 0; }
 
 	uint16_t getVersion () const { return version; }
 	uint8_t getSubversion () const { return subversion; }
@@ -77,6 +79,8 @@ public:
 	uint8_t getCellManufactureMonth () const { return cellManufactureMonth; }
 	uint8_t getChannel () const { return channel; }
 	uint8_t getCellModification () const { return cellModification; }
+		
+	Delegate<void ()> reboot;
 
 private:
 	typedef int32_t (*GetPropertyFunction) (uint8_t key);
@@ -130,34 +134,40 @@ template <  typename CanDat, CanDat& canDat,
 			uint16_t initDescriptor, uint16_t answerDescriptor >
 uint32_t ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::getProperty(uint8_t key) const
 {
-	union
+	if ( isAvailable() )
 	{
-		struct
+		union
 		{
-			uint16_t low;
-			uint16_t hi;
-		};
-		int32_t full;
-	} res;
+			struct
+			{
+				uint16_t low;
+				uint16_t hi;
+			};
+			int32_t full;
+		} res;
 
-	asm (
-			"cli"							"\n\t"
-			"mov r16, %[key]"				"\n\t"
-			"movw r30, %[addr]"				"\n\t"
-			"icall"							"\n\t"
-			"movw %[resL], r16"				"\n\t"
-			"movw %[resH], r18"				"\n\t"
-			"sei"
-				: [resL] "=r" (res.low),
-				  [resH] "=r" (res.hi)
-				: [key] "r" (key),
-				  [addr] "e" (getPropertyPointer)
-				: "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",  "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15",
-				  "r16", "r17", "r18", "r19", "r20", "r21", "r22", "r23", "r24", "r25"//, "r26", "r27"//, "r28", "r29"//, "r30", "r31"
-		);
-
-	return res.full;
-
+		asm (
+				"cli"							"\n\t"
+				"mov r16, %[key]"				"\n\t"
+				"movw r30, %[addr]"				"\n\t"
+				"icall"							"\n\t"
+				"movw %[resL], r16"				"\n\t"
+				"movw %[resH], r18"				"\n\t"
+				"sei"
+					: [resL] "=r" (res.low),
+					  [resH] "=r" (res.hi)
+					: [key] "r" (key),
+					  [addr] "e" (getPropertyPointer)
+					: "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",  "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15",
+					  "r16", "r17", "r18", "r19", "r20", "r21", "r22", "r23", "r24", "r25"//, "r26", "r27"//, "r28", "r29"//, "r30", "r31"
+			);
+			
+		return res.full;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 template <  typename CanDat, CanDat& canDat,
@@ -206,6 +216,10 @@ void ProgrammingCan<CanDat, canDat, initDescriptor, answerDescriptor>::catchInit
 		};
 	};
 	InitMessage &message = *((InitMessage *) addr);
+
+
+	Complex<uint32_t> mn = message.getManufactureNumber();
+	canDat.template send <0x1888> ({0,1,2,0, mn[3], mn[2], mn[1], mn[0]});
 
 	if (  message.isRightKey()
 		 &&	( message.getCellId()				== getCellId()					|| message.getCellId() 		 		== 0 )
@@ -260,12 +274,14 @@ public:
 		Return( neighbour.rebootInProg() ? 0x0 : 0x20 );
 	}
 	void comParser ();
+	
+	Delegate<void ()> reboot;
 
 private:
 	ProgSpi::
 	ProgSpiSimple  < &Register::spiStatusControl, &Register::spiData,
 	 	 	 	 	 &Register::portB, 0, 1, 2, 3,
-	 	 	 	 	 &Register::portD, 0
+	 	 	 	 	 &Register::portB, 4
 					> neighbour;
 
 	Safe<uint16_t>& inPort0;
@@ -384,14 +400,16 @@ void Programming::comParser ()
 		switch (command)
 		{
 		case FUSEWrite:
-//			Complex<uint16_t> in1 = +inPort1;
-//			Complex<uint16_t> in3 = +inPort3;
-//
-//			neighbour.fuseWriteLow( in1[1] );
-//			neighbour.fuseWriteHigh( in1[0] );
-//			neighbour.fuseWriteExt ( in3[1] );
+			{
+			Complex<uint16_t> in1 = +inPort1;
+			Complex<uint16_t> in2 = +inPort2;
+
+			neighbour.fuseWriteLow( in1[1] );
+			neighbour.fuseWriteHigh( in1[0] );
+			neighbour.fuseWriteExt ( in2[1] );
 
 			Return (0);
+			}
 			break;
 
 		case FUSERead:

@@ -11,9 +11,19 @@
 
 #include <cpp/io.h>
 
+void configSelfComplectPin ()
+{
+	reg.portA.pin0.in();
+}
+
 bool isSelfComplectA ()
 {
 	return (reg.portA.pin0 == 0);
+}
+
+inline void lconfig ()
+{
+
 }
 
 template <uint8_t n>
@@ -32,6 +42,12 @@ template <uint8_t n>
 inline void ltoggle ()
 {
 //	reg.portC.pin<n+4>().toggle ();
+}
+
+template <uint8_t n>
+inline void lset (bool on)
+{
+	reg.portC.pin<n+4>() = !on;
 }
 
 //void lam (uint8_t n) __attribute__ ((noinline));

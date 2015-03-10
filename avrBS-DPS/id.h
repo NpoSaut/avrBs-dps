@@ -13,9 +13,9 @@
 
 
 
-#define ID_VERSION 211
+#define ID_VERSION 3
 #define ID_YEAR 0x1F
-#define ID_MODIF 0x21
+#define ID_MODIF 0x11
 #define ID_MANTH 0x0C
 #define ID_BLOK_NUMBER 10107
 #define ID_PARAM_SUMM (ID_VERSION + ID_YEAR + ID_MODIF + ID_MANTH + ID_BLOK_NUMBER/256 + uint8_t(ID_BLOK_NUMBER))
@@ -39,18 +39,18 @@ struct IdentifyDoc {
 
 //uint16_t ID  __attribute__ ((section (".id"))) = 0xab;
 
-IdentifyDoc idOld __attribute__ ((section (".id"))) =
+IdentifyDoc id __attribute__ ((section (".id"))) =
 		{
 		0, 0, 1, ID_VERSION, ID_YEAR, ID_MODIF, ID_MANTH, uint8_t(ID_BLOK_NUMBER/256), uint8_t(ID_BLOK_NUMBER),
 		uint8_t(ID_PARAM_SUMM/256),
 		uint8_t(ID_PARAM_SUMM),
-		0xDF, 0xD9, 0xFD
+		0xEF, 0xD8, 0xFD
 		};
 
 
 // ----------------------------------ATTENTION--------------------------------------
 // .id Section must be placed by linker to address 0x0100.
-// We modify avr/lib/ldscripts/avr5.x to allow place .id between .vectors and .init0
+// We modify avr/lib/ldscripts/avr51.x to allow place .id between .vectors and .init0
 // It normally use --script-file option to linker instead it, but it work bad
 // New file store at name "ld-script.x"
 // ---------------------------------------------------------------------------------

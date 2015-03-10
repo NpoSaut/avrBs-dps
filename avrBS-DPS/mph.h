@@ -14,7 +14,7 @@
 #include <cpp/universal.h>
 #include <cpp/eeprom.h>
 #include <cpp/scheduler.h>
-#include "CanDat.h"
+#include "cpp/can-dat.h"
 #include "CanDesriptors.h"
 
 // ------------------------------------------- Ячейка -------------------------------------------►
@@ -174,6 +174,7 @@ class EeCell
 public:
 	bool write( const uint32_t& value, const SoftIntHandler& runAfterWriteEnd = SoftIntHandler() );
 	bool read ( uint32_t& value );
+	bool setUnwritten (const SoftIntHandler& runAfterWrite);
 	void isGood ( const SoftIntHandler& resultGetter );
 	void isWritten ( const SoftIntHandler& resultGetter );
 	void reset ( const SoftIntHandler& runAfterReset = SoftIntHandler() );
@@ -189,6 +190,8 @@ private:
 	void goodDelayedRequest (uint16_t);
 	void writtenDelayedRequest (uint16_t);
 	void runAfterReset (uint16_t);
+	void clearStatus (uint16_t);
+	void clearingResult (uint16_t);
 
 	Eeprom< EeCellStaticPrivate::Status > status;
 	Eeprom<uint32_t> data;
@@ -217,6 +220,8 @@ bool EeCell::write (const uint32_t& value, const SoftIntHandler& runAfterWrite)
 
 bool EeCell::read(uint32_t& value)
 {
+	uint8_t sreg = reg.status;
+	cli ();
 	if ( !EeCellStaticPrivate::activeWrite  && status.isReady() && data.isReady() )
 	{
 		EeCellStaticPrivate::Status s = status;
@@ -224,6 +229,7 @@ bool EeCell::read(uint32_t& value)
 		if (!s.unWritten)
 		{
 			Complex<uint32_t> d = (uint32_t) data;
+			reg.status = sreg;
 
 			uint8_t crc = 0xFF;
 			for (uint8_t i = 0; i < 4; i++)
@@ -238,7 +244,29 @@ bool EeCell::read(uint32_t& value)
 				return false;
 		}
 		else
+		{
+			reg.status = sreg;
 			return false;
+		}
+	}
+	else
+	{
+		reg.status = sreg;
+		return false;
+	}
+}
+
+bool EeCell::setUnwritten(const SoftIntHandler& runAfterWrite)
+{
+	namespace Static = EeCellStaticPrivate;
+	if ( !Static::activeWrite )
+	{
+		Static::activeWrite = true;
+		Static::afterWrite = runAfterWrite;
+		Static::status = 0xFF;
+		clearStatus (0);
+
+		return true;
 	}
 	else
 		return false;
@@ -351,7 +379,6 @@ uint8_t EeCell::crc7x2 (uint8_t crcx2, uint8_t data)
 	return crcx2;
 }
 
-
 void EeCell::writeStatus (uint16_t )
 {
 	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
@@ -359,7 +386,7 @@ void EeCell::writeStatus (uint16_t )
 		if ( status.updateUnblock( EeCellStaticPrivate::status, SoftIntHandler::from_method<EeCell, &EeCell::writeData>(this) ) )
 			EeCellStaticPrivate::eepromOpRunning = true;
 		else
-				dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writeStatus> (this), 0 );
+			dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::writeStatus> (this), 0 );
 	}
 	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
 	{
@@ -457,6 +484,30 @@ void EeCell::lastControl (uint16_t )
 
 }
 
+void EeCell::clearStatus (uint16_t )
+{
+	if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::No)
+	{
+		if ( status.updateUnblock( EeCellStaticPrivate::status, SoftIntHandler::from_method<EeCell, &EeCell::clearingResult>(this) ) )
+			EeCellStaticPrivate::eepromOpRunning = true;
+		else
+			dispatcher.add( SoftIntHandler::from_method<EeCell, &EeCell::clearStatus> (this), 0 );
+	}
+	else if (EeCellStaticPrivate::resetRequest == EeCellStaticPrivate::ResetRequest::SelfWaitCycle)
+	{
+		runAfterReset (0);
+	}
+}
+
+void EeCell::clearingResult (uint16_t )
+{
+	EeCellStaticPrivate::eepromOpRunning = false;
+	
+	dispatcher.add( EeCellStaticPrivate::afterWrite, 0 );
+
+	EeCellStaticPrivate::activeWrite = false;
+}
+
 void EeCell::goodDelayedRequest (uint16_t )
 {
 	isGood ( EeCellStaticPrivate::isGoodResultGetter );
@@ -482,7 +533,7 @@ struct EepromData
 	EepromData () {}
 
 	enum DpsPosition { Left = 0, Right = 1 };
-	enum VelocityGauge { CL = 0, KPD = 1 }; 	// �?змеритель скорости
+	enum VelocityGauge { SL = 0, KPD = 1 }; 	// Измеритель скорости
 	enum IfSignal { ALS = 0, CKR = 1 };
 	enum AlarmSystem { ALSN = 0, CLUB = 1 };
 
@@ -518,15 +569,15 @@ struct EepromData
 				uint8_t			eks				:1;				// --- спросить (всегда ДА)
 				uint8_t			tapKM130		:1;				// + Кран машиниста КМ-130 (1)
 				uint8_t			club			:1;				// Флаг КЛУБ-У для локомотивной сигнализации (для БЛОК всегда)
-				VelocityGauge	velocityGauge	:1; 			// �?змеритель скорости
-				IfSignal		ifSignal		:1; 			// �?сточник �?Ф сигнала (для БЛОК всегда АЛС)
+				VelocityGauge	velocityGauge	:1; 			// Измеритель скорости
+				IfSignal		ifSignal		:1; 			// Источник ИФ сигнала (для БЛОК всегда АЛС)
 				AlarmSystem		alarmSystem		:1; 			// Локомотивная сигнализация (для БЛОК всегда КЛУБ)
 			};
 			Eeprom< Bitfield<Configuration> > configuration;// +!
 			Eeprom<uint16_t>	reserv1;    				// Резерв
 			Eeprom<int8_t>		diameterCorrection[2]; 		// + Уточнение диаметров бандажей соответственно для ДПС1 и ДПС2. Вычисляются как разность между точным значением
 															//   соответствующего диаметра бандажа в миллиметрах и средним значением, умноженным на 10.
-															//   Седьмой бит - знаковый. -- ВН�?МАН�?Е -- это не дополнительный код
+															//   Седьмой бит - знаковый. -- ВНИМАНИЕ -- это не дополнительный код
 			Eeprom<uint16_t>	controlSumm1;     			// + Контрольная сумма первой строки: CRC16 на базисе 0xA9EB
 			//  ------------------------------- Строка 2 -------------------------------
 			Eeprom<uint16_t>	string2Number; 				// + Номер второй строки (использую:0x0601, можно(?) 0x0401)BigEndian.
@@ -537,7 +588,7 @@ struct EepromData
 			{
 				None = 0,									// Нормальные локомотивы
 				TractionSignalFromBsCkr = 1,				// Сигнал "Тяга" от БС-ЦКР (ЧС2)
-				TractionInversionSignal = 2					// �?нверсный сигнал "Тяга" (ЧС4, ЧС4Т, ЧС7, ЭП1, ВЛ65, ВЛ85, ВЛ11)
+				TractionInversionSignal = 2					// Инверсный сигнал "Тяга" (ЧС4, ЧС4Т, ЧС7, ЭП1, ВЛ65, ВЛ85, ВЛ11)
 			};
 			Eeprom<FeatureCode>	featureCode;
 			Eeprom<uint8_t>		sectionNumber;				// +! Секция
@@ -561,12 +612,12 @@ struct EepromData
 			EeCell		category; 					//  4 - Категория поезда
 			EeCell		lengthWheel;				//  5 - Длина состава в осях
 			EeCell		lengthWagon; 				//  6 - Длина состава в условных вагонах
-			EeCell		locoNumber; 				//  7 - Номер локомотива или ведущей секции многосекционного локомотива
+			EeCell		locoNumberSection; 			//  7 - Номер локомотива + номер секции
 			EeCell		weigth; 					//  8 - масса поезда
 			EeCell		coordStart;					//  9 - Начальная координата
 			EeCell		time;						// 10 - Время
 			EeCell		typeLoco; 					// 11 - Тип локомотива
-			EeCell		vWhite; 						// 12 - Допустимая скорость (на белый)
+			EeCell		vWhite; 					// 12 - Допустимая скорость (на белый)
 			EeCell		vRedYellow; 				// 13 - Скорость движения на КЖ
 			EeCell		blockLength;				// 14 - Приведённая длина блок-участка «Дозор»
 			EeCell		diameter0; 					// 15 - Диаметр бандажа колеса 1, мм
@@ -597,18 +648,18 @@ struct EepromData
 			EeCell		vGreen; 					// 19 - Допустимая скорость на Зелёный
 			EeCell		dirCoord; 					// 20 - Направление изменения координаты
 			EeCell		milage; 					// 21 - Пробег локомотива
-			EeCell		clsdVersion;				// 22 - �?нформация о версии КЛУБ
+			EeCell		clsdVersion;				// 22 - Информация о версии КЛУБ
 			EeCell		trackMPH; 					// 23 - Номер пути для хранения в МПХ ВПД
 			EeCell		vpdPrivate; 				// 24 - Параментр используемый только внутри программы ВПД-М
-			EeCell		bilBrightnes;  				// 25 - Параметр яркости для модуля Б�?Л
+			EeCell		bilBrightnes;  				// 25 - Параметр яркости для модуля БИЛ
 			EeCell		snsPosition1;				// 26 - Расположение СНС первой кабины
 			EeCell		sndPosition2;				// 27 - Расположение СНС второй кабины
 			//-----------------------Запись по MCO_DATA---------------------------------------------------------
-			EeCell		ufirOutConf;				// 28 - УФ�?Р выходил из конфигурации
+			EeCell		ufirOutConf;				// 28 - УФИР выходил из конфигурации
 			EeCell		tskbmOutConf;				// 29 - ТСКБМ выходил из конфигурации
 			EeCell		sautOutConf;				// 30 - САУТ выходил из конфигурации
-			EeCell		bilOutConf;					// 31 - Б�?Л выходил из конфигурации
-			EeCell		ipdOutConf;					// 32 - �?ПД выходил из конфигурации
+			EeCell		bilOutConf;					// 31 - БИЛ выходил из конфигурации
+			EeCell		ipdOutConf;					// 32 - ИПД выходил из конфигурации
 			EeCell		bvuOutConf;					// 33 - БВУ выходил из конфигурации
 			EeCell		mmOutConf;					// 34 - ММ выходил из конфигурации
 			EeCell		ecOutConf;					// 35 - ЭК выходил из конфигурации
@@ -640,15 +691,15 @@ struct EepromData
 			EeCell		locoTip;					// 108
 			EeCell		locoName1;					// 109
 			EeCell		locoName2;					// 110
-			EeCell		section;					// 111
-
-			EeCell		dps0Position;				// 112 conf.0
-			EeCell		dps1Position;				// 113 conf.2
-			EeCell		eks;						// 114
-			EeCell		tapKM130;					// 115
-			EeCell		velocityGauge;				// 116
-			EeCell		ifSignalSource;				// 117
-			EeCell		alarmSystem;				// 118
+			EeCell		locoNumber;					// 111
+			EeCell		section;					// 112 
+			
+			EeCell		cell113;					// 113 free
+			EeCell		cell114;					// 114 free
+			EeCell		cell115;					// 115 free
+			EeCell		cell116;					// 116 free
+			EeCell		cell117;					// 117 free
+			EeCell		cell118;					// 118 free
 			struct SautConfiguration
 			{
 				uint32_t		tapKM130			:1; // 0
@@ -666,9 +717,15 @@ struct EepromData
 		} property;
 	} club;
 
-	// �?справности датчиков
+	// Исправности датчиков
 	Eeprom<uint8_t> 		dps0Good;
 	Eeprom<uint8_t>			dps1Good;
+	
+	// Причина перезагрузки
+	Eeprom<uint8_t>			restartReason;
+	
+	// Флаг готовности МПХ
+	Eeprom<uint32_t>		initFlag;
 
 } eeprom EEMEM;
 
@@ -693,9 +750,9 @@ struct EepromData
 // 2. При этом отсутсвует контроль целостности САУТовской части (это может делать САУТ, при этом crc нужно не забывать обновлять нам).
 // 3. В случае прерывания процесса записи обеспечить возможность прервать запись в САУТ.
 // 5. Для быстрого ответа на запрос от САУТа на чтение eeprom нужно хранить копию в оперативке (вдруг не будет доступа к eeprom)
-//    �? обновлять эту копию регулярно.
+//    И обновлять эту копию регулярно.
 //
-// ~~~ �?нтерфейс: ~~~
+// ~~~ Интерфейс: ~~~
 // 1. updateCell (number, data, afterUpdate)
 //    - Функция, которая должна быть вызвана в звене этапов записи после записи в КЛУБ и перед выдачей результата.
 //    - Производит всю работу по конвертации и записи (если нужно).
@@ -719,7 +776,6 @@ public:
 	uint8_t plainMap[32]; // отображение в ram данных из eeprom
 
 private:
-	void init1StringPlainMap (uint16_t );
 	void dataUpdate (uint16_t);
 	void diametersWriteStep1 (uint16_t);
 	void diametersWriteStep2 (uint16_t);
@@ -752,18 +808,7 @@ private:
 
 SautConvert::SautConvert ()
 	: eepromOpRunning (false), resetRequest (No)
-{
-	stringNumber = 0;
-	runAfter = SoftIntHandler::from_method<SautConvert, &SautConvert::init1StringPlainMap>(this);
-	updateStringCrc (0);
-}
-
-void SautConvert::init1StringPlainMap (uint16_t	)
-{
-	runAfter = SoftIntHandler();
-	stringNumber = 1;
-	updateStringCrc (0);
-}
+{ }
 
 void SautConvert::updateCell (uint8_t number, Complex<uint32_t> data, const SoftIntHandler& afterUpdate)
 {
@@ -795,15 +840,7 @@ void SautConvert::dataUpdate (uint16_t )
 	{
 		eepromOpRunning = true;
 
-		if (cellNumber == 7) // locoNumber
-		{
-			stringNumber = 1;
-			if ( eeprom.saut.property.locoNumberBigEndian.updateUnblock(
-					(uint16_t)Complex<uint16_t>{ data[1], data[0] },
-					SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
-				return;
-		}
-		else if (cellNumber == 15 || cellNumber == 16) // diameter0, diameter1
+		if (cellNumber == 15 || cellNumber == 16) // diameter0, diameter1
 		{
 			uint8_t num = (cellNumber == 16); // Номер вводимого бандажа
 			eepromOpRunning = false;
@@ -867,6 +904,14 @@ void SautConvert::dataUpdate (uint16_t )
 			}
 			else
 				reg.status = sreg;
+		}
+		else if (cellNumber == 111) // locoNumber
+		{
+			stringNumber = 1;
+			if ( eeprom.saut.property.locoNumberBigEndian.updateUnblock(
+			(uint16_t)Complex<uint16_t>{ data[1], data[0] },
+			SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+			return;
 		}
 		else if (cellNumber == 119) // Saut configuration
 		{
@@ -988,10 +1033,10 @@ void SautConvert::dataUpdate (uint16_t )
 					(uint16_t)Complex<uint16_t>{ data[3], data[2] }, SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
-		else if (cellNumber == 111) // section
+		else if (cellNumber == 112) // section
 		{
 			stringNumber = 1;
-			if ( eeprom.saut.property.sectionNumber.updateUnblock( data[0], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
+			if ( eeprom.saut.property.sectionNumber.updateUnblock(data[3], SoftIntHandler::from_method<SautConvert, &SautConvert::updateStringCrc>(this) ) )
 				return;
 		}
 		else
@@ -1081,8 +1126,8 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 {
 	if (resetRequest == ResetRequest::No)
 	{
-		uint8_t& string = Complex<uint16_t> (byteStringNumber)[0];
-		uint8_t& byte = Complex<uint16_t> (byteStringNumber)[1];
+		uint8_t& string = *((uint8_t *)&byteStringNumber);
+		uint8_t& byte = *((uint8_t *)&byteStringNumber + 1);
 
 		if (byte == 14)
 		{
@@ -1102,7 +1147,6 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 			{
 				uint8_t data = eeprom.saut.string[string].data[byte];
 				reg.status = sreg;
-
 
 				// Восстановление "номера строки" в случае отсутсвия
 				eepromOpRunning = true; // приготовимся к записи
@@ -1130,7 +1174,7 @@ void SautConvert::readNextStringByte (uint16_t byteStringNumber)
 
 					// Выполняем подсчёт crc..
 					crc = crcUpdate<0xEBA9> (crc, data);
-					readNextStringByte( Complex<uint16_t>{string, byte+1} );
+					dispatcher.add( Command{SoftIntHandler::from_method<SautConvert, &SautConvert::readNextStringByte>(this), Complex<uint16_t>{string, byte+1}} );
 					return;
 				}
 			}
@@ -1177,6 +1221,8 @@ public:
 	SautConvert sautConvert;
 
 private:
+	void checkInit (uint16_t);
+	void clearCell (uint16_t);
 	void isWritten (uint16_t res);
 	void isGoodWhenWrite (uint16_t res);
 	void isGoodWhenRead (uint16_t res);
@@ -1204,7 +1250,6 @@ private:
 		ErrUnknown		= 5
 	};
 	void endOperation (const Status& status);
-
 
 	struct Packet
 	{
@@ -1243,23 +1288,69 @@ private:
 	monitoredData;
 	uint8_t interrogateCell;
 	uint8_t wrongCell;
-
+	uint8_t clearCellNumber;
 
 	uint8_t killerId;
 	bool reset;
-	bool resetMonitor;
+	bool interruptMonitoringProccess;
+	
+	enum InitEtalon : uint32_t {initEtalon = (uint32_t)0x56EAA36D};
 };
-
-
 
 template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 ConstValModule<CanDatType, canDat, Scheduler, scheduler>::ConstValModule ()
 	: sautConvert (), interrogateCell (128), wrongCell (0), activePacket({0,0}), reset(false)
 {
-	scheduler.runIn(
-			Command {SoftIntHandler::from_method<ConstValModule,&ConstValModule::sendState> (this), 0},
-			500 );
+	checkInit(0);
+}
+
+template <  typename CanDatType, CanDatType& canDat,
+			typename Scheduler, Scheduler& scheduler >
+void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkInit (uint16_t )
+{
+	uint8_t sreg = reg.status;
+	cli ();	
+	if ( eeprom.initFlag.isReady() )
+	{
+		if (eeprom.initFlag == initEtalon)
+		{
+			reg.status = sreg;
+			scheduler.runIn(
+				Command {SoftIntHandler::from_method<ConstValModule,&ConstValModule::sendState> (this), 0},
+						500 );
+		}
+		else
+		{
+			reg.status = sreg;
+			clearCellNumber = 0;
+			clearCell(0);
+		}
+	}
+	else // eeprom занят
+	{
+		reg.status = sreg;
+		// Повторим попытку позже
+		dispatcher.add ( SoftIntHandler::from_method<ConstValModule,&ConstValModule::checkInit> (this), 0 );
+	}
+}
+
+template <  typename CanDatType, CanDatType& canDat,
+typename Scheduler, Scheduler& scheduler >
+void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::clearCell (uint16_t)
+{
+	if (clearCellNumber < 128)
+	{
+		if ( eeprom.club.cell[clearCellNumber].setUnwritten(SoftIntHandler::from_method<ConstValModule,&ConstValModule::clearCell> (this)) )
+			clearCellNumber ++;
+		else
+			dispatcher.add ( SoftIntHandler::from_method<ConstValModule,&ConstValModule::clearCell> (this), 0 );
+	}
+	else
+	{
+		if ( !eeprom.initFlag.updateUnblock (initEtalon, SoftIntHandler::from_method<ConstValModule,&ConstValModule::sendState> (this)) )
+			dispatcher.add ( SoftIntHandler::from_method<ConstValModule,&ConstValModule::clearCell> (this), 0 );
+	}
 }
 
 template <  typename CanDatType, CanDatType& canDat,
@@ -1270,7 +1361,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getWriteMessage (
 
 	if ( packet.number > 0 && packet.number < 128 )
 	{
-		// �?звращение КЛУБа
+		// Извращение КЛУБа
 		if ( packet.number == 9 )
 			return;
 		if ( packet.number == 1 )
@@ -1292,9 +1383,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getWriteMessage (
 		else
 		{
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+				while (!canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
 			else
-				canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+				while (!canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
 		}
 	}
 }
@@ -1305,7 +1396,7 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getLeftDataMessag
 {
 	Packet& packet = *((Packet *) getDataPointer);
 
-	// �?звращение КЛУБа
+	// Извращение КЛУБа
 	if ( packet.number == 1 ) // Только по адресу 1 принимать левые данные
 	{
 		if (activePacket.number == 0) // свободны
@@ -1324,9 +1415,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getLeftDataMessag
 		else
 		{
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+				while (!canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
 			else
-				canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0});
+				while (!canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(packet.number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
 		}
 	}
 }
@@ -1347,6 +1438,13 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::getQueryMessage (
 								Command {SoftIntHandler::from_method<ConstValModule, &ConstValModule::resetAllOps>(this), 0},
 								400 );
 			eeprom.club.cell[number].isWritten( SoftIntHandler::from_method<ConstValModule, &ConstValModule::read> (this) );
+		}
+		else
+		{
+			if (reg.portB.pin7 == 0) // первый полукомплект
+			while (!canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
+			else
+			while (!canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(number|0x80), uint8_t(Status::ErrBusy), 0, 0, 0}));
 		}
 	}
 }
@@ -1491,11 +1589,11 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16_t )
 {
-	if (!resetMonitor) // Нормальный режим работы
+	if (!interruptMonitoringProccess) // Нормальный режим работы
 	{
 		if (interrogateCell != 128) // Предыдущий опрос не завершён
 		{
-			resetMonitor = true;
+			interruptMonitoringProccess = true;
 			return;
 		}
 
@@ -1513,9 +1611,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 				monitoredData.lengthWagon
 								};
 		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<CanTx::SYS_DATA_STATE_A> (sysDataState);
+			while (!canDat.template send<CanTx::SYS_DATA_STATE_A> (sysDataState));
 		else
-			canDat.template send<CanTx::SYS_DATA_STATE_B> (sysDataState);
+			while (!canDat.template send<CanTx::SYS_DATA_STATE_B> (sysDataState));
 
 
 		if ( monitoredData.written.configuration &&
@@ -1533,9 +1631,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					0
 									};
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::SYS_DATA_STATE2_A> (sysDataState2);
+				while (!canDat.template send<CanTx::SYS_DATA_STATE2_A> (sysDataState2));
 			else
-				canDat.template send<CanTx::SYS_DATA_STATE2_B> (sysDataState2);
+				while (!canDat.template send<CanTx::SYS_DATA_STATE2_B> (sysDataState2));
 		}
 
 		if ( monitoredData.written.trackMPH &&
@@ -1552,9 +1650,9 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					0
 								};
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::IPD_PARAM_A> (ipdParam);
+				while (!canDat.template send<CanTx::IPD_PARAM_A> (ipdParam));
 			else
-				canDat.template send<CanTx::IPD_PARAM_B> (ipdParam);
+				while (!canDat.template send<CanTx::IPD_PARAM_B> (ipdParam));
 		}
 
 		if ( monitoredData.written.train &&
@@ -1567,17 +1665,17 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::sendState (uint16
 					monitoredData.category
 								};
 			if (reg.portB.pin7 == 0) // первый полукомплект
-				canDat.template send<CanTx::MPH_STATE_A> (mphState);
+				while (!canDat.template send<CanTx::MPH_STATE_A> (mphState));
 			else
-				canDat.template send<CanTx::MPH_STATE_B> (mphState);
+				while (!canDat.template send<CanTx::MPH_STATE_B> (mphState));
 		}
 	}
 	else // Вызов функции с включенным resetMonitor означает конец сброса
 	{
-		resetMonitor = false;
+		interruptMonitoringProccess = false;
 	}
 
-	// �?нициализация
+	// Инициализация
 	monitoredData.written = 0xFFFF; // Флаги скидываются, если ячейки не записаны
 	interrogateCell = 1;
 	wrongCell = 0;
@@ -1593,7 +1691,7 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkWrite (uint16_t written)
 {
-	if (!resetMonitor)
+	if (!interruptMonitoringProccess)
 	{
 		if (written)
 			eeprom.club.cell[interrogateCell].isGood(
@@ -1611,7 +1709,7 @@ template <  typename CanDatType, CanDatType& canDat,
 			typename Scheduler, Scheduler& scheduler >
 void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::checkNext (uint16_t resPrev)
 {
-	if (!resetMonitor)
+	if (!interruptMonitoringProccess)
 	{
 		if (resPrev == 1) // записан, и без ошибок
 		{
@@ -1718,16 +1816,16 @@ void ConstValModule<CanDatType, canDat, Scheduler, scheduler>::endOperation (con
 	if (status == Status::OK)
 	{
 		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<CanTx::SYS_DATA_A> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]});
+			while (!canDat.template send<CanTx::SYS_DATA_A> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]}));
 		else
-			canDat.template send<CanTx::SYS_DATA_B> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]});
+			while (!canDat.template send<CanTx::SYS_DATA_B> ({activePacket.number, activePacket.data[3], activePacket.data[2], activePacket.data[1], activePacket.data[0]}));
 	}
 	else
 	{
 		if (reg.portB.pin7 == 0) // первый полукомплект
-			canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0});
+			while (!canDat.template send<CanTx::SYS_DATA_A> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0}));
 		else
-			canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0});
+			while (!canDat.template send<CanTx::SYS_DATA_B> ({uint8_t(activePacket.number|0x80), uint8_t(status), 0, 0, 0}));
 	}
 
 	activePacket.number = 0;
