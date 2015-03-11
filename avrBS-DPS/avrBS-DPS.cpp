@@ -37,14 +37,17 @@
 #include "kpt.h"
 #include "mph.h"
 #include "neutral-insertion.h"
+#include "DiscreteInput.h"
 #include "diagnostic.h"
 
 void Init (void) __attribute__ ((naked)) __attribute__ ((section (".init5")));
 void Init (void)
 {
 	// Светодиоды.
-	reg.portD.pin7.out();
-	reg.portD.pin7 = true;
+	reg.portG.pin3.out();
+	reg.portG.pin4.out();
+	reg.portG.pin3 = true;
+	reg.portG.pin4 = true;
 	configSelfComplectPin();
 	lconfig();
 
@@ -72,12 +75,16 @@ typedef INT_TYPELIST_3	(CanTx::SYS_DATA_STATE_A, CanTx::SYS_DATA_STATE_B,
 						 CanTx::IPD_NEUTRAL) SYS_DATA_STATE_IPD_NEUTRAL;
 typedef INT_TYPELIST_2	(CanTx::SYS_DATA_STATE2_A, CanTx::SYS_DATA_STATE2_B) SYS_DATA_STATE2;
 typedef INT_TYPELIST_2	(CanTx::MPH_STATE_A, CanTx::MPH_STATE_B) MPH_STATE;
-typedef INT_TYPELIST_12 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
+typedef INT_TYPELIST_17 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 						 CanTx::AUX_RESOURCE_IPD_A,	CanTx::AUX_RESOURCE_IPD_B,
+						 CanTx::AUX_RESOURCE_VDS_A,	CanTx::AUX_RESOURCE_VDS_B,
 						 CanTx::SYS_DATA_A, CanTx::SYS_DATA_B,
 						 CanTx::MY_DEBUG_A, CanTx::MY_DEBUG_B,
 						 CanTx::MY_KPT_A, CanTx::MY_KPT_B,
-						 CanTx::IPD_PARAM_A, CanTx::IPD_PARAM_B ) AUX_RESOURCE_SYS_DATA_IPD_PARAM;
+						 CanTx::IPD_PARAM_A, CanTx::IPD_PARAM_B,
+						 CanTx::SYS_KEY,
+						 CanTx::VDS_STATE_A, CanTx::VDS_STATE_B
+						  ) AUX_RESOURCE_SYS_DATA_IPD_PARAM;
 
 typedef INT_TYPELIST_5 (CanRx::MCO_STATE_A, CanRx::MCO_STATE_B,
 						CanRx::MCO_LIMITS_A, CanRx::MCO_LIMITS_B,
@@ -142,46 +149,50 @@ CanAsyncType canAsync;
 
 // -------------------------------------------- RS-485 ------------------------------------------►
 
-using namespace Saut;
+//using namespace Saut;
+//
+//enum {		   					// adr, intput, port
+//	// Входящие
+//	DpsCommand 			= SautPacketHead (1, true, 0),
+//	Dps0 				= SautPacketHead (1, true, 0),
+//	DpsBandMeasLenght 	= SautPacketHead (1, true, 1),
+//	Dps1 				= SautPacketHead (1, true, 1),
+//	Dps2 				= SautPacketHead (1, true, 2),
+//	Dps3 				= SautPacketHead (1, true, 3),
+//	Club0				= SautPacketHead (10, true, 0),
+//	BprQuery			= SautPacketHead (13, false, 0),
+//	BprVelocity			= SautPacketHead (13, false, 3),
+//	// �?сходящие
+//	DpsOut0 			= SautPacketHead (1, false, 0),
+//	DpsOut1 			= SautPacketHead (1, false, 1),
+//	DpsOut2 			= SautPacketHead (1, false, 2),
+//	DpsOut3 			= SautPacketHead (1, false, 3),
+//	ClubOut0			= SautPacketHead (10, false, 0),
+//	ClubOut1			= SautPacketHead (10, false, 1)
+//};
+//
+//typedef Dat <	INT_TYPELIST_7 (	// Данные для приёма
+//						Dps0, Dps1, Dps2, Dps3, Club0, BprQuery, BprVelocity
+//								),
+//				INT_TYPELIST_6 (	// Данные для передачи
+//						DpsOut0, DpsOut1, DpsOut2, DpsOut3, ClubOut0, ClubOut1
+//								),
+//				INT_TYPELIST_3 (	// Данные, по приходу которых вызываются прерывания
+//						Dps0, Club0, BprVelocity
+//								)
+//			> DatType;
+//DatType	data;
+//
+//typedef Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
+//				 &Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
+//				 1,
+//				 DatType, data
+//			  > ComType;
+//ComType com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
 
-enum {		   					// adr, intput, port
-	// Входящие
-	DpsCommand 			= SautPacketHead (1, true, 0),
-	Dps0 				= SautPacketHead (1, true, 0),
-	DpsBandMeasLenght 	= SautPacketHead (1, true, 1),
-	Dps1 				= SautPacketHead (1, true, 1),
-	Dps2 				= SautPacketHead (1, true, 2),
-	Dps3 				= SautPacketHead (1, true, 3),
-	Club0				= SautPacketHead (10, true, 0),
-	BprQuery			= SautPacketHead (13, false, 0),
-	BprVelocity			= SautPacketHead (13, false, 3),
-	// �?сходящие
-	DpsOut0 			= SautPacketHead (1, false, 0),
-	DpsOut1 			= SautPacketHead (1, false, 1),
-	DpsOut2 			= SautPacketHead (1, false, 2),
-	DpsOut3 			= SautPacketHead (1, false, 3),
-	ClubOut0			= SautPacketHead (10, false, 0),
-	ClubOut1			= SautPacketHead (10, false, 1)
-};
-
-typedef Dat <	INT_TYPELIST_7 (	// Данные для приёма
-						Dps0, Dps1, Dps2, Dps3, Club0, BprQuery, BprVelocity
-								),
-				INT_TYPELIST_6 (	// Данные для передачи
-						DpsOut0, DpsOut1, DpsOut2, DpsOut3, ClubOut0, ClubOut1
-								),
-				INT_TYPELIST_3 (	// Данные, по приходу которых вызываются прерывания
-						Dps0, Club0, BprVelocity
-								)
-			> DatType;
-DatType	data;
-
-typedef Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
-				 &Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
-				 1,
-				 DatType, data
-			  > ComType;
-ComType com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
+uint8_t sautDecimeters;
+Safe<uint16_t> sautVelocity;
+Safe<uint16_t> sautAcceleratio;
 
 // ------------------------------- Работа с загрузчиком-программатором --------------------------►
 
@@ -209,7 +220,8 @@ void sysDiagnostics (uint16_t a)
 		TSKBM_PCAN,
 		BS_DPS = 16,
 		ALS_TKS,
-		EPK
+		EPK,
+		VDS = 30
 	};
 	enum class Request : uint8_t
 	{
@@ -248,7 +260,7 @@ void sysDiagnostics (uint16_t a)
 	Request request = (Request) canDat.get<CanRx::SYS_DIAGNOSTICS>() [1];
 
 
-	if (unit == Unit::IPD || unit == Unit::BS_DPS)
+	if (unit == Unit::IPD || unit == Unit::BS_DPS || unit == Unit::VDS)
 	{
 		if ( request == Request::VERSION  )
 		{
@@ -289,6 +301,13 @@ void sysDiagnostics (uint16_t a)
 				else
 					canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
 			}
+			else if (unit == Unit::VDS)
+			{
+				if (isSelfComplectA ())
+					canDat.send<CanTx::AUX_RESOURCE_VDS_A>(packet);
+				else
+					canDat.send<CanTx::AUX_RESOURCE_VDS_B>(packet);
+			}
 		}
 		else if ( request == Request::TEST_RUN && unit == Unit::BS_DPS )
 		{
@@ -307,86 +326,9 @@ void sysDiagnostics (uint16_t a)
 	}
 }
 
-
 // ---------------------------------------------- КПТ -------------------------------------------►
 
-typedef Kpt<ClockType, clock, SchedulerType, scheduler, CanDatType, canDat > KptType;
-
-KptType kpt ( _cast( Complex<uint16_t>, data.member<ClubOut1>() )[0], _cast( Complex<uint16_t>, data.member<ClubOut1>() )[1] );
-
-void kptRiseA (uint16_t)
-{
-	if (isSelfComplectA ()) // первый полукомплект
-		kpt.rise();
-}
-
-void kptRiseB (uint16_t)
-{
-	if (!isSelfComplectA ()) // второй полукомплект
-		kpt.rise();
-}
-
-void kptFallA (uint16_t)
-{
-	if (isSelfComplectA ()) // первый полукомплект
-		kpt.fall();
-}
-
-void kptFallB (uint16_t)
-{
-	if (!isSelfComplectA ()) // второй полукомплект
-		kpt.fall();
-}
-
-void kptRiseTimeA (uint16_t dataPointer)
-{
-	if (isSelfComplectA ()) // первый полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.rise (data[0]);
-	}
-}
-
-void kptRiseTimeB (uint16_t dataPointer)
-{
-	if (!isSelfComplectA ()) // второй полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.rise (data[0]);
-	}
-}
-
-void kptFallTimeA (uint16_t dataPointer)
-{
-	if (isSelfComplectA ()) // первый полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.fall (data[0]);
-	}
-}
-
-void kptFallTimeB (uint16_t dataPointer)
-{
-	if (!isSelfComplectA ()) // второй полукомплект
-	{
-		typedef const uint8_t Data[1];
-		Data& data = *( (Data *)(dataPointer) );
-		kpt.fall (data[0]);
-	}
-}
-
-void kptCommandParse ()
-{
-	uint8_t command = _cast( Complex<uint16_t>, data.member<Club0>() )[1];
-
-	if ( (command & (1 << 0)) && (command & (1 << 3)) )
-		kpt.setActive ();
-	else
-		kpt.setPassive ();
-}
+InterruptHandler kptOdometerPluPlusHandler;
 
 // ---------------------------------------------- ДПС -------------------------------------------►
 
@@ -398,41 +340,23 @@ DpsType;
 
 DpsType	dps ( 	Delegate<void (bool)>::from_function< &lset<0> >(), Delegate<void (bool)>::from_function< &lset<1> >(), isSelfComplectA(),
 				&Register::portC,
-				com.decimeters, data.member<DpsOut0>(), data.member<DpsOut1>(),
-				InterruptHandler::from_method <KptType, &KptType::lisPlusPlus> (&kpt),
-				InterruptHandler::from_method <KptType, &KptType::correctKptDistancePlusPlus> (&kpt) );
+				sautDecimeters, sautVelocity, sautAcceleratio,
+				kptOdometerPluPlusHandler,
+				kptOdometerPluPlusHandler );
 
-// ---------------------------- Программирование по линии связи САТУ/RS-485 ---------------------►
 
-Programming programming (
-	data.member<Dps0>(),	data.member<Dps1>(),	data.member<Dps2>(),	data.member<Dps3>(),
-	data.member<DpsOut0>(),	data.member<DpsOut1>(),	data.member<DpsOut2>(),	data.member<DpsOut3>() );
+void unsetResetFlag (uint16_t)
+{
+	dps.repeto = false;
+}
 
 // --------------------------------------------- mcoState ---------------------------------------►
 
-void sysKeyRbRelease (uint16_t)
-{
-	ATOMIC data.member<ClubOut0>() &= ~(1 << 15);
-}
 
 void mcoState (uint16_t pointer)
 {
 	typedef const uint8_t Message[8];
 	Message& message = *( (Message *)(pointer) );
-
-
-	// Передача сигналов КЛУБ
-	uint8_t signals = _cast( Complex<uint16_t>, data.member<ClubOut0>() )[1] & 0x80; // Сохраняем текущее значение РБ
-	static uint8_t convertAls[16] = {0x10,0x08,0x04,0x02,0x01,0x08,0x00,0x00,0x00,0x08,0x04,0x02,0x01,0x01,0x01,0x01};
-	signals |= convertAls[ message[5]&0xF ] | ( message[5] & (1 << 5) ); // Огни АЛС и ЭПК
-	if ( message[5] & ((1 << 6) | (1 << 7)) ) // РБ или РБС
-	{
-		signals |= (1 << 7); // нажимаем РБ
-		scheduler.runIn(
-					Command{ SoftIntHandler::from_function<&sysKeyRbRelease>(), 0 },
-					1000 );
-	}
-	_cast( Complex<uint16_t>, data.member<ClubOut0>() )[1] = signals;
 
 	// Определение, есть ли тяга
 	if ( message[0] & (1 << 5) )
@@ -529,36 +453,6 @@ public:
 		scheduler.runIn( Command{ SoftIntHandler::from_method<Emulation, &Emulation::watchDog>(this), 0 }, 1000 );
 	}
 
-	void getSautVelocity ()
-	{
-		if ( _cast( Complex<uint16_t>, data.member<BprQuery>() )[1] & (1 << 1) )  // Команда на эмуляцию
-		{
-			uint8_t newVelocity = _cast( Complex<uint16_t>, data.member<BprVelocity>() )[1];
-
-			if ( newVelocity != sautCurrentVelocity )
-			{
-				sautCurrentVelocity = newVelocity;
-
-				// Выставляем направления вращения датчиков в зависимости от расположения таким образом, чтобы всегда ехать вперёд
-				Bitfield<EepromData::Saut::Property::Configuration> config;
-				config = eeprom.saut.property.configuration;
-				sautCurrentVirtualCanMessage.sensor[0].clockwise = config.dps0Position == EepromData::DpsPosition::Right ? 1 : 0;
-				sautCurrentVirtualCanMessage.sensor[1].clockwise = config.dps1Position == EepromData::DpsPosition::Right ? 1 : 0;
-
-				for (uint8_t i = 0; i < 2; i ++)
-				{
-					// Рачитываем период импульсов
-					sautCurrentVirtualCanMessage.sensor[0].freqX16 = uint32_t (5941784) * sautCurrentVelocity / dps.diametros(0) / 100;
-																	//sautCurrentVelocity * 42 * 16 / 3,6 / 3,14 / dps.diametros(0) * 1000;
-					sautCurrentVirtualCanMessage.sensor[i].broke1 = 0;
-					sautCurrentVirtualCanMessage.sensor[i].broke2 = 0;
-				}
-			}
-
-			getCanVelocity((uint16_t) &sautCurrentVirtualCanMessage);
-		}
-	}
-
 	void getCanVelocity (uint16_t pointer)
 	{
 		IpdEmulationMessage& target = *( (IpdEmulationMessage *)(pointer) );
@@ -627,6 +521,7 @@ private:
 								& (current.sensor[iSensor].broke1 ? ~(1 << 0) : 0xFF)
 								& (current.sensor[iSensor].broke2 ? ~(1 << 1) : 0xFF)
 						) << (iSensor*2);
+			currentOperationSequence[i] *= 2;
 		}
 
 		// Устанавливает период таймера, генерируещего импульсы
@@ -660,84 +555,76 @@ private:
 const uint8_t Emulation::rotationClockwiseCode[4] = {0, 1,  3, 2};
 Emulation emulation;
 
+// ----------------------------------- Ввод дискретных сигналов ---------------------------------►
 
-// ---------------------------------- Парсер команд по линии связи ------------------------------►
-
-void commandParser ()
+SoftIntHandler discreteInputA, discreteInputB;
+void pushHandler (uint16_t num)
 {
-	struct Command
+//	if ( num == 8 ) // РБ
+//		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x13 });
+//	else if ( num == 9 ) // РБC
+//		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x1B });
+
+	if ( num == 5 ) // Вперёд
 	{
-		uint8_t							:4;
-		uint8_t	highSpeed				:1;
-		uint8_t	eepromRead				:1;
-		uint8_t	idRead					:1;
-		uint8_t	block3Byte				:1;
-	};
-	Bitfield<Command> command;
-
-//	command = uint8_t(get / 256);
-	command = uint8_t(data.member<DpsCommand>() / 256);
-
-	if (command.block3Byte)
-		com.block3Byte = 1;
-
-	if (!command.idRead && !command.eepromRead)	// стандартный режим работы ДПС
-	{
-		data.member<DpsOut2>() = dps.diametros(0); // выводим диаметры бандажа
-		data.member<DpsOut3>() = dps.diametros(1);
-
-		dps.constituoActivus ();
+		dps.constituoVersus (0);
 	}
-	else
+	if ( num == 4 ) // Назад
 	{
-		dps.constituoPassivus ();
-
-		if (command.idRead)
-		{
-			if ( programmingCan.isAvailable() )
-			{
-				data.member<DpsOut0>() = ( (uint16_t) programmingCan.getVersion() 			<< 8 ) | ( programmingCan.getCellManufactureYear() - 1980 );
-				data.member<DpsOut1>() = ( (uint16_t) programmingCan.getCellModification()  << 8 ) | programmingCan.getCellManufactureMonth();
-				data.member<DpsOut2>() = ( (uint16_t) programmingCan.getCellManufactureNumber()  );
-				data.member<DpsOut3>() = (    uint16_t ( programmingCan.getVersion() & 0xFF )
-											+ uint16_t ( (programmingCan.getCellManufactureYear()-1980) & 0xFF )
-											+ uint16_t ( programmingCan.getCellModification() & 0xFF )
-											+ uint16_t ( programmingCan.getCellManufactureMonth() & 0xFF )
-											+ uint16_t ( (programmingCan.getCellManufactureNumber() >> 8) & 0xFF )
-											+ uint16_t ( programmingCan.getCellManufactureNumber() & 0xFF )
-										 );
-			}
-			else
-			{
-				data.member<DpsOut0>() = ( (uint16_t) pgm_read_byte(&id.version) << 8 ) | pgm_read_byte(&id.year);
-				data.member<DpsOut1>() = ( (uint16_t) pgm_read_byte(&id.modif)   << 8 ) | pgm_read_byte(&id.manth);
-				data.member<DpsOut2>() = ( (uint16_t) pgm_read_byte(&id.numberH) << 8 ) | ( (uint16_t) pgm_read_byte(&id.numberL) );
-				data.member<DpsOut3>() = ( (uint16_t) pgm_read_byte(&id.parametersSummH)  << 8 ) | ( (uint16_t) pgm_read_byte(&id.parametersSummL) );
-			}
-		}
-
-		if (command.eepromRead)
-		{
-			uint8_t adr = (data.member<DpsCommand>() & 0x000F) * 8;// Адрес из линии RS-485 * 8
-			data.member<DpsOut0>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+1], mph.sautConvert.plainMap[adr+0] };
-			data.member<DpsOut1>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+3], mph.sautConvert.plainMap[adr+2] };
-			data.member<DpsOut2>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+5], mph.sautConvert.plainMap[adr+4] };
-			data.member<DpsOut3>() = Complex<uint16_t> { mph.sautConvert.plainMap[adr+7], mph.sautConvert.plainMap[adr+6] };
-		}
-	}
-
-	if (data.member<DpsCommand>() == 0x0efe)			// Переход в режим программирования
-	{
-		dps.constituoPassivus ();
-
-		programming.enterProgramMode();
-		data.interruptHandler<Dps0> () = InterruptHandler::from_method <Programming, &Programming::comParser> (&programming);
+		dps.constituoVersus (1);
 	}
 }
 
-void unsetResetFlag (uint16_t)
+void releaseHandler (uint16_t num)
 {
-	dps.repeto = false;
+//	if ( num == 8 ) // РБ
+//		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x13 });
+//	else if ( num == 9 ) // РБC
+//		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x1B });
+}
+
+typedef DiscreteInput<ClockType, clock> DiscreteInputType;
+DiscreteInputType discreteInput ( !isSelfComplectA(), SoftIntHandler::from_function<&pushHandler>(), SoftIntHandler::from_function<&releaseHandler>() );
+
+void inputSignalStateOut (uint16_t )
+{
+	struct OutMessageFields
+	{
+		uint16_t railwayMode			:1;
+		uint16_t tifon					:1;
+		uint16_t siren					:1;
+		uint16_t emergencyStop			:1;
+		uint16_t vigilanceButton		:1;
+		uint16_t engineWork				:1;
+		uint16_t forwardTransmission 	:1;
+		uint16_t backwardTransmission	:1;
+		uint16_t tractionDisable		:1;
+		uint16_t						:1;
+		uint16_t epkKey					:1;
+		uint16_t 						:5;
+	};
+	typedef Bitfield<OutMessageFields> OutMessage;
+	OutMessage outMessage;
+
+	DiscreteInputType::Inputs state = discreteInput.getState();
+
+	outMessage.railwayMode = state.in2;
+	outMessage.tifon = state.in7;
+	outMessage.siren = 0; // Сирена заведена на 27 вход ячейки, но она не заведена на процессор
+	outMessage.emergencyStop = state.in6;
+	outMessage.vigilanceButton = state.in8;
+	outMessage.engineWork = !state.in6; // работа двигателя как инверсия сигнала "остановка двигателя"
+	outMessage.forwardTransmission = state.in5;
+	outMessage.backwardTransmission = state.in4;
+	outMessage.tractionDisable = (state.in5 == 0) && (state.in4 == 0);
+	outMessage.epkKey = 1;
+
+	if ( isSelfComplectA() )
+		canDat.send<CanTx::VDS_STATE_A> ({uint8_t(outMessage/256), uint8_t(outMessage)});
+	else
+		canDat.send<CanTx::VDS_STATE_B> ({uint8_t(outMessage/256), uint8_t(outMessage)});
+
+	scheduler.runIn( Command {SoftIntHandler::from_function<&inputSignalStateOut>(), 0}, 500 );
 }
 
 // -------------------------------------- store restart reason ----------------------------------►
@@ -784,9 +671,6 @@ void smartdogAlarm (uint16_t wdtPointer)
 
 int main ()
 {
-	data.interruptHandler<DpsCommand> () = InterruptHandler::from_function<&commandParser>();
-	data.interruptHandler<Club0> () = InterruptHandler::from_function<&kptCommandParse>();
-	data.interruptHandler<BprVelocity> () = InterruptHandler::from_method<Emulation, &Emulation::getSautVelocity> (&emulation);
 	canDat.rxHandler<CanRx::IPD_EMULATION>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
 
 	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);
@@ -809,15 +693,11 @@ int main ()
 
 	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_method <DpsType, &DpsType::takeEcDataForAdjust> (&dps);
 
-	canDat.rxHandler<CanRx::MP_ALS_ON_A>() = SoftIntHandler::from_function <&kptRiseA>();
-	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_A>() = SoftIntHandler::from_function <&kptRiseTimeA>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_A>() = SoftIntHandler::from_function <&kptFallA>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_A>() = SoftIntHandler::from_function <&kptFallTimeA>();
-	canDat.rxHandler<CanRx::MP_ALS_ON_B>() = SoftIntHandler::from_function <&kptRiseB>();
-	canDat.rxHandler<CanRx::MP_ALS_ON_TIME_B>() = SoftIntHandler::from_function <&kptRiseTimeB>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_B>() = SoftIntHandler::from_function <&kptFallB>();
-	canDat.rxHandler<CanRx::MP_ALS_OFF_TIME_B>() = SoftIntHandler::from_function <&kptFallTimeB>();
-	
+	// ВДС
+	inputSignalStateOut(0);
+
+	dps.constituoActivus();
+
 	// Причина перезагрузки
 	diagnostic_storeDelegate = Delegate<void (uint8_t)>::from_function <&storeRestartReason> ();
 	diagnostic_restoreDelegate = Delegate<uint8_t ()>::from_function <&restoreRestartReason> ();
@@ -830,7 +710,6 @@ int main ()
 	dispatcher.overflowHandler = Delegate<void (uint16_t)>::from_function <&dispatcherOverflowHandler> ();
 	scheduler.fullHandler = Delegate<void ()>::from_function <&schedulerFullHandler> ();
 	programmingCan.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();
-	programming.reboot = Delegate<void ()>::from_function <&programmingRebootHandler> ();
 	smartdog_deathAlarm = &smartdogAlarm;
 	smartdog_on();
 
@@ -881,15 +760,6 @@ int main ()
 
     for (;;)
     {
-    	static bool resetButtonWasFree = false;
-    	resetButtonWasFree |= reg.portB.pin5;
-    	if ( resetButtonWasFree && !reg.portB.pin5 ) // Нажата кнопка сброса (а до этого была отпущена)
-    	{
-    		eeprom.dps0Good = 1;
-    		eeprom.dps1Good = 1;
-    		diagnostic_restart(RestartReason::BUTTON_PRESS);
-    	}
-
     	dispatcher.invoke();
     	smartdog_reset();
     }

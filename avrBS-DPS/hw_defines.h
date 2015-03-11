@@ -13,55 +13,35 @@
 
 void configSelfComplectPin ()
 {
-	reg.portB.pin7.in();
+	reg.portA.pin0.in();
 }
 
 bool isSelfComplectA ()
 {
-	return (reg.portB.pin7 == 0);
+	return (reg.portA.pin0 == 0);
 }
 
 inline void lconfig ()
 {
-	reg.portC.pin4.out ();
-	reg.portC.pin5.out ();
+
 }
 
 template <uint8_t n>
 inline void ldown ()
 {
-	reg.portC.pin<n+4>() = true;
-//	switch (n)
-//	{
-//		case 0:
-//			portC.pin4 = true;
-//			break;
-//		case 1:
-//			portC.pin5 = true;
-//			break;
-//	}
+//	reg.portC.pin<n+4>() = true;
 }
 
 template <uint8_t n>
 inline void lup ()
 {
-	reg.portC.pin<n+4>() = false;
+//	reg.portC.pin<n+4>() = false;
 }
 
 template <uint8_t n>
 inline void ltoggle ()
 {
-//	PORTC ^= (1 << (n+4));
-	reg.portC.pin<n+4>().toggle ();
-//	switch (n)
-//	{
-//		case 0:
-//			portC.pin4.toggle();
-//			break;
-//		case 1:
-//			portC.pin5.toggle();
-//			break;
-//	}
+//	reg.portC.pin<n+4>().toggle ();
 }
 
 template <uint8_t n>

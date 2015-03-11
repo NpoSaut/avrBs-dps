@@ -365,10 +365,11 @@ public:
 
 		// По-умолчанию отдаётся предпочтение предыдущему
 		uint8_t preferred = previous;
-		preferred = checkSlipBlock (dimetiors, preferred);
-		preferred = checkProlongedDeviation (dimetiors, preferred);
+		//preferred = checkSlipBlock (dimetiors, preferred);
+		//preferred = checkProlongedDeviation (dimetiors, preferred);
 		preferred = checkConfidentValidity (dimetiors, preferred);
 		preferred = checkValidity (dimetiors, preferred);
+		preferred = 0;
 		
 		wasSwitch = (previous != preferred);
 		previous = preferred;
@@ -608,13 +609,13 @@ public:
 			: lanterna0Set (lanterna0Set), lanterna1Set (lanterna1Set), isSelfComplectA (isSelfComplectA),
 			  accessusPortus (accessusPortus), spatiumMeters (0), spatiumAdjustedMeters (0),
 			  odometer16dmPlusPlus ({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
-			  tractus (false), repeto (true), // после перезагрузки -- флаг перезагрузки
+			  tractus (false), manualVersus (manualVersus), repeto (true), // после перезагрузки -- флаг перезагрузки
 			  ecAdjust ( Delegate<uint16_t ()>::from_method<CeleritasSpatiumDimetior,
 					  	&CeleritasSpatiumDimetior::accipioCeleritas> (this),
 					  	 Delegate<int32_t ()>::from_method<CeleritasSpatiumDimetior,
 						&CeleritasSpatiumDimetior::accipioSpatiumAdjustedMeters> (this)),
 			  animadversor ( InterruptHandler::from_method<CeleritasSpatiumDimetior, &CeleritasSpatiumDimetior::animadversio> (this) ),
-			  spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (acceleratioEtAffectus),
+			  mittoSaut (false), spatium (spatium), celeritasProdo (celeritas), acceleratioEtAffectus (acceleratioEtAffectus),
 			  spatiumDecimeters65536 (0), spatiumDecimetersMultiple10 (10), spatiumDecimetersMulitple16 (0),
 			  rotundCeleritas (0), dimetiorChooser(), bothBreak(isSelfComplectA), activus (0),
 			  dimetiorObj ({Dimetior(lanterna0Set, lanterna1Set, isSelfComplectA), Dimetior(lanterna0Set, lanterna1Set, !isSelfComplectA)})
@@ -653,7 +654,14 @@ public:
 		}
 	}
 	bool sicinActivus () const
-	{	return activus;}
+	{	
+		return activus;
+	}
+	
+	void constituoMittoSaut (bool mitto)
+	{
+		mittoSaut = mitto;
+	}
 
 	void constituoTractus ()
 	{
@@ -670,6 +678,16 @@ public:
 
 	void constituoVersusInversio ( bool inversio )
 	{	dimetiors[0]->constituoVersusInversio (inversio); dimetiors[1]->constituoVersusInversio (inversio);}
+	
+	// Напрвление движения. 0 - вперёд
+	const uint8_t versus () const
+	{
+		return manualVersus;
+	}
+	void constituoVersus (uint8_t versus)
+	{
+		manualVersus = versus;
+	}
 
 	bool sicinBothBrake () const
 	{	return bothBreak.isBreak();}
@@ -678,12 +696,6 @@ public:
 	const uint16_t celeritas () const
 	{
 		return signCeleritas( dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioCeleritas() );
-	}
-
-	// Напрвление движения. 0 - вперёд
-	const uint8_t versus () const
-	{
-		return dimetiors[dimetiorChooser.getBestDimetiorNumber()]->accipioVersus();
 	}
 
 	// диаметр бандажа
@@ -696,8 +708,6 @@ public:
 	{
 		ecAdjust.takeEcData(pointerToData);
 	}
-	
-	
 
 	Port Register::* accessusPortus; // Указатель на порт, на битах 0-3 отражается состояние каналов ДПС
 	Complex<int32_t> spatiumMeters;// пройденный путь в метрах
@@ -718,7 +728,9 @@ private:
 	EcAdjustType ecAdjust;
 
 	bool tractus;// 0 - выбег или торможение, 1 - тяга
+	uint8_t manualVersus;
 
+	bool mittoSaut; // Отправлять ли информацию в САУТ
 	uint8_t& spatium;
 	Safe<uint16_t>& celeritasProdo;
 	Safe<uint16_t>& acceleratioEtAffectus;
@@ -752,8 +764,8 @@ private:
 
 	void corpusVicissim (uint16_t affectus)
 	{
-		uint32_t spatium0 = dimetiors[0]->punctum (affectus & 0b11);
-		uint32_t spatium1 = dimetiors[1]->punctum (affectus / 4);
+		uint32_t spatium0 = dimetiors[0]->punctum ((affectus / 2) & 0b11);
+		uint32_t spatium1 = 0;
 		// накапливать пройденный путь по выбранному датчику
 		uint32_t appendicula = dimetiorChooser.getBestDimetiorNumber() == 1 ? spatium1 : spatium0;
 
@@ -1011,12 +1023,12 @@ private:
 			
 			case 1:
 			if ( eeprom.club.property.diameter0.read (tmp) )
-				dimetiors[0]->constituoDiametros (tmp);
+				dimetiors[0]->constituoDiametros ( tmp );
 			break;
 			
 			case 2:
 			if ( eeprom.club.property.diameter1.read (tmp) )
-				dimetiors[1]->constituoDiametros (tmp);
+				dimetiors[1]->constituoDiametros ( tmp );
 			break;
 			
 			case 3:

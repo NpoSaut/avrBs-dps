@@ -15,7 +15,7 @@
 
 #define ID_VERSION 3
 #define ID_YEAR 0x1F
-#define ID_MODIF 0x21
+#define ID_MODIF 0x11
 #define ID_MANTH 0x0C
 #define ID_BLOK_NUMBER 10107
 #define ID_PARAM_SUMM (ID_VERSION + ID_YEAR + ID_MODIF + ID_MANTH + ID_BLOK_NUMBER/256 + uint8_t(ID_BLOK_NUMBER))
@@ -44,7 +44,7 @@ IdentifyDoc id __attribute__ ((section (".id"))) =
 		0, 0, 1, ID_VERSION, ID_YEAR, ID_MODIF, ID_MANTH, uint8_t(ID_BLOK_NUMBER/256), uint8_t(ID_BLOK_NUMBER),
 		uint8_t(ID_PARAM_SUMM/256),
 		uint8_t(ID_PARAM_SUMM),
-		0xDF, 0xD9, 0xFD
+		0xEF, 0xD8, 0xFD
 		};
 
 

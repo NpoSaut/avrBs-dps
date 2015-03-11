@@ -8,6 +8,7 @@
 
 enum CanTx : uint16_t
 {
+	 SYS_KEY =				(0x60	<< 5) + 1, // 0C01
 	 IPD_STATE_A =			(0xC4	<< 5) + 8, // 1888
 	 IPD_STATE_B =			(0xD4	<< 5) + 8, // 1A88
 	 IPD_DPS_FAULT =		(0xD6	<< 5) + 2, // 1AC2
@@ -16,6 +17,8 @@ enum CanTx : uint16_t
 	 IPD_NEUTRAL =			(0xC8	<< 5) + 3, // 1903
 	 SAUT_INFO_A =          (0x233	<< 5) + 8, // 4668
 	 SAUT_INFO_B =          (0x234	<< 5) + 8, // 4688
+	 VDS_STATE_A = 			(0x2E0	<< 5) + 2, // 5C02
+	 VDS_STATE_B = 			(0x2E1	<< 5) + 2, // 5C22
 	 SYS_DATA_A =			(0x313	<< 5) + 5, // 6265
 	 SYS_DATA_B = 			(0x314	<< 5) + 5, // 6285
 	 SYS_DATA_STATE_A =		(0x31F	<< 5) + 7, // 63E7
@@ -29,6 +32,8 @@ enum CanTx : uint16_t
 	 AUX_RESOURCE_IPD_B = 	((uint16_t)0x4D0	<< 5) + 5, // 9A05
 	 AUX_RESOURCE_BS_A = 	((uint16_t)0x633	<< 5) + 5, // C665
 	 AUX_RESOURCE_BS_B = 	((uint16_t)0x634	<< 5) + 5, // C685
+	 AUX_RESOURCE_VDS_A = 	((uint16_t)0x6E1	<< 5) + 5, // DC25
+	 AUX_RESOURCE_VDS_B = 	((uint16_t)0x6E2	<< 5) + 5, // DC45
 	 MY_DEBUG_A =			((uint16_t)0x4CC	<< 5) + 4, // 9984
 	 MY_DEBUG_B =			((uint16_t)0x4DC	<< 5) + 4, // 9B84
 	 MY_KPT_A = 			((uint16_t)0x4CE	<< 5) + 1, // 99C1
