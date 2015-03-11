@@ -565,10 +565,6 @@ void pushHandler (uint16_t num)
 //	else if ( num == 9 ) // РБC
 //		canDat.send<CanTx::SYS_KEY> ({ (1 << 6) | 0x1B });
 
-	if ( num == 2 ) // Ж/Д ход
-	{
-		dps.constituoRailWayRotae(true);
-	}
 	if ( num == 5 ) // Вперёд
 	{
 		dps.constituoVersus (0);
@@ -585,11 +581,6 @@ void releaseHandler (uint16_t num)
 //		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x13 });
 //	else if ( num == 9 ) // РБC
 //		canDat.send<CanTx::SYS_KEY> ({ (2 << 6) | 0x1B });
-
-	if ( num == 2 ) // Ж/Д ход
-	{
-		dps.constituoRailWayRotae(false);
-	}
 }
 
 typedef DiscreteInput<ClockType, clock> DiscreteInputType;

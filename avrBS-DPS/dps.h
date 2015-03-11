@@ -609,7 +609,7 @@ public:
 			: lanterna0Set (lanterna0Set), lanterna1Set (lanterna1Set), isSelfComplectA (isSelfComplectA),
 			  accessusPortus (accessusPortus), spatiumMeters (0), spatiumAdjustedMeters (0),
 			  odometer16dmPlusPlus ({ odometer16dm0PlusPlus, odometer16dm1PlusPlus }),
-			  tractus (false), manualVersus (manualVersus), railWayRotae (false), repeto (true), // после перезагрузки -- флаг перезагрузки
+			  tractus (false), manualVersus (manualVersus), repeto (true), // после перезагрузки -- флаг перезагрузки
 			  ecAdjust ( Delegate<uint16_t ()>::from_method<CeleritasSpatiumDimetior,
 					  	&CeleritasSpatiumDimetior::accipioCeleritas> (this),
 					  	 Delegate<int32_t ()>::from_method<CeleritasSpatiumDimetior,
@@ -678,21 +678,11 @@ public:
 
 	void constituoVersusInversio ( bool inversio )
 	{	dimetiors[0]->constituoVersusInversio (inversio); dimetiors[1]->constituoVersusInversio (inversio);}
-		
-	// Ж/Д ход
-	const bool accipioRailWayRotae() const
-	{
-		return railWayRotae;
-	}
-	void constituoRailWayRotae(bool railWayRotae)
-	{
-		CeleritasSpatiumDimetior::railWayRotae = railWayRotae;
-	}
 	
 	// Напрвление движения. 0 - вперёд
 	const uint8_t versus () const
 	{
-		return railWayRotae ? !manualVersus : manualVersus; // Особенность KGT-4RS
+		return manualVersus;
 	}
 	void constituoVersus (uint8_t versus)
 	{
@@ -739,7 +729,6 @@ private:
 
 	bool tractus;// 0 - выбег или торможение, 1 - тяга
 	uint8_t manualVersus;
-	bool railWayRotae; // В ж/д режиме увеличивается диаметр бандажа и инвертируется направление движения
 
 	bool mittoSaut; // Отправлять ли информацию в САУТ
 	uint8_t& spatium;
@@ -1034,12 +1023,12 @@ private:
 			
 			case 1:
 			if ( eeprom.club.property.diameter0.read (tmp) )
-				dimetiors[0]->constituoDiametros ( railWayRotae ? tmp*2 : tmp );
+				dimetiors[0]->constituoDiametros ( tmp );
 			break;
 			
 			case 2:
 			if ( eeprom.club.property.diameter1.read (tmp) )
-				dimetiors[1]->constituoDiametros ( railWayRotae ? tmp*2 : tmp );
+				dimetiors[1]->constituoDiametros ( tmp );
 			break;
 			
 			case 3:
