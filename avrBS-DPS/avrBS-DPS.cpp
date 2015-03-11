@@ -75,7 +75,8 @@ typedef INT_TYPELIST_3	(CanTx::SYS_DATA_STATE_A, CanTx::SYS_DATA_STATE_B,
 						 CanTx::IPD_NEUTRAL) SYS_DATA_STATE_IPD_NEUTRAL;
 typedef INT_TYPELIST_2	(CanTx::SYS_DATA_STATE2_A, CanTx::SYS_DATA_STATE2_B) SYS_DATA_STATE2;
 typedef INT_TYPELIST_2	(CanTx::MPH_STATE_A, CanTx::MPH_STATE_B) MPH_STATE;
-typedef INT_TYPELIST_17 (CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
+typedef INT_TYPELIST_18 (CanRx::SYS_DIAGNOSTICS,
+						 CanTx::AUX_RESOURCE_BS_A,	CanTx::AUX_RESOURCE_BS_B,
 						 CanTx::AUX_RESOURCE_IPD_A,	CanTx::AUX_RESOURCE_IPD_B,
 						 CanTx::AUX_RESOURCE_VDS_A,	CanTx::AUX_RESOURCE_VDS_B,
 						 CanTx::SYS_DATA_A, CanTx::SYS_DATA_B,
@@ -93,7 +94,7 @@ typedef INT_TYPELIST_8 (CanRx::MP_ALS_ON_A, CanRx::MP_ALS_OFF_A, CanRx::MP_ALS_O
 						CanRx::MP_ALS_ON_B, CanRx::MP_ALS_OFF_B, CanRx::MP_ALS_ON_TIME_B, CanRx::MP_ALS_OFF_TIME_B) MP_ALS;
 typedef INT_TYPELIST_2 (CanRx::MM_DATA, CanRx::MM_NEUTRAL) MM;
 typedef INT_TYPELIST_3 (CanRx::BKSI_DATA, CanRx::INPUT_DATA, CanTx::SYS_DATA_A) INPUT;
-typedef INT_TYPELIST_3 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B) DIAGNOSTICS;
+typedef INT_TYPELIST_5 (CanRx::SYS_DIAGNOSTICS, CanRx::AUX_RESOURCE_MCO_A, CanRx::AUX_RESOURCE_MCO_B, CanTx::AUX_RESOURCE_BS_A, CanTx::AUX_RESOURCE_BS_B) DIAGNOSTICS;
 
 typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов для отправки
 						IPD_STATE,
@@ -114,7 +115,7 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 						 Int2Type< CanRx::IPD_EMULATION >,
 						 Int2Type< CanRx::FU_INIT >
 						 	 	 ),
-				 LOKI_TYPELIST_22(
+				 LOKI_TYPELIST_24(
 						 Int2Type< CanRx::INPUT_DATA >,
 						 Int2Type< CanRx::MCO_DATA >,
 						 Int2Type< CanRx::BKSI_DATA >,
@@ -136,7 +137,9 @@ typedef CanDat < LOKI_TYPELIST_7(					// Список дескрипторов �
 						 Int2Type< CanRx::MP_ALS_OFF_TIME_B >,
 						 Int2Type< CanRx::MM_NEUTRAL >,
 						 Int2Type< CanRx::IPD_EMULATION >,
-						 Int2Type< CanRx::FU_INIT >
+						 Int2Type< CanRx::FU_INIT >,
+						 Int2Type< CanTx::AUX_RESOURCE_BS_A >,
+						 Int2Type< CanTx::AUX_RESOURCE_BS_B >
 								),
 					128,
 					NullType,
@@ -149,47 +152,6 @@ CanAsyncType canAsync;
 
 // -------------------------------------------- RS-485 ------------------------------------------►
 
-//using namespace Saut;
-//
-//enum {		   					// adr, intput, port
-//	// Входящие
-//	DpsCommand 			= SautPacketHead (1, true, 0),
-//	Dps0 				= SautPacketHead (1, true, 0),
-//	DpsBandMeasLenght 	= SautPacketHead (1, true, 1),
-//	Dps1 				= SautPacketHead (1, true, 1),
-//	Dps2 				= SautPacketHead (1, true, 2),
-//	Dps3 				= SautPacketHead (1, true, 3),
-//	Club0				= SautPacketHead (10, true, 0),
-//	BprQuery			= SautPacketHead (13, false, 0),
-//	BprVelocity			= SautPacketHead (13, false, 3),
-//	// �?сходящие
-//	DpsOut0 			= SautPacketHead (1, false, 0),
-//	DpsOut1 			= SautPacketHead (1, false, 1),
-//	DpsOut2 			= SautPacketHead (1, false, 2),
-//	DpsOut3 			= SautPacketHead (1, false, 3),
-//	ClubOut0			= SautPacketHead (10, false, 0),
-//	ClubOut1			= SautPacketHead (10, false, 1)
-//};
-//
-//typedef Dat <	INT_TYPELIST_7 (	// Данные для приёма
-//						Dps0, Dps1, Dps2, Dps3, Club0, BprQuery, BprVelocity
-//								),
-//				INT_TYPELIST_6 (	// Данные для передачи
-//						DpsOut0, DpsOut1, DpsOut2, DpsOut3, ClubOut0, ClubOut1
-//								),
-//				INT_TYPELIST_3 (	// Данные, по приходу которых вызываются прерывания
-//						Dps0, Club0, BprVelocity
-//								)
-//			> DatType;
-//DatType	data;
-//
-//typedef Com  <  &Register::usart1Control, &Register::usart1BaudRate, &Register::usart1Data,
-//				 &Register::portD, 2, &Register::portD, 3, &Register::portD, 4, &Register::portB, 7,
-//				 1,
-//				 DatType, data
-//			  > ComType;
-//ComType com (USART1_RX_handler, USART1_TX_handler, USART1_UDRE_handler);
-
 uint8_t sautDecimeters;
 Safe<uint16_t> sautVelocity;
 Safe<uint16_t> sautAcceleratio;
@@ -199,75 +161,103 @@ Safe<uint16_t> sautAcceleratio;
 typedef ProgrammingCan <CanDatType, canDat, CanRx::FU_INIT, CanTx::FU_DEV > ProgrammingCanType;
 ProgrammingCanType programmingCan;
 
+// ---------------------------------------------- КПТ -------------------------------------------►
+
+InterruptHandler kptOdometerPluPlusHandler;
+
+// ---------------------------------------------- ДПС -------------------------------------------►
+
+typedef
+CeleritasSpatiumDimetior  < CanDatType, canDat,
+ClockType, clock,
+SchedulerType, scheduler >
+DpsType;
+
+DpsType *dps = 0;
+
+void unsetResetFlag (uint16_t)
+{
+	if (dps)
+		dps->repeto = false;
+}
+
+// --------------------------------- Модуль постоянных характеристик ----------------------------►
+
+typedef ConstValModule <CanAsyncType, canAsync, SchedulerType, scheduler> MPHType;
+MPHType *mph = 0;
+
 // ---------------------------------- SYS_DIAGNOSTICS / AUX_RESOURCE ----------------------------►
 
+enum class SysDiagnosticsUnit : uint8_t
+{
+	MCO = 1,
+	MM,
+	MP_ALS,
+	IPD = 4,
+	MPSU,
+	RK,
+	BIL,
+	SAUT,
+	TCKBM_KCAN,
+	UKTOL,
+	CANGate,
+	BR_UMO = 14,
+	TSKBM_PCAN,
+	BS_DPS = 16,
+	ALS_TKS,
+	EPK,
+	VDS = 30
+};
+
+enum class SysDiagnosticsRequest : uint8_t
+{
+	PASSIVE = 1,
+	ACTIVE,
+	TEST_RUN,
+	READ,
+	VERSION,
+	DIST_TRAVEL_WRITE, // IPD
+	ECARD_NUMBER_READ = 10, // MM
+	DIST_TRAVEL_READ_A = 13, // IPD
+	DIST_TRAVEL_READ_B, // IPD
+	BIL_DIAG, // BIL
+	BVU_ALSN_SEND_ON = 33, // ALS_TKS
+	BVU_ALSN_SEND_OFF, // ALS_TKS,
+	ALSN_DIAG_ON, // ALS_TKS
+	ALSN_DIAG_OFF, // ALS_TKS
+	ALS_EN_DIAG_ON, // ALS_TKS
+	ALSN_EN_DIAG_OFF, // ALS_TKS
+	RC_STATE_READ, // RK
+	MCO_ACTIVE_N_READ // MCO
+};
+
+enum class SysDiagnosticsAnswer : uint8_t
+{
+	VERSION = 0,
+	ERROR = 1,
+	WARNING = 2,
+	DATA = 208,
+	BUSY = 251,
+	FAIL,
+	REPEAT,
+	UNKNOWN,
+	OK
+};
+	
 void sysDiagnostics (uint16_t a)
 {
-	enum class Unit : uint8_t
-	{
-		MCO = 1,
-		MM,
-		MP_ALS,
-		IPD = 4,
-		MPSU,
-		RK,
-		BIL,
-		SAUT,
-		TCKBM_KCAN,
-		UKTOL,
-		CANGate,
-		BR_UMO = 14,
-		TSKBM_PCAN,
-		BS_DPS = 16,
-		ALS_TKS,
-		EPK,
-		VDS = 30
-	};
-	enum class Request : uint8_t
-	{
-		PASSIVE = 1,
-		ACTIVE,
-		TEST_RUN,
-		READ,
-		VERSION,
-		DIST_TRAVEL_WRITE, // IPD
-		ECARD_NUMBER_READ = 10, // MM
-		DIST_TRAVEL_READ_A = 13, // IPD
-		DIST_TRAVEL_READ_B, // IPD
-		BIL_DIAG, // BIL
-		BVU_ALSN_SEND_ON = 33, // ALS_TKS
-		BVU_ALSN_SEND_OFF, // ALS_TKS,
-		ALSN_DIAG_ON, // ALS_TKS
-		ALSN_DIAG_OFF, // ALS_TKS
-		ALS_EN_DIAG_ON, // ALS_TKS
-		ALSN_EN_DIAG_OFF, // ALS_TKS
-		RC_STATE_READ, // RK
-		MCO_ACTIVE_N_READ // MCO
-	};
-	enum class Answer : uint8_t
-	{
-		VERSION = 0,
-		ERROR = 1,
-		WARNING = 2,
-		DATA = 208,
-		BUSY = 251,
-		FAIL,
-		REPEAT,
-		UNKNOWN,
-		OK
-	};
-	Unit unit = (Unit) canDat.get<CanRx::SYS_DIAGNOSTICS>() [0];
-	Request request = (Request) canDat.get<CanRx::SYS_DIAGNOSTICS>() [1];
+	SysDiagnosticsUnit unit = (SysDiagnosticsUnit) canDat.get<CanRx::SYS_DIAGNOSTICS>() [0];
+	SysDiagnosticsRequest request = (SysDiagnosticsRequest) canDat.get<CanRx::SYS_DIAGNOSTICS>() [1];
 
 
-	if (unit == Unit::IPD || unit == Unit::BS_DPS || unit == Unit::VDS)
+	if ( (dps && (unit == SysDiagnosticsUnit::IPD || unit == SysDiagnosticsUnit::BS_DPS)) || unit == SysDiagnosticsUnit::VDS)
 	{
-		if ( request == Request::VERSION  )
+		if ( request == SysDiagnosticsRequest::VERSION  )
 		{
 			uint8_t packet[5];
 			if ( programmingCan.isAvailable () )
 			{
-				packet[0] =	(uint8_t) Answer::VERSION;
+				packet[0] =	(uint8_t) SysDiagnosticsAnswer::VERSION;
 				packet[1] =	(uint8_t) programmingCan.getVersion();
 				packet[2] =	(uint8_t) programmingCan.getSubversion();
 				packet[3] =	(uint8_t) (programmingCan.getCheckSum() & 0xFF);
@@ -280,28 +270,28 @@ void sysDiagnostics (uint16_t a)
 				for (uint8_t i = 0; i < idSize; i ++)
 				checkSumm += pgm_read_word ((uint16_t *)&id + i);
 
-				packet[0] =	(uint8_t) Answer::VERSION;
+				packet[0] =	(uint8_t) SysDiagnosticsAnswer::VERSION;
 				packet[1] =	pgm_read_byte(&id.version);
 				packet[2] =	0;
 				packet[3] =	0;
 				packet[4] =	uint8_t (checkSumm);
 			}
 
-			if (unit == Unit::IPD)
+			if (unit == SysDiagnosticsUnit::IPD)
 			{
 				if (isSelfComplectA ())
 					canDat.send<CanTx::AUX_RESOURCE_IPD_A>(packet);
 				else
 					canDat.send<CanTx::AUX_RESOURCE_IPD_B>(packet);
 			}
-			else if (unit == Unit::BS_DPS)
+			else if (unit == SysDiagnosticsUnit::BS_DPS)
 			{
 				if (isSelfComplectA ())
 					canDat.send<CanTx::AUX_RESOURCE_BS_A>(packet);
 				else
 					canDat.send<CanTx::AUX_RESOURCE_BS_B>(packet);
 			}
-			else if (unit == Unit::VDS)
+			else if (unit == SysDiagnosticsUnit::VDS)
 			{
 				if (isSelfComplectA ())
 					canDat.send<CanTx::AUX_RESOURCE_VDS_A>(packet);
@@ -309,10 +299,10 @@ void sysDiagnostics (uint16_t a)
 					canDat.send<CanTx::AUX_RESOURCE_VDS_B>(packet);
 			}
 		}
-		else if ( request == Request::TEST_RUN && unit == Unit::BS_DPS )
+		else if ( request == SysDiagnosticsRequest::TEST_RUN && unit == SysDiagnosticsUnit::BS_DPS )
 		{
 			uint8_t packet[5] = {
-					(uint8_t) Answer::DATA,
+					(uint8_t) SysDiagnosticsAnswer::DATA,
 					0,
 					0,
 					0,
@@ -326,49 +316,37 @@ void sysDiagnostics (uint16_t a)
 	}
 }
 
-// ---------------------------------------------- КПТ -------------------------------------------►
-
-InterruptHandler kptOdometerPluPlusHandler;
-
-// ---------------------------------------------- ДПС -------------------------------------------►
-
-typedef
-CeleritasSpatiumDimetior  < CanDatType, canDat,
-							ClockType, clock,
-							SchedulerType, scheduler >
-DpsType;
-
-DpsType	dps ( 	Delegate<void (bool)>::from_function< &lset<0> >(), Delegate<void (bool)>::from_function< &lset<1> >(), isSelfComplectA(),
-				&Register::portC,
-				sautDecimeters, sautVelocity, sautAcceleratio,
-				kptOdometerPluPlusHandler,
-				kptOdometerPluPlusHandler );
-
-
-void unsetResetFlag (uint16_t)
-{
-	dps.repeto = false;
-}
-
 // --------------------------------------------- mcoState ---------------------------------------►
-
 
 void mcoState (uint16_t pointer)
 {
 	typedef const uint8_t Message[8];
 	Message& message = *( (Message *)(pointer) );
 
-	// Определение, есть ли тяга
-	if ( message[0] & (1 << 5) )
-		dps.constituoNonTractus ();
-	else
-		dps.constituoTractus ();
+	if (dps)
+	{
+		// Определение, есть ли тяга
+		if ( message[0] & (1 << 5) )
+			dps->constituoNonTractus ();
+		else
+			dps->constituoTractus ();
 
-	// В задней кабине инвертировать направление, если это не маневровый
-	uint32_t locoType = 0;
-	if ( eeprom.club.property.category.read (locoType) )
-		if ( locoType != 7 ) // не маневровый
-			dps.constituoVersusInversio ( message[3] & (1 << 5) );
+		// В задней кабине инвертировать направление, если это не маневровый
+		uint32_t locoType = 0;
+		if ( eeprom.club.property.category.read (locoType) )
+			if ( locoType != 7 ) // не маневровый
+				dps->constituoVersusInversio ( message[3] & (1 << 5) );
+				
+		// Контроль выхода из конфигурации
+		if ( clock.getTime() > 7000 && 	// проработали больше 7 секунд
+			!dps->sicinBothBrake() ) // если оба датчика неисправны, то перезагрузку не делать
+		{
+			if( !(message[6] & (1 << 1)) )
+				diagnostic_restart(RestartReason::IPD_OUT);
+			if( !(message[7] & (1 << 6)) )
+				diagnostic_restart(RestartReason::DPS_OUT);
+		}
+	}
 
 	// Контроль перезагрузки ЦО.
 	static uint32_t lastTime = 0;
@@ -376,17 +354,6 @@ void mcoState (uint16_t pointer)
 	if ( time - lastTime > 4000 )
 		diagnostic_restart(RestartReason::CO_LOST);
 	lastTime = time;
-
-	// Контроль выхода из конфигурации
-	if ( clock.getTime() > 7000 && 	// проработали больше 7 секунд
-		dps.sicinActivus() && // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
-		!dps.sicinBothBrake() ) // если оба датчика неисправны, то перезагрузку не делать
-	{
-		if( !(message[6] & (1 << 1)) )
-			diagnostic_restart(RestartReason::IPD_OUT);
-		if( !(message[7] & (1 << 6)) )
-			diagnostic_restart(RestartReason::DPS_OUT);
-	}
 
 }
 
@@ -408,11 +375,13 @@ void mcoAuxResControl (uint16_t pointer)
 	typedef const uint8_t Message[5];
 	Message& message = *( (Message *)(pointer) );
 
-	if ( message[0] == 2 && message[1] == 3 && !(message[2] & (1 << 2)) && // Кодовая комбинация, означающая выход МПХ из конфиграции
-			clock.getTime() > 7000 && 	// проработали больше 7 секунд
-			dps.sicinActivus() ) // активность модуля ДПС говорит о том, что мы не в режиме программирования и т.д.
+	if (mph)
 	{
-		diagnostic_restart(RestartReason::MPH_OUT);
+		if ( message[0] == 2 && message[1] == 3 && !(message[2] & (1 << 2)) && // Кодовая комбинация, означающая выход МПХ из конфиграции
+			clock.getTime() > 7000 ) 	// проработали больше 7 секунд
+		{
+			diagnostic_restart(RestartReason::MPH_OUT);
+		}
 	}
 }
 
@@ -427,16 +396,6 @@ void mcoAuxResB (uint16_t pointer)
 	if (!isSelfComplectA ()) // второй полукомплект
 		mcoAuxResControl (pointer);
 }
-
-// --------------------------------- Модуль постоянных характеристик ----------------------------►
-
-typedef ConstValModule <CanAsyncType, canAsync, SchedulerType, scheduler> MPHType;
-MPHType mph;
-
-// ------------------------------------- Нейтральная вставка -------------------------------------►
-
-typedef NeutralInsertion<CanDatType, canDat, SchedulerType, scheduler, DpsType, dps> NeutralInsertionType;
-NeutralInsertionType neutralInsertion;
 
 // --------------------------------------- Эмуляция движения ------------------------------------►
 
@@ -530,14 +489,16 @@ private:
 			engine.setPeriod ( period );
 
 		// Натравливаем БС-ДПС
-		dps.accessusPortus = (Port Register::*) (&Register::general0);
+		if (dps)
+			dps->accessusPortus = (Port Register::*) (&Register::general0);
 
 		// Поехали
 		engine.enable();
 	}
 	void disable ()
 	{
-		dps.accessusPortus = &Register::portC;
+		if (dps)
+			dps->accessusPortus = &Register::portC;
 		engine.disable();
 	}
 
@@ -567,11 +528,11 @@ void pushHandler (uint16_t num)
 
 	if ( num == 5 ) // Вперёд
 	{
-		dps.constituoVersus (0);
+		dps->constituoVersus (0);
 	}
 	if ( num == 4 ) // Назад
 	{
-		dps.constituoVersus (1);
+		dps->constituoVersus (1);
 	}
 }
 
@@ -667,22 +628,55 @@ void smartdogAlarm (uint16_t wdtPointer)
 	diagnostic_restart (RestartReason::WATCHDOG, ptr[2], ptr[1], ptr[0]);
 }
 
+// ----------------------------------------- Поиск БС-ДПС ----------------------------------------►
+
+uint8_t startDpsAndMphDelayProcess = 0;
+
+void requestBsDps ()
+{
+	uint8_t packet [7] = {
+		(uint8_t) SysDiagnosticsUnit::BS_DPS,
+		(uint8_t) SysDiagnosticsRequest::VERSION,
+		0, 0, 0, 0, 0
+	};
+	while ( !canAsync.send<CanRx::SYS_DIAGNOSTICS>(packet) );
+}
+
+void catchBsDpsVersion (uint16_t )
+{
+	scheduler.deleteId (startDpsAndMphDelayProcess);
+}
+
+void startDpsAndMph (uint16_t )
+{
+	dps = new DpsType ( Delegate<void (bool)>::from_function< &lset<0> >(), Delegate<void (bool)>::from_function< &lset<1> >(), isSelfComplectA(),
+		&Register::portC,
+		sautDecimeters, sautVelocity, sautAcceleratio,
+		kptOdometerPluPlusHandler,
+		kptOdometerPluPlusHandler );
+	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_method <DpsType, &DpsType::takeEcDataForAdjust> (dps);
+			
+	mph = new MPHType ();
+	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (mph);
+	canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (mph);
+	canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (mph);
+	canDat.rxHandler<CanTx::SYS_DATA_A>() = SoftIntHandler::from_method <MPHType, &MPHType::getLeftDataMessage> (mph); // Если кто-то ещё ответит, то обновить мои данные
+	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::getQueryMessage> (mph);	
+}
+
 // --------------------------------------------- main -------------------------------------------►
 
 int main ()
-{
+{	
+	// Поиск БС-ДПС
+	if ( isSelfComplectA() )
+		canDat.rxHandler<CanTx::AUX_RESOURCE_BS_A>() = SoftIntHandler::from_function <&catchBsDpsVersion> ();
+	else
+		canDat.rxHandler<CanTx::AUX_RESOURCE_BS_B>() = SoftIntHandler::from_function <&catchBsDpsVersion> ();
+	requestBsDps ();
+	startDpsAndMphDelayProcess = scheduler.runIn( Command {SoftIntHandler::from_function<&startDpsAndMph>(), 0}, 1000 );
+	
 	canDat.rxHandler<CanRx::IPD_EMULATION>() = SoftIntHandler::from_method <Emulation, &Emulation::getCanVelocity>(&emulation);
-
-	canDat.rxHandler<CanRx::INPUT_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);
-	canDat.rxHandler<CanRx::MCO_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);
-	canDat.rxHandler<CanRx::BKSI_DATA>() = SoftIntHandler::from_method <MPHType, &MPHType::getWriteMessage> (&mph);
-	canDat.rxHandler<CanTx::SYS_DATA_A>() = SoftIntHandler::from_method <MPHType, &MPHType::getLeftDataMessage> (&mph); // Если кто-то ещё ответит, то обновить мои данные
-	canDat.rxHandler<CanRx::SYS_DATA_QUERY>() = SoftIntHandler::from_method <MPHType, &MPHType::getQueryMessage> (&mph);
-
-	if (isSelfComplectA ()) // первый полукомплект
-	{
-		canDat.rxHandler<CanRx::MM_NEUTRAL>() = SoftIntHandler::from_method <NeutralInsertionType, &NeutralInsertionType::getEcData> (&neutralInsertion);
-	}
 
 	canDat.rxHandler<CanRx::SYS_DIAGNOSTICS>() = SoftIntHandler::from_function <&sysDiagnostics>();
 
@@ -691,20 +685,16 @@ int main ()
 	canDat.rxHandler<CanRx::AUX_RESOURCE_MCO_A>() = SoftIntHandler::from_function <&mcoAuxResA>();
 	canDat.rxHandler<CanRx::AUX_RESOURCE_MCO_B>() = SoftIntHandler::from_function <&mcoAuxResB>();
 
-	canDat.rxHandler<CanRx::MM_DATA>() = SoftIntHandler::from_method <DpsType, &DpsType::takeEcDataForAdjust> (&dps);
-
 	// ВДС
 	inputSignalStateOut(0);
-
-	dps.constituoActivus();
 
 	// Причина перезагрузки
 	diagnostic_storeDelegate = Delegate<void (uint8_t)>::from_function <&storeRestartReason> ();
 	diagnostic_restoreDelegate = Delegate<uint8_t ()>::from_function <&restoreRestartReason> ();
 	if (isSelfComplectA())
-		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_A> > (&canDat);
+		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_VDS_A> > (&canDat);
 	else
-		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_IPD_B> > (&canDat);
+		diagnostic_sendMessageDelegate = AuxResourceMessage::from_method< CanDatType, &CanDatType::send<CanTx::AUX_RESOURCE_VDS_B> > (&canDat);
 	diagnostic_watchdogResetDelegate = Delegate<void ()>::from_function <&smartdog_reset> ();
 	canDat.setBusOffHandler( Delegate<void ()>::from_function <&canBusOffHandler> () );
 	dispatcher.overflowHandler = Delegate<void (uint16_t)>::from_function <&dispatcherOverflowHandler> ();
@@ -742,21 +732,24 @@ int main ()
 
 		if (isSelfComplectA ())
 		{
-			while ( !canAsync.send<CanTx::AUX_RESOURCE_IPD_A>(packet) );
-			while ( !canAsync.send<CanTx::AUX_RESOURCE_BS_A>(packet) );
+			if (dps)
+				while ( !canAsync.send<CanTx::AUX_RESOURCE_IPD_A>(packet) );
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_VDS_A>(packet) );
 		}
 		else
 		{
-			while ( !canAsync.send<CanTx::AUX_RESOURCE_IPD_B>(packet) );
-			while ( !canAsync.send<CanTx::AUX_RESOURCE_BS_B>(packet) );
+			if (dps)
+				while ( !canAsync.send<CanTx::AUX_RESOURCE_IPD_B>(packet) );
+			while ( !canAsync.send<CanTx::AUX_RESOURCE_VDS_B>(packet) );
 		}
 	}
 	
 	diagnostic_sendReasonOfPreviousRestart();
 
 	scheduler.runIn( Command {SoftIntHandler::from_function<&unsetResetFlag>(), 0}, 7000 );
-		
-	dps.constituoActivus();
+	
+	if (dps)	
+		dps->constituoActivus();
 
     for (;;)
     {
