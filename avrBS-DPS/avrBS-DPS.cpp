@@ -620,9 +620,9 @@ void inputSignalStateOut (uint16_t )
 	outMessage.epkKey = 1;
 
 	if ( isSelfComplectA() )
-		canDat.send<CanTx::VDS_STATE_A> ({uint8_t(outMessage/256), uint8_t(outMessage)});
+		while ( !canDat.send<CanTx::VDS_STATE_A> ({uint8_t(outMessage/256), uint8_t(outMessage)}) );
 	else
-		canDat.send<CanTx::VDS_STATE_B> ({uint8_t(outMessage/256), uint8_t(outMessage)});
+		while ( !canDat.send<CanTx::VDS_STATE_B> ({uint8_t(outMessage/256), uint8_t(outMessage)}) );
 
 	scheduler.runIn( Command {SoftIntHandler::from_function<&inputSignalStateOut>(), 0}, 500 );
 }
